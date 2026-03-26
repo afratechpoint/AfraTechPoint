@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { storage } from '@/lib/storage';
+import { revalidatePath } from 'next/cache';
 
 const defaultSettings = {
   // ... (keeping existing defaultSettings)
@@ -66,6 +67,10 @@ export async function PUT(request: Request) {
     
     const updatedSettings = { ...settings, ...data };
     await storage.updateSettings(updatedSettings);
+    
+    // Recalculate home page and contact page
+    revalidatePath("/");
+    revalidatePath("/contact");
     
     return NextResponse.json(updatedSettings);
   } catch (error: any) {

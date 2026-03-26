@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { readData, settingsFile } from "@/lib/db";
+import { storage } from "@/lib/storage";
 import ClientLayout from "@/components/ClientLayout";
 import SettingsProvider from "@/components/SettingsProvider";
 import { THEMES, ThemeId } from "@/lib/themes";
@@ -31,7 +31,7 @@ const defaultSettings = {
 export async function generateMetadata(): Promise<Metadata> {
   let settings: any = {};
   try {
-    settings = await readData(settingsFile);
+    settings = await storage.getSettings();
     if (!settings || Object.keys(settings).length === 0 || Array.isArray(settings)) {
       settings = defaultSettings;
     }
@@ -57,7 +57,7 @@ export default async function RootLayout({
 }>) {
   let settings: any = {};
   try {
-    settings = await readData(settingsFile);
+    settings = await storage.getSettings();
     if (!settings || Object.keys(settings).length === 0 || Array.isArray(settings)) {
       settings = defaultSettings;
     }
