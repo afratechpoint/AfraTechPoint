@@ -7,6 +7,8 @@ import { Plus, ShoppingCart, Search, X, Star, ArrowRight } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useSettings } from "@/components/SettingsProvider";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+
 
 interface Product {
   id: string;
@@ -22,6 +24,7 @@ interface Product {
 export default function ProductGrid() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [filter, setFilter] = useState('All');
   const { addItem } = useCart();
   const settings = useSettings();
 
@@ -33,6 +36,10 @@ export default function ProductGrid() {
         setIsLoading(false);
       });
   }, []);
+
+  const filteredProducts = filter === 'All' 
+    ? products 
+    : products.filter((p: Product) => p.category === filter);
 
   return (
     <section id="shop" className="py-24 max-w-[1400px] mx-auto px-4 sm:px-8">
@@ -47,10 +54,28 @@ export default function ProductGrid() {
             Explore our curated selection of high-end technology, combining futuristic aesthetics with unparalleled performance.
           </p>
         </div>
-        <div className="flex items-center gap-3 bg-white p-2 rounded-3xl shadow-sm border border-gray-100">
-           <button className="px-6 py-2.5 bg-[var(--primary)] text-white rounded-2xl text-xs font-bold transition-all">All</button>
-           <button className="px-6 py-2.5 text-gray-400 hover:text-black rounded-2xl text-xs font-bold transition-all">Audio</button>
-           <button className="px-6 py-2.5 text-gray-400 hover:text-black rounded-2xl text-xs font-bold transition-all">Wearables</button>
+        <div className="flex items-center gap-3 bg-white p-2 rounded-3xl shadow-sm border border-gray-100 overflow-x-auto no-scrollbar">
+           <button 
+             onClick={() => setFilter('All')}
+             className={cn(
+               "px-6 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap",
+               filter === 'All' ? "bg-[var(--primary)] text-white" : "text-gray-400 hover:text-black"
+             )}
+           >
+             All
+           </button>
+           {(settings.categories || []).map((cat: any) => (
+             <button 
+               key={cat.id}
+               onClick={() => setFilter(cat.label)}
+               className={cn(
+                 "px-6 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap",
+                 filter === cat.label ? "bg-[var(--primary)] text-white" : "text-gray-400 hover:text-black"
+               )}
+             >
+               {cat.label}
+             </button>
+           ))}
         </div>
       </div>
 
@@ -59,7 +84,7 @@ export default function ProductGrid() {
           [1, 2, 3, 4].map((i) => (
             <div key={i} className="bg-white rounded-[2.5rem] p-6 h-[400px] animate-pulse border border-gray-100" />
           ))
-        ) : products.map((product, i) => (
+        ) : filteredProducts.map((product, i) => (
           <motion.div
             key={product.id}
             layout

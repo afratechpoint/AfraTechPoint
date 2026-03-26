@@ -21,14 +21,8 @@ const defaultSettings = {
     { id: "3", label: "About", href: "/about" },
     { id: "4", label: "Contact", href: "/contact" }
   ],
-  banners: [
-    { id: "b1", title: "Latest Gadgets", subtitle: "Discover the Future", imageUrl: "/banner1.jpg", linkUrl: "/shop" }
-  ],
-  categories: [
-    { id: "c1", label: "Smartphones", slug: "smartphones" },
-    { id: "c2", label: "Laptops", slug: "laptops" },
-    { id: "c3", label: "Audio", slug: "audio" }
-  ],
+  banners: [],
+  categories: [],
   socialLinks: [
     { id: "s1", platform: "Facebook", url: "https://facebook.com" },
     { id: "s2", platform: "Twitter", url: "https://twitter.com" },
