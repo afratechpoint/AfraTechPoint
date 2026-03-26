@@ -1,8 +1,4 @@
-"use client";
-// app/checkout/success/page.tsx
-// Order success page — fetches order from /api/orders/[id] (JSON DB).
-
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -20,7 +16,7 @@ interface Order {
   items: OrderItem[];
 }
 
-export default function CheckoutSuccessPage() {
+function CheckoutSuccessContent() {
   const params   = useSearchParams();
   const orderId  = params.get("orderId") ?? "";
   const settings = useSettings() as any;
@@ -117,5 +113,17 @@ export default function CheckoutSuccessPage() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-gray-100 border-t-black rounded-full animate-spin" />
+      </div>
+    }>
+      <CheckoutSuccessContent />
+    </Suspense>
   );
 }

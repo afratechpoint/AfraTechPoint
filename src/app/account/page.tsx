@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -35,7 +35,7 @@ interface Order {
   items: { name: string; quantity: number; price: number }[];
 }
 
-export default function AccountPage() {
+function AccountContent() {
   const { openCart } = useUI();
   const { user, loading, logout } = useAuth();
   const router   = useRouter();
@@ -473,5 +473,17 @@ export default function AccountPage() {
       </div>
       <Footer />
     </div>
+  );
+}
+
+export default function AccountPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-gray-100 border-t-black rounded-full animate-spin" />
+      </div>
+    }>
+      <AccountContent />
+    </Suspense>
   );
 }

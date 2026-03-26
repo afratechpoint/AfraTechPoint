@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { useUI } from "@/lib/ui";
 import MobileNav from "@/components/MobileNav";
 import CartSidebar from "@/components/CartSidebar";
@@ -14,7 +14,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   return (
     <>
-      <NavigationObserver />
+      <Suspense fallback={null}>
+        <NavigationObserver />
+      </Suspense>
       <AnimatePresence>
         {isLoading && <PremiumLoader />}
       </AnimatePresence>
