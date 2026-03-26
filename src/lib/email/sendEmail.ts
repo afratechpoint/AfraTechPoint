@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import { render } from "@react-email/components";
+import { render } from "@react-email/render";
 
 interface SendEmailParams {
   to: string | string[];
