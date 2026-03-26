@@ -60,11 +60,16 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
-  const data = await request.json();
-  const settings = await storage.getSettings();
-  
-  const updatedSettings = { ...settings, ...data };
-  await storage.updateSettings(updatedSettings);
-  
-  return NextResponse.json(updatedSettings);
+  try {
+    const data = await request.json();
+    const settings = await storage.getSettings();
+    
+    const updatedSettings = { ...settings, ...data };
+    await storage.updateSettings(updatedSettings);
+    
+    return NextResponse.json(updatedSettings);
+  } catch (error: any) {
+    console.error("Firebase settings save error:", error);
+    return NextResponse.json({ error: error.message || "Failed to save settings" }, { status: 500 });
+  }
 }

@@ -486,10 +486,11 @@ export default function AdminSettings() {
         const updated = await res.json();
         setSettings(updated);
       } else {
-        throw new Error("Failed to update");
+        const errorData = await res.json().catch(() => null);
+        throw new Error(errorData?.error || "Failed to update");
       }
-    } catch (error) {
-      toast.error("Failed to save settings.");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save settings.");
     } finally {
       setIsSaving(false);
     }
