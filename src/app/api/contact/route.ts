@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Dispatch Dual Emails concurrently
-    await Promise.all([
+    const results = await Promise.allSettled([
       // Auto-reply to customer
       sendEmail({
         to: email,
@@ -46,10 +46,24 @@ export async function POST(req: NextRequest) {
       })
     ]);
 
-    return NextResponse.json({ success: true, message: "Emails dispatched successfully." });
+    const failures = results.filter(r => r.status === 'rejected');
+    
+    if (failures.length > 0) {
+      console.error("Some emails failed to send:", failures);
+      // If all failed, return error. If some failed, we might still return success but log it.
+      if (failures.length === results.length) {
+        const errorMsg = (failures[0] as PromiseRejectedResult).reason?.message || "Email delivery failed";
+        return NextResponse.json({ 
+          error: "Message received but email delivery failed. Please check your SMTP settings.",
+          details: errorMsg 
+        }, { status: 500 });
+      }
+    }
+
+    return NextResponse.json({ success: true, message: "Message received successfully." });
     
   } catch (error: any) {
-    console.error("Contact API Error:", error);
-    return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
+    console.error("Contact API Exception:", error);
+    return NextResponse.json({ error: "An unexpected error occurred. Please try again later." }, { status: 500 });
   }
 }
