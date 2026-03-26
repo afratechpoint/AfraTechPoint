@@ -16,30 +16,13 @@ const defaultSettings = {
   announcementActive: false,
   businessHours: "Mon - Fri: 9:00 AM - 6:00 PM",
   navLinks: [
-    { id: "1", label: "Home", href: "/" },
-    { id: "2", label: "Shop", href: "/shop" },
-    { id: "3", label: "About", href: "/about" },
-    { id: "4", label: "Contact", href: "/contact" }
+    { id: "1", label: "Home", href: "/" }
   ],
   banners: [],
   categories: [],
-  socialLinks: [
-    { id: "s1", platform: "Facebook", url: "https://facebook.com" },
-    { id: "s2", platform: "Twitter", url: "https://twitter.com" },
-    { id: "s3", platform: "Instagram", url: "https://instagram.com" }
-  ],
-  footerProducts: [
-    { id: "p1", label: "Features", href: "#" },
-    { id: "p2", label: "Pricing", href: "#" },
-    { id: "p3", label: "Integrations", href: "#" },
-    { id: "p4", label: "Changelog", href: "#" }
-  ],
-  footerCompany: [
-    { id: "c1", label: "About", href: "/about" },
-    { id: "c2", label: "Careers", href: "#" },
-    { id: "c3", label: "Contact", href: "/contact" },
-    { id: "c4", label: "Partners", href: "#" }
-  ]
+  socialLinks: [],
+  footerProducts: [],
+  footerCompany: []
 };
 
 export async function GET() {
