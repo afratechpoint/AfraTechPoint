@@ -1,20 +1,25 @@
 // lib/storage.ts
 import { readData, writeData, settingsFile, productsFile, ordersFile } from "./db";
-import { getSettingsFromFirestore, updateSettingsInFirestore } from "./firebase/settings";
-import { getAllOrders, getOrderById, createOrderInFirestore, updateOrderInFirestore, getProductsFromFirestore, createProductInFirestore, updateProductInFirestore, deleteProductFromFirestore } from "./firebase/firestore";
 
 const USE_FIREBASE = process.env.NEXT_PUBLIC_USE_FIREBASE === "true";
+
+// Server-side only Firestore adapter
+const getAdapter = async () => {
+  return await import("./firebase/server_firestore");
+};
 
 export const storage = {
   // ── Settings ──────────────────────────────────────────────────────────
   async getSettings() {
     if (USE_FIREBASE) {
+      const { getSettingsFromFirestore } = await getAdapter();
       return await getSettingsFromFirestore();
     }
     return await readData(settingsFile);
   },
   async updateSettings(data: any) {
     if (USE_FIREBASE) {
+      const { updateSettingsInFirestore } = await getAdapter();
       return await updateSettingsInFirestore(data);
     }
     return await writeData(settingsFile, data);
@@ -23,11 +28,11 @@ export const storage = {
   // ── Orders ────────────────────────────────────────────────────────────
   async getOrders(filters?: { userId?: string }) {
     if (USE_FIREBASE) {
+      const adapter = await getAdapter();
       if (filters?.userId) {
-        const { getOrdersByUser } = await import("./firebase/firestore");
-        return await getOrdersByUser(filters.userId);
+        return await adapter.getOrdersByUser(filters.userId);
       }
-      return await getAllOrders();
+      return await adapter.getAllOrders();
     }
     const orders = await readData(ordersFile);
     if (filters?.userId) {
@@ -38,6 +43,7 @@ export const storage = {
 
   async getOrderById(id: string) {
     if (USE_FIREBASE) {
+      const { getOrderById } = await getAdapter();
       return await getOrderById(id);
     }
     const orders = await readData(ordersFile);
@@ -46,6 +52,7 @@ export const storage = {
 
   async createOrder(data: any) {
     if (USE_FIREBASE) {
+      const { createOrderInFirestore } = await getAdapter();
       return await createOrderInFirestore(data);
     }
     const orders = await readData(ordersFile);
@@ -57,6 +64,7 @@ export const storage = {
 
   async updateOrder(id: string, fields: any) {
     if (USE_FIREBASE) {
+      const { updateOrderInFirestore } = await getAdapter();
       return await updateOrderInFirestore(id, fields);
     }
     const orders = await readData(ordersFile);
@@ -69,9 +77,8 @@ export const storage = {
 
   async deleteOrder(id: string) {
     if (USE_FIREBASE) {
-      const { doc, deleteDoc } = await import("firebase/firestore");
-      const { db } = await import("./firebase/firestore");
-      await deleteDoc(doc(db, "orders", id));
+      const { deleteOrderFromFirestore } = await getAdapter();
+      await deleteOrderFromFirestore(id);
       return;
     }
     const orders = await readData(ordersFile);
@@ -82,6 +89,7 @@ export const storage = {
   // ── Products ──────────────────────────────────────────────────────────
   async getProducts() {
     if (USE_FIREBASE) {
+      const { getProductsFromFirestore } = await getAdapter();
       return await getProductsFromFirestore();
     }
     return await readData(productsFile);
@@ -89,6 +97,7 @@ export const storage = {
 
   async createProduct(data: any) {
     if (USE_FIREBASE) {
+      const { createProductInFirestore } = await getAdapter();
       return await createProductInFirestore(data);
     }
     const products = await readData(productsFile);
@@ -100,6 +109,7 @@ export const storage = {
 
   async updateProduct(id: string, data: any) {
     if (USE_FIREBASE) {
+      const { updateProductInFirestore } = await getAdapter();
       return await updateProductInFirestore(id, data);
     }
     const products = await readData(productsFile);
@@ -112,6 +122,7 @@ export const storage = {
 
   async deleteProduct(id: string) {
     if (USE_FIREBASE) {
+      const { deleteProductFromFirestore } = await getAdapter();
       return await deleteProductFromFirestore(id);
     }
     const products = await readData(productsFile);
