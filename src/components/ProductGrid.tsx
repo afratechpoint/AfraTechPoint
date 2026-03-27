@@ -42,8 +42,8 @@ export default function ProductGrid() {
     : products.filter((p: Product) => p.category === filter);
 
   return (
-    <section id="shop" className="py-10 md:py-24 max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-6">
+    <section id="shop" className="py-6 md:py-24 max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-16 gap-6">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-[2px] bg-black"></div>
@@ -81,61 +81,73 @@ export default function ProductGrid() {
 
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 lg:gap-10 auto-rows-fr">
         {isLoading ? (
-          [1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white rounded-[2.5rem] p-6 h-[400px] animate-pulse border border-gray-100" />
+          [1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="bg-white rounded-2xl md:rounded-[2.5rem] p-4 h-[300px] md:h-[400px] animate-pulse border border-gray-50 shadow-sm" />
           ))
         ) : filteredProducts.map((product, i) => (
           <motion.div
             key={product.id}
             layout
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.4 }}
-            className="group relative bg-white rounded-2xl md:rounded-[2rem] p-3 md:p-4 shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-700 flex flex-col h-full active:scale-[0.98]"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.4, delay: i * 0.05 }}
+            className="group relative bg-white rounded-2xl md:rounded-[2.5rem] !p-0 md:!p-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-gray-100/50 hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-500 flex flex-col h-full active:scale-[0.98] overflow-hidden"
           >
-            <Link href={`/shop/${product.id}`} className="block relative aspect-square mb-5 bg-[#f8f9fa] rounded-[1.5rem] overflow-hidden group-hover:scale-[0.98] transition-transform duration-700">
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform duration-1000 ease-out"
-              />
+            {/* Image Container - Full Bleed on Mobile */}
+            <Link href={`/shop/${product.id}`} className="block w-full !m-0 relative aspect-square bg-[#f8f9fa] md:rounded-[1.8rem] overflow-hidden md:m-1">
+               <img
+                 src={product.image}
+                 alt={product.name}
+                 className="w-full h-full object-contain md:p-4 group-hover:scale-110 transition-transform duration-1000 ease-out"
+               />
+               {/* Sale Badge */}
+               {product.salePrice && (
+                 <div className="absolute top-2 left-2 bg-red-500 text-white text-[8px] md:text-[10px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-tighter z-10">
+                   SALE
+                 </div>
+               )}
             </Link>
 
-            <div className="space-y-1.5 flex flex-col flex-1 px-1">
-               <div className="flex justify-between items-center">
-                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                   {product.category}
-                 </p>
-                 <div className="flex flex-col items-end">
-                   {product.salePrice && (
-                     <span className="text-[10px] font-bold text-gray-300 line-through tracking-tighter mb-0.5">
-                       {settings?.currencySymbol || '$'}{(product.regularPrice || product.price || 0).toFixed(0)}
-                     </span>
-                   )}
-                   <p className="text-base md:text-lg font-bold text-gray-900 leading-none">
-                     {settings?.currencySymbol || '$'}{(product.salePrice || product.regularPrice || product.price || 0).toFixed(0)}
-                   </p>
-                 </div>
+            <div className="flex flex-col flex-1 px-3 py-3 md:px-1">
+               {/* Price Row First (AliExpress Pattern) */}
+               <div className="flex items-baseline gap-1.5 mb-0.5">
+                  <p className="text-sm md:text-xl font-black text-gray-900 leading-none">
+                    {settings?.currencySymbol || '$'}{(product.salePrice || product.regularPrice || product.price || 0).toFixed(0)}
+                  </p>
+                  {product.salePrice && (
+                    <span className="text-[9px] md:text-sm font-bold text-gray-300 line-through tracking-tighter">
+                      {settings?.currencySymbol || '$'}{(product.regularPrice || product.price || 0).toFixed(0)}
+                    </span>
+                  )}
                </div>
+
+               {/* Category & Title */}
+               <p className="text-[8px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 truncate">
+                 {product.category}
+               </p>
                <Link href={`/shop/${product.id}`}>
-                 <h3 className="text-sm font-bold text-gray-900 group-hover:text-black transition-colors leading-tight">
+                 <h3 className="text-[11px] md:text-sm font-black text-gray-800 group-hover:text-black transition-colors leading-tight line-clamp-2 md:line-clamp-1">
                    {product.name}
                  </h3>
                </Link>
-               <p className="text-[11px] md:text-xs text-gray-500 leading-relaxed font-medium mt-1">
+
+               {/* Desktop Only Description */}
+               <p className="hidden md:block text-xs text-gray-400 leading-relaxed font-medium mt-2 line-clamp-2">
                  {product.description}
                </p>
 
-               <div className="flex items-center gap-2 pt-4 mt-auto">
+               {/* Desktop Buttons */}
+               <div className="hidden md:flex items-center gap-2 pt-4 mt-auto">
                   <Link 
                     href={`/shop/${product.id}`}
                     className="flex-1 py-2.5 bg-gray-50 hover:bg-gray-100 text-black rounded-xl text-[10px] font-bold text-center transition-all uppercase tracking-widest border border-gray-100"
                   >
-                    View Details
+                    Details
                   </Link>
                   <button 
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
                       addItem({
                         id: product.id,
                         name: product.name,
@@ -145,14 +157,31 @@ export default function ProductGrid() {
                       });
                       toast.success(`${product.name} added to cart!`);
                     }}
-                    style={{ 
-                      backgroundColor: 'var(--primary)',
-                      color: 'var(--primary-text)'
-                    }}
-                    className="flex-1 py-2.5 hover:bg-[var(--primary-hover)] rounded-xl text-[10px] font-bold text-center transition-all uppercase tracking-widest flex items-center justify-center gap-2 shadow-sm"
+                    style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-text)' }}
+                    className="flex-1 py-2.5 hover:bg-[var(--primary-hover)] rounded-xl text-[10px] font-bold text-center transition-all uppercase tracking-widest flex items-center justify-center gap-2"
                   >
-                    Add to Cart
+                    Add
                   </button>
+               </div>
+
+               {/* Mobile Minimalist Add to Cart (AliExpress Style) */}
+               <div className="md:hidden flex justify-end mt-auto pt-2">
+                 <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      addItem({
+                        id: product.id,
+                        name: product.name,
+                        price: product.salePrice || product.regularPrice || product.price || 0,
+                        image: product.image,
+                        quantity: 1
+                      });
+                      toast.success(`${product.name} added!`);
+                    }}
+                    className="w-7 h-7 bg-black text-white rounded-full flex items-center justify-center shadow-md active:scale-90 transition-transform"
+                 >
+                   <Plus size={14} strokeWidth={3} />
+                 </button>
                </div>
             </div>
           </motion.div>

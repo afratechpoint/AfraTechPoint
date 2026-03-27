@@ -32,6 +32,7 @@ interface Order {
 
 const PMT_STATUS: Record<string, { bg: string; text: string; dot: string; label: string }> = {
   pending:   { bg: "bg-amber-50",  text: "text-amber-700",  dot: "bg-amber-400",  label: "Pending" },
+  pending_cod: { bg: "bg-blue-50",   text: "text-blue-700",   dot: "bg-blue-500",   label: "Cash on Delivery" },
   confirmed: { bg: "bg-green-50",  text: "text-green-700",  dot: "bg-green-500",  label: "Confirmed" },
   failed:    { bg: "bg-red-50",    text: "text-red-700",    dot: "bg-red-500",    label: "Failed" },
   refunded:  { bg: "bg-blue-50",   text: "text-blue-700",   dot: "bg-blue-500",   label: "Refunded" },
@@ -169,7 +170,7 @@ export default function AdminOrderDetailPage() {
     <div className="max-w-4xl space-y-6 pb-10">
 
       {/* ── Top bar ─────────────────────────────────── */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
         <Link href="/admin/orders"
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors">
           <ArrowLeft size={15} /> All Orders
@@ -198,7 +199,7 @@ export default function AdminOrderDetailPage() {
       </div>
 
       {/* ── Status strip ─────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {[
           {
             icon: <CreditCard size={14} />, label: "Payment",
@@ -260,7 +261,7 @@ export default function AdminOrderDetailPage() {
               { icon: <Phone size={12} />,  label: "Sender Number", val: pmt.senderNumber  ?? "—" },
               { icon: <Hash size={12} />,   label: "Transaction ID", val: pmt.transactionId ?? "—" },
               { icon: <Send size={12} />,   label: "Sent to Account",val: pmt.accountUsed   ?? "—" },
-            ].map(({ icon, label, val }) => (
+            ].filter(() => pmt.method !== "Cash on Delivery").map(({ icon, label, val }) => (
               <div key={label} className="flex items-start justify-between pt-3 first:pt-0">
                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0 mt-0.5">
                   {icon} {label}
@@ -308,7 +309,7 @@ export default function AdminOrderDetailPage() {
 
         <div className="space-y-2">
           {order.items?.map((item, i) => (
-            <div key={i} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 transition-colors">
+            <div key={i} className="flex items-start md:items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 transition-colors">
               {item.image ? (
                 <div className="w-12 h-12 bg-gray-100 rounded-xl shrink-0 overflow-hidden border border-gray-100">
                   <img src={item.image} alt={item.name} className="w-full h-full object-contain p-1.5" />

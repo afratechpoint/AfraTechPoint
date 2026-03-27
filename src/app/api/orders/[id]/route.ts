@@ -30,6 +30,9 @@ export async function PATCH(
 
     // ── Send Email Notifications ─────────────────────────────────────
     try {
+      const settings = await storage.getSettings();
+      const logoUrl = settings?.logoUrl;
+      const shopUrl = settings?.shopUrl;
       const promises: Promise<any>[] = [];
 
 
@@ -42,7 +45,9 @@ export async function PATCH(
           props: {
             orderId: newOrder.id,
             status: newOrder.orderStatus,
-            trackingInfo: body.trackingNumber || newOrder.trackingNumber
+            trackingInfo: body.trackingNumber || newOrder.trackingNumber,
+            logoUrl,
+            shopUrl
           }
         }));
       }
@@ -55,7 +60,9 @@ export async function PATCH(
           template: PaymentConfirmed,
           props: {
             orderId: newOrder.id,
-            customerName: newOrder.shippingAddress?.fullName || 'Valued Customer'
+            customerName: newOrder.shippingAddress?.fullName || 'Valued Customer',
+            logoUrl,
+            shopUrl
           }
         }));
       }

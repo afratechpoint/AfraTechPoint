@@ -36,8 +36,7 @@ interface Order {
 }
 
 function AccountContent() {
-  const { openCart } = useUI();
-  const { user, loading, logout } = useAuth();
+    const { user, loading, logout } = useAuth();
   const router   = useRouter();
   const searchParams = useSearchParams();
   const settings = useSettings();
@@ -140,7 +139,7 @@ function AccountContent() {
   return (
     <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa]">
       <div className="w-full max-w-[1440px] mx-auto flex flex-col relative px-4 md:px-8">
-        <Navbar searchEnabled={false} onOpenCart={openCart} />
+        <Navbar searchEnabled={false} />
 
         <main className="py-6 md:py-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

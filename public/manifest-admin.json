@@ -1,0 +1,28 @@
+{
+  "name": "Afra Admin",
+  "short_name": "ATP Admin",
+  "description": "Admin panel for managing Afra Tech Point store.",
+  "start_url": "/admin",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "scope": "/admin",
+  "icons": [
+    {
+      "src": "/icons/admin-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/admin-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "en",
+  "dir": "ltr"
+}

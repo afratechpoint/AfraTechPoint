@@ -35,8 +35,7 @@ const FAQS = [
 ];
 
 export default function PremiumContactPage() {
-  const { openCart } = useUI();
-  const settings = useSettings();
+    const settings = useSettings();
   const [loading, setLoading] = useState(false);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [success, setSuccess] = useState(false);
@@ -78,7 +77,7 @@ export default function PremiumContactPage() {
   return (
     <div className="min-h-screen bg-[#fafafa] selection:bg-black selection:text-white flex flex-col">
       <div className="w-full max-w-[1440px] mx-auto flex flex-col relative px-4 md:px-8 mb-8">
-        <Navbar searchEnabled={false} onOpenCart={openCart} />
+        <Navbar searchEnabled={false} />
       </div>
 
       {/* ── MAIN CONTENT LAYER ── */}

@@ -1,4 +1,6 @@
 "use client";
+// app/checkout/success/page.tsx
+// Order success page — fetches order from /api/orders/[id] (JSON DB).
 
 import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";

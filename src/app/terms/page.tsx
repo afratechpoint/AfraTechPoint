@@ -6,13 +6,11 @@ import { Shield, Book, Bookmark, CreditCard, UserCheck, HelpCircle } from "lucid
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import CartSidebar from "@/components/CartSidebar";
 
 import { useUI } from "@/lib/ui";
 
 export default function TermsPage() {
-  const { openCart } = useUI();
-
+  
   const sections = [
     {
       id: "intro",
@@ -57,7 +55,7 @@ export default function TermsPage() {
       <div className="w-full max-w-[1440px] mx-auto flex flex-col relative px-4 md:px-8">
         <Navbar 
           searchEnabled={false} 
-          onOpenCart={openCart} 
+          
         />
 
         <main className="py-20 max-w-4xl mx-auto">

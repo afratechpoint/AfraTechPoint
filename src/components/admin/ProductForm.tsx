@@ -126,7 +126,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
       </div>
 
       <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-        <form onSubmit={handleSubmit} className="p-8 space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 md:p-8 space-y-6">
           <div className="space-y-1.5">
             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Product Name</label>
             <input
@@ -189,7 +189,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
               <ImageIcon size={12} /> Product Images
             </label>
             
-            <div className="flex bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden h-32">
+            <div className="flex flex-col md:flex-row bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden h-auto md:h-32">
               {/* Main image — left fixed panel */}
               <div 
                 onClick={() => {
@@ -197,7 +197,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                   setIsMediaPickerOpen(true);
                 }}
                 className={cn(
-                  "relative w-32 shrink-0 bg-white border-r border-gray-100 group cursor-pointer hover:bg-gray-50 transition-all flex flex-col items-center justify-center gap-1",
+                  "relative w-full md:w-32 h-32 md:h-full shrink-0 bg-white border-b md:border-b-0 md:border-r border-gray-100 group cursor-pointer hover:bg-gray-50 transition-all flex flex-col items-center justify-center gap-1",
                 )}
               >
                 {image ? (
@@ -298,33 +298,36 @@ export default function ProductForm({ initialData }: ProductFormProps) {
             {specs.length > 0 ? (
               <div className="space-y-2">
                 {specs.map((s, i) => (
-                  <div key={i} className="flex gap-2 items-center bg-gray-50 p-2.5 rounded-xl border border-gray-100">
-                    <input 
-                      placeholder="Type (e.g. Warranty)"
-                      value={s.label}
-                      onChange={(e) => {
-                         const newSpecs = [...specs];
-                         newSpecs[i].label = e.target.value;
-                         setSpecs(newSpecs);
-                      }}
-                      className="flex-[1] min-w-0 h-10 px-3 rounded-lg border-none ring-1 ring-gray-200 focus:ring-2 focus:ring-black outline-none transition-all text-xs font-bold"
-                    />
-                    <input 
-                      placeholder="Value (e.g. 2 Years)"
-                      value={s.value}
-                      onChange={(e) => {
-                         const newSpecs = [...specs];
-                         newSpecs[i].value = e.target.value;
-                         setSpecs(newSpecs);
-                      }}
-                      className="flex-[2] min-w-0 h-10 px-3 rounded-lg border-none ring-1 ring-gray-200 focus:ring-2 focus:ring-black outline-none transition-all text-xs font-medium"
-                    />
+                  <div key={i} className="flex flex-col md:flex-row gap-2 items-center bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                    <div className="w-full flex gap-2">
+                      <input 
+                        placeholder="Type (e.g. Warranty)"
+                        value={s.label}
+                        onChange={(e) => {
+                           const newSpecs = [...specs];
+                           newSpecs[i].label = e.target.value;
+                           setSpecs(newSpecs);
+                        }}
+                        className="flex-[1] min-w-0 h-10 px-3 rounded-lg border-none ring-1 ring-gray-200 focus:ring-2 focus:ring-black outline-none transition-all text-xs font-bold bg-white"
+                      />
+                      <input 
+                        placeholder="Value (e.g. 2 Years)"
+                        value={s.value}
+                        onChange={(e) => {
+                           const newSpecs = [...specs];
+                           newSpecs[i].value = e.target.value;
+                           setSpecs(newSpecs);
+                        }}
+                        className="flex-[2] min-w-0 h-10 px-3 rounded-lg border-none ring-1 ring-gray-200 focus:ring-2 focus:ring-black outline-none transition-all text-xs font-medium bg-white"
+                      />
+                    </div>
                     <button 
                       type="button"
                       onClick={() => setSpecs(specs.filter((_, idx) => idx !== i))}
-                      className="w-10 h-10 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all shrink-0"
+                      className="w-full md:w-10 h-10 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all shrink-0 bg-white md:bg-transparent border md:border-none border-gray-100"
                     >
                       <Trash2 size={16} />
+                      <span className="md:hidden text-xs font-bold ml-2">Remove Row</span>
                     </button>
                   </div>
                 ))}
@@ -492,7 +495,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
             </div>
           </div>
           
-          <div className="pt-6 border-t border-gray-50 flex gap-4">
+          <div className="pt-6 border-t border-gray-50 flex flex-col md:flex-row gap-4">
             <Link 
               href="/admin/products"
               className="flex-1 h-12 rounded-xl font-bold text-gray-500 hover:text-black bg-gray-50 hover:bg-gray-100 transition-all flex items-center justify-center"

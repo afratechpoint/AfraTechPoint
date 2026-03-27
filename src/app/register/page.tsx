@@ -81,7 +81,7 @@ export default function RegisterPage() {
         {/* Logo */}
         <div className="relative z-10">
           <Link href="/">
-            <img src="/logo.png" alt="Afra Tech Point" className="h-10 w-auto object-contain brightness-0 invert" />
+            <img src="/logo.png" alt="Afra Tech Point" className="h-12 w-auto object-contain brightness-0 invert" />
           </Link>
         </div>
 
@@ -121,8 +121,8 @@ export default function RegisterPage() {
       {/* ── Right panel (form) ────────────────────────────────────── */}
       <div className="flex-1 flex flex-col justify-center items-center p-6 md:p-12 bg-white overflow-y-auto">
         {/* Mobile logo */}
-        <div className="lg:hidden mb-8">
-          <Link href="/"><img src="/logo.png" alt="Afra Tech Point" className="h-8 w-auto object-contain" /></Link>
+        <div className="lg:hidden mb-12">
+          <Link href="/"><img src="/logo.png" alt="Afra Tech Point" className="h-16 w-auto object-contain" /></Link>
         </div>
 
         <motion.div

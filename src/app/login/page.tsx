@@ -93,7 +93,7 @@ export default function LoginPage() {
         <div className="absolute bottom-1/4 right-1/4 w-56 h-56 bg-white/5 rounded-full blur-2xl" />
         <div className="relative z-10">
           <Link href="/">
-            <img src="/logo.png" alt="Afra Tech Point" className="h-10 w-auto object-contain brightness-0 invert" />
+            <img src="/logo.png" alt="Afra Tech Point" className="h-12 w-auto object-contain brightness-0 invert" />
           </Link>
         </div>
         <div className="relative z-10 space-y-6">
@@ -119,8 +119,8 @@ export default function LoginPage() {
       </div>
 
       <div className="flex-1 flex flex-col justify-center items-center p-6 md:p-12 bg-white">
-        <div className="lg:hidden mb-8">
-          <Link href="/"><img src="/logo.png" alt="Afra Tech Point" className="h-8 w-auto object-contain" /></Link>
+        <div className="lg:hidden mb-12">
+          <Link href="/"><img src="/logo.png" alt="Afra Tech Point" className="h-16 w-auto object-contain" /></Link>
         </div>
 
         <motion.div

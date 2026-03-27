@@ -37,7 +37,7 @@ export default function Footer() {
   const settings = useSettings();
 
   return (
-    <footer className="w-full bg-gray-50 border-t border-gray-100 mt-20">
+    <footer className="w-full bg-gray-50 border-t border-gray-100 mt-20 pb-24 md:pb-0">
       <div className="max-w-[1440px] mx-auto px-6 md:px-12">
 
         {/* ── Trust bar ───────────────────────────────────────────── */}

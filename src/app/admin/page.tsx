@@ -73,17 +73,17 @@ export default function AdminDashboard() {
             ) : (
               <div className="space-y-2">
                 {recentOrders.map((order, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
+                  <div key={i} className="flex flex-col md:flex-row md:items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100 gap-3 md:gap-0">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
+                      <div className="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
                         <ShoppingCart size={14} />
                       </div>
-                      <div>
-                        <p className="font-bold text-sm text-gray-900">{order.customer?.name}</p>
+                      <div className="min-w-0">
+                        <p className="font-bold text-sm text-gray-900 truncate">{order.customer?.name}</p>
                         <p className="text-[10px] text-gray-400 font-medium">Order #{order.id.slice(0, 8)}</p>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="flex md:flex-col items-center md:items-end justify-between md:justify-start gap-2">
                       <p className="font-bold text-sm text-gray-900">{settings?.currencySymbol || '$'}{order.total?.toFixed(2)}</p>
                       <p className="text-[10px] text-orange-500 font-bold uppercase">{order.status}</p>
                     </div>

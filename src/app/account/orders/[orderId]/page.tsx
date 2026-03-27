@@ -28,6 +28,7 @@ interface Order {
 
 const PMT_BADGE: Record<string, string> = {
   pending:   "bg-amber-50 text-amber-600 border-amber-200",
+  pending_cod: "bg-blue-50 text-blue-600 border-blue-200",
   confirmed: "bg-green-50 text-green-600 border-green-200",
   failed:    "bg-red-50 text-red-500 border-red-200",
 };
@@ -106,8 +107,11 @@ export default function UserOrderDetailPage() {
         <div className="grid grid-cols-2 gap-3">
           {[
             { label: "Payment", badge: <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border", PMT_BADGE[payStatus] ?? "bg-gray-50 text-gray-500 border-gray-200")}>
-              {payStatus === "pending" && <Clock size={9} />}{payStatus === "confirmed" && <CheckCircle2 size={9} />}{payStatus === "failed" && <XCircle size={9} />}
-              {payStatus}
+              {(payStatus === "pending") && <Clock size={9} />}
+              {payStatus === "pending_cod" && <Package size={9} />}
+              {payStatus === "confirmed" && <CheckCircle2 size={9} />}
+              {payStatus === "failed" && <XCircle size={9} />}
+              {payStatus === "pending_cod" ? "Cash on Delivery" : payStatus}
             </span> },
             { label: "Order", badge: <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border", ORD_BADGE[ordStatus] ?? "bg-gray-50 text-gray-500 border-gray-200")}>
               <Package size={9} />{ordStatus.charAt(0).toUpperCase() + ordStatus.slice(1)}
@@ -120,7 +124,7 @@ export default function UserOrderDetailPage() {
           ))}
         </div>
 
-        {/* Pending banner */}
+        {/* Pending banner (Digital only) */}
         {payStatus === "pending" && (
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
             <Clock size={16} className="text-amber-600 shrink-0 mt-0.5" />
@@ -139,7 +143,7 @@ export default function UserOrderDetailPage() {
               { label: "Method", val: pmt.method ?? "—" },
               { label: "Sender", val: pmt.senderNumber ?? "—" },
               { label: "TrxID",  val: pmt.transactionId ?? "—" },
-            ].map(({ label, val }) => (
+            ].filter(f => pmt.method !== "Cash on Delivery" || f.label === "Method").map(({ label, val }) => (
               <div key={label} className="bg-gray-50 rounded-xl p-3">
                 <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">{label}</p>
                 <p className="text-xs font-bold text-gray-900 font-mono break-all">{val}</p>

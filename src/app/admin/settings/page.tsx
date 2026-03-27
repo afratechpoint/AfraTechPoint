@@ -71,7 +71,7 @@ function ListEditor({ title, description, icon: Icon, items, setItems, isSocial 
         {items.length === 0 ? (
           <p className="text-center text-xs text-gray-400 font-medium italic p-4">No items configured yet.</p>
         ) : items.map((item: any) => (
-          <div key={item.id} className="flex gap-4 items-start">
+          <div key={item.id} className="flex flex-col md:flex-row gap-4 items-start bg-white md:bg-transparent p-4 md:p-0 rounded-2xl md:rounded-none border border-gray-100 md:border-none">
             <div className="flex-1 space-y-1.5">
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">{isSocial ? 'Platform Name' : 'Display Label'}</label>
               <input 
@@ -192,24 +192,26 @@ function NavigationEditor({ title, description, icon: Icon, items, setItems, pre
         {items.length === 0 ? (
           <p className="text-center text-xs text-gray-400 font-medium italic p-4">No items configured yet.</p>
         ) : items.map((item: any, index: number) => (
-          <div key={item.id} className="flex gap-4 items-end bg-white p-4 rounded-2xl border border-gray-100 shadow-sm group animate-in slide-in-from-right-2 duration-300">
+          <div key={item.id} className="flex flex-col md:flex-row gap-4 items-center md:items-end bg-white p-4 rounded-2xl border border-gray-100 shadow-sm group animate-in slide-in-from-right-2 duration-300">
             {/* Reorder controls */}
-            <div className="flex flex-col gap-1 pr-2 border-r border-gray-50">
+            <div className="flex md:flex-col gap-1 pr-2 border-b md:border-b-0 md:border-r border-gray-50 pb-2 md:pb-0 w-full md:w-auto justify-center">
                <button 
                 type="button"
                 onClick={() => moveItem(index, 'up')}
                 disabled={index === 0}
-                className="p-1 hover:bg-gray-100 rounded-md disabled:opacity-30 transition-colors text-gray-400 hover:text-black"
+                className="p-1 hover:bg-gray-100 rounded-md disabled:opacity-30 transition-colors text-gray-400 hover:text-black flex items-center justify-center font-bold"
                >
                  <ChevronUp size={14} />
+                 <span className="md:hidden text-[10px] ml-1">Move Up</span>
                </button>
                <button 
                 type="button"
                 onClick={() => moveItem(index, 'down')}
                 disabled={index === items.length - 1}
-                className="p-1 hover:bg-gray-100 rounded-md disabled:opacity-30 transition-colors text-gray-400 hover:text-black"
+                className="p-1 hover:bg-gray-100 rounded-md disabled:opacity-30 transition-colors text-gray-400 hover:text-black flex items-center justify-center font-bold"
                >
                  <ChevronDown size={14} />
+                 <span className="md:hidden text-[10px] ml-1">Move Down</span>
                </button>
             </div>
             
@@ -332,24 +334,26 @@ function SocialMediaEditor({ title, description, icon: Icon, items, setItems, ic
         {items.length === 0 ? (
           <p className="text-center text-xs text-gray-400 font-medium italic p-4">No social links configured yet.</p>
         ) : items.map((item: any, index: number) => (
-          <div key={item.id} className="flex gap-4 items-end bg-white p-4 rounded-2xl border border-gray-100 shadow-sm group animate-in slide-in-from-right-2 duration-300">
+          <div key={item.id} className="flex flex-col md:flex-row gap-4 md:items-end bg-white p-4 rounded-2xl border border-gray-100 shadow-sm group animate-in slide-in-from-right-2 duration-300">
             {/* Reorder controls */}
-            <div className="flex flex-col gap-1 pr-2 border-r border-gray-50">
+            <div className="flex md:flex-col gap-1 pr-2 border-b md:border-b-0 md:border-r border-gray-50 pb-2 md:pb-0 w-full md:w-auto justify-center">
                <button 
                 type="button"
                 onClick={() => moveItem(index, 'up')}
                 disabled={index === 0}
-                className="p-1 hover:bg-gray-100 rounded-md disabled:opacity-30 transition-colors text-gray-400 hover:text-black"
+                className="p-1 hover:bg-gray-100 rounded-md disabled:opacity-30 transition-colors text-gray-400 hover:text-black flex items-center justify-center"
                >
                  <ChevronUp size={14} />
+                 <span className="md:hidden text-[10px] ml-1">Move Up</span>
                </button>
                <button 
                 type="button"
                 onClick={() => moveItem(index, 'down')}
                 disabled={index === items.length - 1}
-                className="p-1 hover:bg-gray-100 rounded-md disabled:opacity-30 transition-colors text-gray-400 hover:text-black"
+                className="p-1 hover:bg-gray-100 rounded-md disabled:opacity-30 transition-colors text-gray-400 hover:text-black flex items-center justify-center"
                >
                  <ChevronDown size={14} />
+                 <span className="md:hidden text-[10px] ml-1">Move Down</span>
                </button>
             </div>
             
@@ -579,10 +583,9 @@ export default function AdminSettings() {
             <div className="p-6 space-y-6 min-h-[400px]">
               {/* Store Name + Logo row */}
               <input type="hidden" name="logoUrl" value={logoUrl} />
-              <div className="flex items-start gap-6">
+              <div className="flex flex-col-reverse md:flex-row items-center md:items-start gap-8">
                  {/* Left side: Inputs */}
                  <div className="flex-1 space-y-6">
-                   {/* Store Name */}
                    <div className="space-y-1.5">
                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Store Name</label>
                      <input
@@ -592,7 +595,6 @@ export default function AdminSettings() {
                      />
                    </div>
 
-                   {/* Currency & Color row */}
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                      <div className="space-y-1.5">
                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Currency Symbol</label>
@@ -608,16 +610,16 @@ export default function AdminSettings() {
                          ))}
                        </select>
                      </div>
-                     <div className="space-y-1.5">
+                     <div className="space-y-2">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Theme Palette</label>
-                        <div className="grid grid-cols-5 gap-3 h-12">
+                        <div className="flex flex-wrap gap-3">
                           {Object.values(THEMES).map((t) => (
                             <button
                               key={t.id}
                               type="button"
                               onClick={() => setThemeId(t.id as any)}
                               className={cn(
-                                "relative h-full rounded-xl border-2 transition-all p-0.5",
+                                "relative w-14 h-12 rounded-xl border-2 transition-all p-0.5 shrink-0",
                                 themeId === t.id ? "border-black scale-105 shadow-sm" : "border-transparent hover:scale-105"
                               )}
                               title={t.name}
@@ -627,15 +629,15 @@ export default function AdminSettings() {
                                 <div style={{ backgroundColor: t.hover }} className="flex-1 w-full" />
                               </div>
                               {themeId === t.id && (
-                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-black text-white rounded-full flex items-center justify-center border-2 border-white">
-                                  <Check size={8} strokeWidth={4} />
+                                <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-black text-white rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                                  <Check size={10} strokeWidth={4} />
                                 </div>
                               )}
                             </button>
                           ))}
                         </div>
                       </div>
-                  </div>
+                   </div>
                  </div>
 
                  <div className="space-y-1.5 shrink-0">
@@ -653,14 +655,12 @@ export default function AdminSettings() {
                              <ImageIcon size={20} />
                              <span className="text-[9px] font-bold uppercase tracking-widest">Set Logo</span>
                            </div>}
-                       {/* Hover overlay */}
                        <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl">
                          <ImageIcon size={16} className="text-white" />
                          <span className="text-[9px] font-bold text-white uppercase tracking-widest">Select New</span>
                        </div>
                      </button>
 
-                     {/* Edit/Crop Button */}
                      {logoUrl && (
                        <button
                          type="button"
@@ -677,56 +677,161 @@ export default function AdminSettings() {
                      )}
                    </div>
                  </div>
-               </div>                  
-                <div className="space-y-1.5 md:col-span-2">
-                  <div className="flex items-center justify-between ml-1 mb-1.5">
-                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Top Announcement Bar</label>
-                     <label className="flex items-center gap-2 cursor-pointer">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-600">Active</span>
-                        <input 
-                           type="checkbox" 
-                           name="announcementActive" 
-                           defaultChecked={settings?.announcementActive}
-                           className="w-4 h-4 rounded text-black bg-gray-100 border-none focus:ring-black focus:ring-offset-0" 
-                        />
-                     </label>
-                  </div>
-                  <input 
-                    name="announcementText" 
-                    defaultValue={settings?.announcementText || "Free shipping on all orders over $50! Shop now."} 
-                    placeholder="e.g. Big Winter Sale up to 50% Off!"
-                    className="w-full h-12 px-4 rounded-xl bg-gray-50 border-none ring-1 ring-gray-100 focus:ring-2 focus:ring-black outline-none transition-all text-sm font-medium" 
-                  />
-                </div>
+              </div>
 
-                {/* ── Contact Info Block ── */}
-                <div className="md:col-span-2 pt-6 border-t border-gray-100 mt-6 space-y-4">
+              <div className="space-y-1.5 md:col-span-2">
+                <div className="flex items-center justify-between ml-1 mb-1.5">
+                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Top Announcement Bar</label>
+                   <label className="flex items-center gap-2 cursor-pointer">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-600">Active</span>
+                      <input 
+                         type="checkbox" 
+                         name="announcementActive" 
+                         defaultChecked={settings?.announcementActive}
+                         className="w-4 h-4 rounded text-black bg-gray-100 border-none focus:ring-black focus:ring-offset-0" 
+                      />
+                   </label>
+                </div>
+                <input 
+                  name="announcementText" 
+                  defaultValue={settings?.announcementText || "Free shipping on all orders over $50! Shop now."} 
+                  placeholder="e.g. Big Winter Sale up to 50% Off!"
+                  className="w-full h-12 px-4 rounded-xl bg-gray-50 border-none ring-1 ring-gray-100 focus:ring-2 focus:ring-black outline-none transition-all text-sm font-medium" 
+                />
+              </div>
+
+              {/* ── Contact Info Block ── */}
+              <div className="md:col-span-2 pt-6 border-t border-gray-100 mt-6 space-y-4">
+                <div>
+                  <h4 className="font-bold text-gray-900">Corporate Identity & Contact</h4>
+                  <p className="text-[10px] font-medium text-gray-500">This data dynamically populates the /contact page and site footer.</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Support Email</label>
+                    <input name="contactEmail" defaultValue={settings?.contactEmail} className="w-full h-12 px-4 rounded-xl bg-gray-50 border-none ring-1 ring-gray-100 focus:ring-2 focus:ring-black outline-none transition-all text-sm font-medium" placeholder="support@domain.com" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Support Phone</label>
+                    <input name="contactPhone" defaultValue={settings?.contactPhone} className="w-full h-12 px-4 rounded-xl bg-gray-50 border-none ring-1 ring-gray-100 focus:ring-2 focus:ring-black outline-none transition-all text-sm font-medium" placeholder="+8801..." />
+                  </div>
+                  <div className="space-y-1.5 md:col-span-2">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Office Address</label>
+                    <textarea name="contactAddress" defaultValue={settings?.contactAddress} className="w-full p-4 rounded-xl bg-gray-50 border-none ring-1 ring-gray-100 focus:ring-2 focus:ring-black outline-none transition-all text-sm font-medium resize-none" rows={2} placeholder="Level 4, Innovation Tower..." />
+                  </div>
+                  <div className="space-y-1.5 md:col-span-2">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Business Hours</label>
+                    <textarea name="businessHours" defaultValue={settings?.businessHours} className="w-full p-4 rounded-xl bg-gray-50 border-none ring-1 ring-gray-100 focus:ring-2 focus:ring-black outline-none transition-all text-sm font-medium resize-none" rows={3} placeholder="Monday - Friday: 9am - 8pm..." />
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Payment Methods Section ── */}
+              <div className="md:col-span-2 pt-10 border-t border-gray-100 mt-6 space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-green-50 text-green-600">
+                    <CreditCard size={16} />
+                  </div>
                   <div>
-                    <h4 className="font-bold text-gray-900">Corporate Identity & Contact</h4>
-                    <p className="text-[10px] font-medium text-gray-500">This data dynamically populates the /contact page and site footer.</p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Support Email</label>
-                      <input name="contactEmail" defaultValue={settings?.contactEmail} className="w-full h-12 px-4 rounded-xl bg-gray-50 border-none ring-1 ring-gray-100 focus:ring-2 focus:ring-black outline-none transition-all text-sm font-medium" placeholder="support@domain.com" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Support Phone</label>
-                      <input name="contactPhone" defaultValue={settings?.contactPhone} className="w-full h-12 px-4 rounded-xl bg-gray-50 border-none ring-1 ring-gray-100 focus:ring-2 focus:ring-black outline-none transition-all text-sm font-medium" placeholder="+8801..." />
-                    </div>
-                    <div className="space-y-1.5 md:col-span-2">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Office Address</label>
-                      <textarea name="contactAddress" defaultValue={settings?.contactAddress} className="w-full p-4 rounded-xl bg-gray-50 border-none ring-1 ring-gray-100 focus:ring-2 focus:ring-black outline-none transition-all text-sm font-medium resize-none" rows={2} placeholder="Level 4, Innovation Tower..." />
-                    </div>
-                    <div className="space-y-1.5 md:col-span-2">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Business Hours</label>
-                      <textarea name="businessHours" defaultValue={settings?.businessHours} className="w-full p-4 rounded-xl bg-gray-50 border-none ring-1 ring-gray-100 focus:ring-2 focus:ring-black outline-none transition-all text-sm font-medium resize-none" rows={3} placeholder="Monday - Friday: 9am - 8pm..." />
-                    </div>
+                    <h3 className="font-bold text-gray-900 text-sm">Payment Methods & Charges</h3>
+                    <p className="text-[10px] text-gray-500 font-medium tracking-tight">Set account numbers and toggle methods for checkout.</p>
                   </div>
                 </div>
 
+                <div className="space-y-4">
+                  {/* Delivery Charge */}
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 p-4 bg-gray-50 border border-gray-100 rounded-2xl">
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="w-8 h-8 bg-black rounded-xl flex items-center justify-center shrink-0">
+                        <Truck size={16} className="text-white" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-xs text-gray-900">Delivery Charge</p>
+                        <p className="text-[9px] text-gray-500">Added to every order. Set 0 for free delivery.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                       <span className="text-xs font-black text-gray-400 ml-2 sm:hidden">Amount:</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={deliveryCharge}
+                        onChange={(e) => setDeliveryCharge(Number(e.target.value))}
+                        className="flex-1 sm:w-32 h-10 px-4 rounded-xl bg-white border ring-1 ring-gray-200 focus:ring-2 focus:ring-black outline-none text-sm font-bold font-mono text-right"
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+
+                  {paymentMethods.map((method) => (
+                    <div key={method.id} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-3 bg-white border border-gray-100 rounded-2xl shadow-sm">
+                      {/* Label + Input Row (Mobile & Desktop) */}
+                      <div className="flex items-center gap-2 flex-1">
+                        <div className={`w-20 shrink-0 px-2 py-2 rounded-xl text-[10px] font-black text-center border ${
+                          method.name === "bKash"  ? "bg-pink-50 border-pink-200 text-pink-700" :
+                          method.name === "Nagad"  ? "bg-orange-50 border-orange-200 text-orange-700" :
+                          "bg-purple-50 border-purple-200 text-purple-700"
+                        }`}>
+                          {method.name}
+                        </div>
+                        <input
+                          type="text"
+                          value={method.accountNumber}
+                          onChange={(e) => setPaymentMethods(prev =>
+                            prev.map(m => m.id === method.id ? { ...m, accountNumber: e.target.value } : m)
+                          )}
+                          placeholder={`${method.name} Number`}
+                          className="flex-1 h-10 px-4 rounded-xl bg-gray-50/50 border-none ring-1 ring-gray-100 focus:ring-2 focus:ring-black outline-none transition-all text-sm font-medium font-mono"
+                        />
+                      </div>
+
+                      {/* Toggle Button - Mobile Row 2 / Desktop End */}
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethods(prev =>
+                          prev.map(m => m.id === method.id ? { ...m, enabled: !m.enabled } : m)
+                        )}
+                        className={cn(
+                          "h-10 px-4 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-2",
+                          method.enabled 
+                            ? "bg-green-50 text-green-600 border-green-200 hover:bg-green-100" 
+                            : "bg-gray-50 text-gray-400 border-gray-200 hover:bg-gray-100",
+                          "w-full sm:w-auto"
+                        )}
+                      >
+                        {method.enabled ? <><ToggleRight size={16} /> Active</> : <><ToggleLeft size={16} /> Disabled</>}
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* Cash on Delivery */}
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-4 bg-green-50 border border-green-100 rounded-2xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-green-100 rounded-xl flex items-center justify-center">
+                        <Banknote size={16} className="text-green-700" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-xs text-gray-900">Cash on Delivery</p>
+                        <p className="text-[9px] text-gray-500">Allow customers to pay in cash upon arrival</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCodEnabled(prev => !prev)}
+                      className={`flex items-center justify-center gap-2 px-6 h-10 rounded-xl text-xs font-bold border transition-all ${
+                        codEnabled
+                          ? "bg-green-600 text-white border-green-600 shadow-md shadow-green-200"
+                          : "bg-white text-gray-400 border-gray-200"
+                      }`}
+                    >
+                      {codEnabled ? <><ToggleRight size={16} /> Enabled</> : <><ToggleLeft size={16} /> Disabled</>}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
+          </div>
         )}
 
         {/* Header Settings */}
@@ -798,112 +903,6 @@ export default function AdminSettings() {
             setItems={setSocialLinks} 
           />
         )}
-        
-        {/* ── Payment Methods Section (always visible) ─────────── */}
-        <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <div className="p-6 border-b border-gray-50 bg-gray-50/30 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-green-50 text-green-600">
-              <CreditCard size={16} />
-            </div>
-            <div>
-              <h3 className="font-bold text-gray-900">Payment Methods</h3>
-              <p className="text-[10px] text-gray-500 font-medium">Set account numbers, delivery charge, and toggle methods on/off for checkout.</p>
-            </div>
-          </div>
-          <div className="p-6 space-y-4">
-
-            {/* Delivery Charge */}
-            <div className="flex items-center gap-4 p-4 bg-gray-50 border border-gray-100 rounded-2xl">
-              <div className="w-8 h-8 bg-black rounded-xl flex items-center justify-center shrink-0">
-                <Truck size={16} className="text-white" />
-              </div>
-              <div className="flex-1">
-                <p className="font-bold text-sm text-gray-900">Delivery Charge</p>
-                <p className="text-[10px] text-gray-500">Added to every order at checkout. Set 0 for free delivery.</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={deliveryCharge}
-                  onChange={(e) => setDeliveryCharge(Number(e.target.value))}
-                  className="w-32 h-10 px-4 rounded-xl bg-white border ring-1 ring-gray-200 focus:ring-2 focus:ring-black outline-none text-sm font-bold font-mono text-right"
-                  placeholder="0"
-                />
-              </div>
-            </div>
-
-            {paymentMethods.map((method) => (
-              <div key={method.id} className="flex items-center gap-4">
-                {/* Method name badge */}
-                <div className={`w-24 shrink-0 px-3 py-2 rounded-xl text-xs font-black text-center border ${
-                  method.name === "bKash"  ? "bg-pink-50 border-pink-200 text-pink-700" :
-                  method.name === "Nagad"  ? "bg-orange-50 border-orange-200 text-orange-700" :
-                  "bg-purple-50 border-purple-200 text-purple-700"
-                }`}>
-                  {method.name}
-                </div>
-                {/* Account number */}
-                <input
-                  type="text"
-                  value={method.accountNumber}
-                  onChange={(e) => setPaymentMethods(prev =>
-                    prev.map(m => m.id === method.id ? { ...m, accountNumber: e.target.value } : m)
-                  )}
-                  placeholder="01XXXXXXXXX"
-                  className="flex-1 h-10 px-4 rounded-xl bg-gray-50 border-none ring-1 ring-gray-100 focus:ring-2 focus:ring-black outline-none transition-all text-sm font-medium font-mono"
-                />
-                {/* Enabled toggle */}
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethods(prev =>
-                    prev.map(m => m.id === method.id ? { ...m, enabled: !m.enabled } : m)
-                  )}
-                  className={`flex items-center gap-2 px-4 h-10 rounded-xl text-xs font-bold border transition-all ${
-                    method.enabled
-                      ? "bg-green-50 text-green-600 border-green-200 hover:bg-green-100"
-                      : "bg-gray-50 text-gray-400 border-gray-200 hover:bg-gray-100"
-                  }`}
-                >
-                  {method.enabled
-                    ? <><ToggleRight size={16} /> Active</>
-                    : <><ToggleLeft size={16} /> Off</>
-                  }
-                </button>
-              </div>
-            ))}
-          </div>
-
-          {/* Cash on Delivery Toggle */}
-          <div className="px-6 pb-6">
-            <div className="flex items-center justify-between p-4 bg-green-50 border border-green-100 rounded-2xl">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-green-100 rounded-xl flex items-center justify-center">
-                  <Banknote size={16} className="text-green-700" />
-                </div>
-                <div>
-                  <p className="font-bold text-sm text-gray-900">Cash on Delivery</p>
-                  <p className="text-[10px] text-gray-500">Allow customers to pay in cash when order arrives</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setCodEnabled(prev => !prev)}
-                className={`flex items-center gap-2 px-4 h-10 rounded-xl text-xs font-bold border transition-all ${
-                  codEnabled
-                    ? "bg-green-100 text-green-700 border-green-200 hover:bg-green-200"
-                    : "bg-gray-50 text-gray-400 border-gray-200 hover:bg-gray-100"
-                }`}
-              >
-                {codEnabled
-                  ? <><ToggleRight size={16} /> Enabled</>
-                  : <><ToggleLeft size={16} /> Disabled</>
-                }
-              </button>
-            </div>
-          </div>
-        </div>
 
         {/* Global Save Button - visible regardless of tab */}
         <div className="flex justify-end pt-4 pb-20">

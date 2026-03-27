@@ -242,7 +242,8 @@ export default function AdminOrdersPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-visible">
+      {/* Desktop Table View */}
+      <div className="hidden md:block bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-visible">
         <table className="w-full text-left">
           <thead>
             <tr className="bg-gray-50/50 border-b border-gray-100">
@@ -338,6 +339,98 @@ export default function AdminOrdersPage() {
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-4">
+        {loading ? (
+          <div className="bg-white p-10 rounded-3xl border border-gray-100 flex items-center justify-center">
+            <div className="w-6 h-6 border-4 border-gray-100 border-t-gray-700 rounded-full animate-spin" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="bg-white p-10 rounded-3xl border border-gray-100 text-center text-gray-400 text-sm italic">
+            No orders found.
+          </div>
+        ) : filtered.map((order) => {
+          const payStatus = order.paymentStatus ?? "pending";
+          const ordStatus = order.orderStatus   ?? order.status?.toLowerCase() ?? "pending";
+          const total     = order.totalAmount   ?? order.total ?? 0;
+          const pmtMethod = order.payment?.method ?? order.paymentDetails?.method ?? "—";
+          const custName  = order.shippingAddress?.fullName ?? order.customer?.name  ?? order.userEmail ?? "—";
+          const custPhone = order.shippingAddress?.phone   ?? order.customer?.phone ?? "—";
+          const isUpdating = updating === order.id;
+
+          return (
+            <div key={order.id} className="bg-white rounded-3xl border border-gray-100 p-5 shadow-sm space-y-4">
+              {/* Card Header: Order ID & Date */}
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="font-black text-xs text-gray-900 font-mono">#{order.id.slice(0, 8).toUpperCase()}</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">
+                    {new Date(order.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                  </p>
+                </div>
+                <div className="text-right">
+                   <p className="font-black text-gray-900 text-base">{currency}{Number(total).toFixed(2)}</p>
+                   {pmtMethod === "Cash on Delivery" ? (
+                      <span className="inline-flex items-center gap-1 text-[9px] font-black text-green-700 bg-green-50 border border-green-100 rounded-full px-2 py-0.5 mt-0.5">
+                        <Banknote size={10} /> COD
+                      </span>
+                    ) : (
+                      <p className="text-[10px] text-gray-400">{pmtMethod}</p>
+                    )}
+                </div>
+              </div>
+
+              {/* Customer Info */}
+              <div className="bg-gray-50/50 p-3 rounded-2xl flex items-center justify-between">
+                <div className="min-w-0">
+                  <p className="font-bold text-sm text-gray-900 truncate">{custName}</p>
+                  <p className="text-[10px] text-gray-400 truncate">{custPhone}</p>
+                </div>
+                <Link href={`/admin/orders/${order.id}`} className="shrink-0 w-8 h-8 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-gray-400">
+                   <ChevronRight size={16} />
+                </Link>
+              </div>
+
+              {/* Status Toggles */}
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className="space-y-1.5">
+                  <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Payment</p>
+                  <StatusDropdown
+                    value={payStatus}
+                    options={PMT_OPTIONS}
+                    onSelect={v => handlePaymentStatus(order.id, v)}
+                    disabled={isUpdating}
+                  />
+                </div>
+                <div className="space-y-1.5 text-right">
+                  <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mr-1">Delivery</p>
+                  <StatusDropdown
+                    value={ordStatus}
+                    options={ORD_OPTIONS}
+                    onSelect={v => handleOrderStatus(order.id, v)}
+                    disabled={isUpdating}
+                  />
+                </div>
+              </div>
+
+              {/* Card Footer: Actions */}
+              <div className="flex items-center justify-between pt-3 border-t border-gray-50">
+                <button
+                  onClick={() => handleDelete(order.id)}
+                  disabled={isUpdating}
+                  className="flex items-center gap-1.5 text-[10px] font-bold text-red-500 bg-red-50 px-3 py-1.5 rounded-xl hover:bg-red-100 transition-colors disabled:opacity-50"
+                >
+                  <Trash2 size={12} /> Delete Order
+                </button>
+                <Link href={`/admin/orders/${order.id}`} className="text-[10px] font-bold text-gray-900 bg-gray-100 px-4 py-1.5 rounded-xl">
+                  Full Details
+                </Link>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Delete Confirmation Modal */}

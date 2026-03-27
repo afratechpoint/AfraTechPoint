@@ -6,7 +6,6 @@ import { Search, ShoppingBag, ArrowUpRight, Github, ArrowLeft, ArrowRight } from
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import ProductGrid from "@/components/ProductGrid";
-import CartSidebar from "@/components/CartSidebar";
 import Link from "next/link";
 import { useCart } from "@/lib/cart";
 import Footer from "@/components/Footer";
@@ -15,8 +14,7 @@ import { useUI } from "@/lib/ui";
 import { useSettings } from "@/components/SettingsProvider";
 
 export default function Home() {
-  const { openCart } = useUI();
-  const [searchQuery, setSearchQuery] = useState(""); 
+    const [searchQuery, setSearchQuery] = useState(""); 
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const settings = useSettings();
@@ -46,7 +44,7 @@ export default function Home() {
 
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-white">
+    <div className="flex flex-col w-full">
       
       {/* Constraints for centered content */}
       <div className="w-full max-w-[1440px] mx-auto flex flex-col relative px-4 md:px-8">
@@ -56,13 +54,13 @@ export default function Home() {
           searchEnabled={true} 
           searchQuery={searchQuery} 
           setSearchQuery={setSearchQuery} 
-          onOpenCart={openCart} 
         />
 
         {/* Hero Slider Section */}
+        {/* Hero Slider Section */}
         {slides.length > 0 && (
-          <div className="relative mt-4">
-            <div className="relative h-[320px] sm:h-[400px] md:h-[500px] w-full overflow-hidden rounded-2xl md:rounded-[2.5rem] border border-gray-100 shadow-xl">
+          <div className="relative mt-2">
+            <div className="relative h-[460px] md:h-[500px] w-full overflow-hidden rounded-2xl md:rounded-[2.5rem] border border-gray-100 shadow-xl">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentSlide}
@@ -70,63 +68,62 @@ export default function Home() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -100 }}
                   transition={{ duration: 0.6, ease: "easeInOut" }}
-                  className={cn("absolute inset-0 p-6 md:p-20 flex flex-col justify-center overflow-hidden", slides[currentSlide].color)}
+                  className={cn("absolute inset-0 p-4 md:p-20 flex flex-col justify-center md:justify-center overflow-hidden", slides[currentSlide].color)}
                 >
-                  {/* Text protection overlay on mobile */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/70 to-transparent md:hidden pointer-events-none z-[1]" />
-                  <div className="z-10 relative max-w-md md:max-w-2xl">
-                    <motion.h1 
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 }}
-                      className="text-xl md:text-2xl lg:text-3xl font-bold leading-[1.2] tracking-tight text-gray-900 mb-4 md:mb-6 uppercase"
-                    >
-                      {slides[currentSlide].title}
-                    </motion.h1>
-                    
-                    <motion.div 
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.6 }}
-                      className="flex items-start gap-4"
-                    >
-                       <div className="max-w-[480px]">
-                          <p className="text-xs md:text-sm text-gray-500 leading-relaxed font-medium">
-                            {slides[currentSlide].description}
-                          </p>
-                       </div>
-                    </motion.div>
-                  </div>
-
-                  <div className="absolute top-0 right-0 w-96 h-96 bg-black/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
-                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl" />
-
+                  {/* Text protection overlay on mobile - improved density */}
+                  <div className="absolute inset-0 bg-white/10 md:bg-transparent md:hidden pointer-events-none z-[1]" />
+                   {/* Hero Image First on Mobile */}
                   <motion.div 
-                     initial={{ opacity: 0, scale: 0.8, rotate: 10, y: 40 }}
-                     animate={{ opacity: 1, scale: 1, rotate: 0, y: 0 }}
-                     transition={{ duration: 0.8, delay: 0.3, type: "spring" }}
-                     className="absolute inset-y-0 right-0 w-1/2 flex items-center justify-center md:justify-end md:pr-12 lg:pr-32 pointer-events-none"
+                     initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                     animate={{ opacity: 1, scale: 1, y: 0 }}
+                     transition={{ duration: 0.8, delay: 0.2, type: "spring" }}
+                     className="relative md:absolute md:inset-y-0 md:right-0 w-full md:w-1/2 flex items-center justify-center md:justify-end pr-0 md:pr-12 lg:pr-32 z-0 mt-2 md:mt-0"
                   >
                     {slides[currentSlide].linkUrl ? (
                       <Link href={slides[currentSlide].linkUrl} className="pointer-events-auto block">
                         <img 
                           src={slides[currentSlide].image} 
                           alt="Hero Product" 
-                          className="w-[140px] h-[140px] sm:w-[200px] sm:h-[200px] md:w-[380px] md:h-[380px] object-contain drop-shadow-[0_45px_45px_rgba(0,0,0,0.15)] md:hover:scale-105 transition-transform duration-1000 cursor-pointer"
+                          className="w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] md:w-[380px] md:h-[380px] object-contain drop-shadow-[0_45px_45px_rgba(0,0,0,0.15)] md:hover:scale-105 transition-transform duration-1000 cursor-pointer"
                         />
                       </Link>
                     ) : (
                       <img 
                         src={slides[currentSlide].image} 
                         alt="Hero Product" 
-                        className="w-[140px] h-[140px] sm:w-[200px] sm:h-[200px] md:w-[380px] md:h-[380px] object-contain drop-shadow-[0_45px_45px_rgba(0,0,0,0.15)] md:hover:scale-105 transition-transform duration-1000"
+                        className="w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] md:w-[380px] md:h-[380px] object-contain drop-shadow-[0_45px_45px_rgba(0,0,0,0.15)] md:hover:scale-105 transition-transform duration-1000"
                       />
                     )}
                   </motion.div>
+
+                  {/* Text Content Below on Mobile */}
+                  <div className="z-10 relative w-full md:max-w-2xl px-2 flex flex-col items-center md:items-start text-center md:text-left pb-8 md:pb-0">
+                    <motion.h1 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                      className="text-lg md:text-2xl lg:text-3xl font-black leading-tight tracking-tight text-gray-900 mb-2 md:mb-6 uppercase"
+                    >
+                      {slides[currentSlide].title}
+                    </motion.h1>
+                    
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 }}
+                      className="flex flex-col md:flex-row items-center md:items-start gap-4"
+                    >
+                       <div className="max-w-[480px]">
+                          <p className="text-[10px] md:text-sm text-gray-400 leading-relaxed font-bold line-clamp-2 md:line-clamp-none">
+                            {slides[currentSlide].description}
+                          </p>
+                       </div>
+                    </motion.div>
+                  </div>
                 </motion.div>
               </AnimatePresence>
 
-              <div className="absolute bottom-8 right-8 md:bottom-12 md:right-12 z-20 flex gap-2 md:gap-4">
+              <div className="absolute bottom-4 right-4 md:bottom-12 md:right-12 z-20 flex gap-2 md:gap-4">
                   <button 
                     onClick={prevSlide}
                     className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-white/80 backdrop-blur-md border border-gray-100 flex items-center justify-center hover:bg-black hover:text-white transition-all shadow-lg shadow-black/5"
@@ -167,7 +164,9 @@ export default function Home() {
       </div>
 
       {/* Full Catalog Section */}
-      <ProductGrid />
+      <div className="mt-4 md:mt-16">
+        <ProductGrid />
+      </div>
 
       {/* Footer */}
       <Footer />

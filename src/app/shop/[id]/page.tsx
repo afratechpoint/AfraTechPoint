@@ -17,7 +17,6 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import CartSidebar from "@/components/CartSidebar";
 import { useUI } from "@/lib/ui";
 import { useSettings } from "@/components/SettingsProvider";
 
@@ -31,7 +30,7 @@ import { Product, Variant } from "./types";
 
 export default function ProductDetailPage() {
   const params = useParams();
-  const { openCart, isCartOpen, closeCart } = useUI();
+  const { isCartOpen, closeCart } = useUI();
   const settings = useSettings();
 
   // ── Data state ────────────────────────────────────────────────
@@ -118,7 +117,7 @@ export default function ProductDetailPage() {
   return (
     <div className="flex flex-col w-full min-h-screen bg-white">
       <div className="w-full max-w-[1440px] mx-auto flex flex-col relative px-4 md:px-8">
-        <Navbar searchEnabled={false} onOpenCart={openCart} />
+        <Navbar searchEnabled={false} />
 
         <main className="py-2 md:py-6 lg:py-4">
           {/* Mobile back link */}
@@ -240,7 +239,7 @@ export default function ProductDetailPage() {
       </div>
 
       <Footer />
-      <CartSidebar isOpen={isCartOpen} onClose={closeCart} />
+      
     </div>
   );
 }

@@ -7,12 +7,10 @@ import { ArrowUpRight, Target, ShieldCheck, Zap, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
-import CartSidebar from "@/components/CartSidebar";
 import { useUI } from "@/lib/ui";
 
 export default function AboutPage() {
-  const { openCart } = useUI();
-  return (
+    return (
     <div className="flex flex-col w-full min-h-screen bg-white">
       
       {/* Constraints for centered content */}
@@ -20,7 +18,7 @@ export default function AboutPage() {
         
         <Navbar 
           searchEnabled={false} 
-          onOpenCart={openCart} 
+          
         />
 
         {/* Hero Section */}

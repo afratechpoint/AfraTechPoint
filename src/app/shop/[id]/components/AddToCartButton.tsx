@@ -9,9 +9,9 @@ import React, { useState } from "react";
 import { ShoppingBag, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from "@/lib/cart";
-import { useUI } from "@/lib/ui";
 import { addToCartAction } from "../actions";
 import { Variant } from "../types";
+import { useRouter } from "next/navigation";
 
 interface AddToCartButtonProps {
   productId: string;
@@ -35,7 +35,7 @@ export default function AddToCartButton({
   currencySymbol = "৳",
 }: AddToCartButtonProps) {
   const { addItem } = useCart();
-  const { openCart } = useUI();
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleAddToCart = async () => {
@@ -66,7 +66,7 @@ export default function AddToCartButton({
 
     if (result.success) {
       toast.success(result.message);
-      openCart();
+      router.push("/cart");
     } else {
       toast.error(result.message);
     }
@@ -79,7 +79,7 @@ export default function AddToCartButton({
     }
     // Add to cart first then redirect
     await handleAddToCart();
-    // TODO: redirect to checkout
+    router.push("/checkout");
   };
 
   return (

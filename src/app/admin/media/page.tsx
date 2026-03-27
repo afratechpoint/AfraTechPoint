@@ -131,7 +131,7 @@ export default function AdminMediaPage() {
     <div className="max-w-7xl mx-auto space-y-6">
 
       {/* Header Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
           { label: "Total Files", value: files.length, icon: ImageIcon, color: "bg-blue-50 text-blue-600" },
           { label: "Total Storage", value: formatBytes(totalSize), icon: HardDrive, color: "bg-purple-50 text-purple-600" },
@@ -217,7 +217,7 @@ export default function AdminMediaPage() {
         </button>
       </div>
 
-      <div className="flex gap-6">
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* Gallery Grid */}
         <div className="flex-1">
           {isLoading ? (
@@ -300,9 +300,9 @@ export default function AdminMediaPage() {
               animate={{ opacity: 1, x: 0, width: 260 }}
               exit={{ opacity: 0, x: 20, width: 0 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="shrink-0 overflow-hidden"
+              className="shrink-0 overflow-hidden w-full lg:w-auto"
             >
-              <div className="w-[260px] bg-white rounded-[1.5rem] border border-gray-100 shadow-sm p-5 space-y-4">
+              <div className="w-full lg:w-[260px] bg-white rounded-[1.5rem] border border-gray-100 shadow-sm p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-black text-gray-900">File Details</p>
                   <button onClick={() => setSelected(null)} className="text-gray-300 hover:text-black transition-colors">

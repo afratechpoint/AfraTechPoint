@@ -42,10 +42,16 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: settings.storeName,
     description: settings.shortDescription,
+    manifest: "/manifest.webmanifest",
     icons: {
       icon: settings.logoUrl || "/logo.png",
       shortcut: settings.logoUrl || "/logo.png",
       apple: settings.logoUrl || "/logo.png",
+    },
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: settings.storeName,
     },
   };
 }
@@ -69,8 +75,16 @@ export default async function RootLayout({
   const theme = THEMES[themeId] || THEMES.midnight;
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="bg-[#f9fafb] overscroll-y-none" suppressHydrationWarning>
       <head>
+        <meta name="application-name" content="Afra Tech Point" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Afra Tech" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="theme-color" content="#111111" />
+        <link rel="apple-touch-icon" href="/icons/shop-icon-192.png" />
         <style
           suppressHydrationWarning
           dangerouslySetInnerHTML={{
@@ -85,7 +99,7 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.className} min-h-screen bg-[#f8f9fa] overflow-x-hidden pb-20 md:pb-0`} suppressHydrationWarning>
+      <body className={`${inter.className} min-h-[100dvh] bg-[#f9fafb] overscroll-y-none overflow-x-hidden`} suppressHydrationWarning>
         <AuthProvider>
           <SettingsProvider initialSettings={settings}>
             {settings.announcementActive && settings.announcementText && (

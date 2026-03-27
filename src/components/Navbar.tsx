@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, ShoppingBag, User, LogOut, Settings, ChevronDown } from "lucide-react";
+import { Search, ShoppingBag, Menu, X, User, LogOut, Settings, ChevronDown, LayoutDashboard, ChevronRight, ShoppingCart, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/lib/cart";
 import { useSettings } from "@/components/SettingsProvider";
@@ -14,18 +14,17 @@ interface NavbarProps {
   searchEnabled?: boolean;
   searchQuery?: string;
   setSearchQuery?: (query: string) => void;
-  onOpenCart: () => void;
 }
 
 export default function Navbar({ 
   searchEnabled = false, 
   searchQuery = "", 
-  setSearchQuery, 
-  onOpenCart 
+  setSearchQuery
 }: NavbarProps) {
   const pathname  = usePathname();
   const router    = useRouter();
-  const { items } = useCart();
+  const { items, removeItem } = useCart();
+  const isAuthPage = ['/login', '/register', '/reset-password', '/verify-email'].includes(pathname);
   const settings  = useSettings();
   const { user, loading, isAdmin, logout, displayName, photoURL } = useAuth();
 
@@ -63,24 +62,23 @@ export default function Navbar({
       {/* ── Mobile top bar ── */}
       <div className="flex md:hidden items-center justify-between h-14 px-4">
         <Link href="/" className="shrink-0">
-          <img src={settings.logoUrl || "/logo.png"} alt={settings.storeName} className="h-7 w-auto object-contain" />
+          <img src={settings.logoUrl || "/logo.png"} alt={settings.storeName} className="h-14 w-auto object-contain" />
         </Link>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onOpenCart}
-            className="relative p-2 rounded-xl bg-gray-50 border border-gray-100 active:scale-95 transition-all"
-          >
-            <ShoppingBag size={18} className="text-gray-700" />
-            {cartCount > 0 && (
-              <span
-                style={{ backgroundColor: "var(--primary)", color: "var(--primary-text)" }}
-                className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center rounded-full border-2 border-white text-[9px] font-bold"
-              >
-                {cartCount}
-              </span>
-            )}
-          </button>
-        </div>
+        {!isAuthPage && (
+          <div className="flex items-center gap-2">
+            <Link
+              href="/cart"
+              className="p-2.5 rounded-2xl bg-gray-50 text-gray-900 border border-gray-100 shadow-sm relative active:scale-95 transition-all"
+            >
+              <ShoppingBag size={18} strokeWidth={2.5} />
+              {items.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-black text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white">
+                  {items.length}
+                </span>
+              )}
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Mobile search bar */}
@@ -154,9 +152,9 @@ export default function Navbar({
 
           {/* Cart button */}
           <div className="hidden md:flex items-center gap-3">
-            <button
-              onClick={onOpenCart}
-              className="p-2.5 rounded-full bg-white shadow-sm border border-gray-100 hover:bg-gray-50 transition-all relative group"
+            <Link
+              href="/cart"
+              className="p-2.5 rounded-full bg-white shadow-sm border border-gray-100 hover:bg-gray-50 transition-all relative group block"
             >
               <ShoppingBag size={20} className="text-gray-700 group-hover:text-black" />
               {cartCount > 0 && (
@@ -167,7 +165,7 @@ export default function Navbar({
                   {cartCount}
                 </span>
               )}
-            </button>
+            </Link>
           </div>
 
           {/* ── Auth section ─────────────────────────────────────── */}

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fdfdfd;
+  --background: #f9fafb;
   --foreground: #0a0a0a;
   --accent: #000000;
   --muted: #f4f4f5;
@@ -13,20 +13,21 @@
   --mobile-nav-height: 72px;
 }
 
-body {
-  color: var(--foreground);
+html, body {
+  min-height: 100%;
   background: var(--background);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  /* Prevent overscroll bounce on non-scroll elements */
-  overscroll-behavior: none;
+  overscroll-behavior-y: none;
 }
 
-/* Give mobile pages breathing room above the bottom nav */
+body {
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Give mobile pages breathing room above the bottom nav - REMOVED GLOBAL BODY PADDING TO FIX WHITE GAP */
 @media (max-width: 767px) {
-  body {
-    padding-bottom: calc(var(--mobile-nav-height) + var(--safe-area-bottom));
-  }
+  /* Padding is now handled at the component level (Footer, individual pages) */
 }
 
 @layer utilities {
@@ -96,4 +97,14 @@ body {
   .pt-safe {
     padding-top: var(--safe-area-top);
   }
+}
+
+/* Hide Next.js and Vercel dev indicators for a cleaner look during user testing */
+#vk-indicator, 
+#__next-hot-reload-indicator,
+#nextjs-dev-overlay-container,
+[data-nextjs-toast],
+[data-vercel-indicator],
+[data-nextjs-indicator] {
+  display: none !important;
 }
