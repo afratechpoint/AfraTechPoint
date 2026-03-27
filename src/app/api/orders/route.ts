@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { storage } from '@/lib/storage';
+import { sendEmail } from "@/lib/email/sendEmail";
+import { OrderConfirmation, NewOrderAdminNotification } from "@/emails/renderers/index";
+
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -45,9 +48,6 @@ export async function POST(request: Request) {
     // We use Promise.allSettled to ensure that even if emails fail 
     // (e.g., missing SMTP config or network issues), the order creation proceeds.
     try {
-      const { sendEmail } = await import("@/lib/email/sendEmail");
-      const { OrderConfirmation, NewOrderAdminNotification } = await import("@/emails/renderers/index");
-      
       const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER || "afratechpoint@gmail.com";
 
       await Promise.allSettled([

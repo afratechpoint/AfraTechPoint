@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { storage } from '@/lib/storage';
+import { sendEmail } from "@/lib/email/sendEmail";
+import { OrderStatusUpdate, PaymentConfirmed } from "@/emails/renderers/index";
+
 
 export async function GET(
   _req: Request,
@@ -27,10 +30,8 @@ export async function PATCH(
 
     // ── Send Email Notifications ─────────────────────────────────────
     try {
-      const { sendEmail } = await import("@/lib/email/sendEmail");
-      const { OrderStatusUpdate, PaymentConfirmed } = await import("@/emails/renderers/index");
-
       const promises: Promise<any>[] = [];
+
 
       // 1. Order Status Update
       if (body.orderStatus && body.orderStatus !== oldOrder.orderStatus) {
