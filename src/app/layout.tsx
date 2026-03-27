@@ -12,9 +12,9 @@ const inter = Inter({ subsets: ["latin"] });
 const defaultSettings = {
   storeName: "Afra Tech Point",
   logoUrl: "/logo.png",
-  contactEmail: "info@afratechpoint.com",
-  contactPhone: "+1 (555) 123-4567",
-  contactAddress: "123 Tech Avenue, Innovation District, Silicon Valley, CA 94025",
+  contactEmail: "info@afratechpoint.shop",
+  contactPhone: "+880 1XXXXXXXXX",
+  contactAddress: "Dhaka, Bangladesh",
   shortDescription: "Your premium destination for the latest in cutting-edge electronics and smart home devices.",
   currencySymbol: "৳",
   themeId: "midnight" as ThemeId,

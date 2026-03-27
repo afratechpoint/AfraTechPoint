@@ -168,11 +168,11 @@ export default function PremiumContactPage() {
                   {settings?.contactAddress || "Afra Tech Point\nLevel 4, Innovation Tower\n123 Tech Drive, Gulshan-2\nDhaka 1212, Bangladesh"}
                 </p>
                 <div className="pt-4 border-t border-gray-100 flex flex-col gap-3">
-                  <a href={`mailto:${settings?.contactEmail || "info@afratechpoint.com"}`} className="flex items-center gap-3 hover:text-black transition-colors">
-                    <Mail size={15} /> {settings?.contactEmail || "info@afratechpoint.com"}
+                  <a href={`mailto:${settings?.contactEmail || "info@afratechpoint.shop"}`} className="flex items-center gap-3 hover:text-black transition-colors">
+                    <Mail size={15} /> {settings?.contactEmail || "info@afratechpoint.shop"}
                   </a>
-                  <a href={`tel:${settings?.contactPhone || "+1 (555) 123-4567"}`} className="flex items-center gap-3 hover:text-black transition-colors">
-                    <Phone size={15} /> {settings?.contactPhone || "+1 (555) 123-4567"}
+                  <a href={`tel:${settings?.contactPhone || "+880 1XXXXXXXXX"}`} className="flex items-center gap-3 hover:text-black transition-colors">
+                    <Phone size={15} /> {settings?.contactPhone || "+880 1XXXXXXXXX"}
                   </a>
                 </div>
               </div>

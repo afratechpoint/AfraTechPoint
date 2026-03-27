@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     // (e.g., missing SMTP config or network issues), the order creation proceeds.
     try {
       const settings = await storage.getSettings();
-      const adminEmail = settings?.adminEmail || process.env.ADMIN_EMAIL || process.env.SMTP_USER || "afratechpoint@gmail.com";
+      const adminEmail = settings?.adminEmail || process.env.ADMIN_EMAIL || process.env.SMTP_USER || "info@afratechpoint.shop";
       const customerEmail = body.userEmail || body.email || body.customer?.email;
       
       const logoUrl = settings?.logoUrl;
