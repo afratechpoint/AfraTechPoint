@@ -61,10 +61,13 @@ export async function PATCH(
       }
 
       if (promises.length > 0) {
-        Promise.allSettled(promises).then(results => {
-          results.forEach((res, i) => {
-            if (res.status === 'rejected') console.warn(`Email ${i} failed:`, res.reason);
-          });
+        const results = await Promise.allSettled(promises);
+        results.forEach((res, i) => {
+          if (res.status === 'rejected') {
+            console.error(`Email ${i} failed:`, res.reason);
+          } else {
+            console.log(`Email ${i} sent successfully.`);
+          }
         });
       }
     } catch (emailErr) {
