@@ -5,15 +5,20 @@ import { Body, Container, Head, Html, Img, Link, Preview, Section, Text, Hr } fr
 interface EmailVerificationEmailProps {
   customerName: string;
   verificationLink: string;
+  logoUrl?: string;
+  shopUrl?: string;
 }
 
 const baseUrl = getShopUrl();
 
-// Standalone (no BaseLayout) to avoid Tailwind dependency edge cases in this older template
 export default function EmailVerificationEmail({
   customerName,
   verificationLink,
+  logoUrl,
+  shopUrl
 }: EmailVerificationEmailProps) {
+  const finalShopUrl = shopUrl || getShopUrl();
+  const finalLogoUrl = logoUrl || `${finalShopUrl}/logo.png`;
   return (
     <Html>
       <Head>
@@ -36,7 +41,7 @@ export default function EmailVerificationEmail({
 
             {/* Header */}
             <Section style={{ backgroundColor: "#0ea5e9", padding: "36px 40px", textAlign: "center" }}>
-              <Img src={`${baseUrl}/logo.png`} width="130" alt="Afra Tech Point" style={{ display: "block", margin: "0 auto" }} />
+              <Img src={finalLogoUrl} width="130" alt="Afra Tech Point" style={{ display: "block", margin: "0 auto" }} />
             </Section>
 
             {/* Body */}
@@ -95,7 +100,7 @@ export default function EmailVerificationEmail({
             <Section style={{ padding: "24px 40px", backgroundColor: "#fafafa", textAlign: "center" }}>
               <Text style={{ fontSize: "12px", color: "#aaaaaa", margin: "0", lineHeight: "20px" }}>
                 © {new Date().getFullYear()} Afra Tech Point. All rights reserved.<br />
-                <Link href={baseUrl} style={{ color: "#000000", fontWeight: "700", textDecoration: "none" }}>Visit Afra Tech Point →</Link>
+                <Link href={finalShopUrl} style={{ color: "#000000", fontWeight: "700", textDecoration: "none" }}>Visit Afra Tech Point →</Link>
               </Text>
             </Section>
           </Section>

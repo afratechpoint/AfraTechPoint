@@ -2,20 +2,25 @@ import { Text, Section, Link } from "@react-email/components";
 import * as React from "react";
 import { BaseLayout } from "../components/Layout";
 import { PrimaryButton } from "../components/Button";
+import { getShopUrl } from "../utils";
 
 // ── Auto-Reply ───────────────────────────────────────────────────────
 interface ContactAutoReplyProps {
   name: string;
+  logoUrl?: string;
+  shopUrl?: string;
 }
 
-export function ContactAutoReply({ name }: ContactAutoReplyProps) {
-  const shopUrl = process.env.NEXT_PUBLIC_SHOP_URL || "https://yourdomain.com";
+export function ContactAutoReply({ name, logoUrl, shopUrl: propShop }: ContactAutoReplyProps) {
+  const shopUrl = propShop || getShopUrl();
 
   return (
     <BaseLayout
       previewText="We received your message — we'll be in touch soon!"
       accentColor="#7c3aed"
       accentLabel="Message Received"
+      logoUrl={logoUrl}
+      shopUrl={shopUrl}
     >
       <Section style={{ textAlign: "center", marginBottom: "28px" }}>
         <Text style={{ fontSize: "28px", fontWeight: "900", color: "#000000", margin: "0 0 10px", letterSpacing: "-0.02em" }}>
@@ -51,14 +56,18 @@ interface ContactAdminProps {
   email: string;
   message: string;
   subject?: string;
+  logoUrl?: string;
+  shopUrl?: string;
 }
 
-export function ContactAdminNotification({ name, email, message, subject }: ContactAdminProps) {
+export function ContactAdminNotification({ name, email, message, subject, logoUrl, shopUrl }: ContactAdminProps) {
   return (
     <BaseLayout
       previewText={`New Contact Inquiry from ${name}`}
       accentColor="#7c3aed"
       accentLabel="New Customer Inquiry"
+      logoUrl={logoUrl}
+      shopUrl={shopUrl}
     >
       <Section style={{ textAlign: "center", marginBottom: "28px" }}>
         <Text style={{ fontSize: "26px", fontWeight: "900", color: "#000000", margin: "0 0 10px", letterSpacing: "-0.02em" }}>

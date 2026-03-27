@@ -2,12 +2,15 @@ import { Text, Section } from "@react-email/components";
 import * as React from "react";
 import { BaseLayout } from "../components/Layout";
 import { PrimaryButton } from "../components/Button";
+import { getShopUrl } from "../utils";
 
 interface OrderStatusUpdateProps {
   orderId: string;
   customerName?: string;
   status: string;
   trackingInfo?: string;
+  logoUrl?: string;
+  shopUrl?: string;
 }
 
 const STATUS_CONFIG: Record<string, { color: string; label: string; message: string }> = {
@@ -19,8 +22,8 @@ const STATUS_CONFIG: Record<string, { color: string; label: string; message: str
   default:     { color: "#000000", label: "Updated",      message: "Your order status has been updated." },
 };
 
-export default function OrderStatusUpdate({ orderId, customerName, status, trackingInfo }: OrderStatusUpdateProps) {
-  const shopUrl = process.env.NEXT_PUBLIC_SHOP_URL || "https://yourdomain.com";
+export default function OrderStatusUpdate({ orderId, customerName, status, trackingInfo, logoUrl, shopUrl: propShop }: OrderStatusUpdateProps) {
+  const shopUrl = propShop || getShopUrl();
   const orderUrl = `${shopUrl}/account?tab=orders`;
   const shortId = orderId.slice(0, 8).toUpperCase();
   const cfg = STATUS_CONFIG[status.toLowerCase()] || STATUS_CONFIG.default;
@@ -30,6 +33,8 @@ export default function OrderStatusUpdate({ orderId, customerName, status, track
       previewText={`Order #${shortId} — ${cfg.label}`}
       accentColor={cfg.color}
       accentLabel={`Order Status: ${cfg.label}`}
+      logoUrl={logoUrl}
+      shopUrl={shopUrl}
     >
       {/* Hero */}
       <Section style={{ textAlign: "center", marginBottom: "28px" }}>

@@ -2,21 +2,26 @@ import { Text, Section } from "@react-email/components";
 import * as React from "react";
 import { BaseLayout } from "../components/Layout";
 import { PrimaryButton } from "../components/Button";
+import { getShopUrl } from "../utils";
 
 interface PaymentConfirmedProps {
   orderId: string;
   customerName: string;
   amount?: number;
   currency?: string;
+  logoUrl?: string;
+  shopUrl?: string;
 }
 
 export default function PaymentConfirmed({
   orderId,
   customerName,
   amount,
-  currency = "৳"
+  currency = "৳",
+  logoUrl,
+  shopUrl: propShop
 }: PaymentConfirmedProps) {
-  const shopUrl = process.env.NEXT_PUBLIC_SHOP_URL || "https://yourdomain.com";
+  const shopUrl = propShop || getShopUrl();
   const orderUrl = `${shopUrl}/account?tab=orders`;
   const shortId = orderId.slice(0, 8).toUpperCase();
 
@@ -25,6 +30,8 @@ export default function PaymentConfirmed({
       previewText={`Payment Confirmed — #${shortId}`}
       accentColor="#16a34a"
       accentLabel="Payment Successful"
+      logoUrl={logoUrl}
+      shopUrl={shopUrl}
     >
       {/* Hero */}
       <Section style={{ textAlign: "center", marginBottom: "28px" }}>

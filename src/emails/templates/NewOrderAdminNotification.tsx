@@ -3,6 +3,7 @@ import * as React from "react";
 import { BaseLayout } from "../components/Layout";
 import { OrderSummary } from "../components/OrderSummary";
 import { PrimaryButton } from "../components/Button";
+import { getShopUrl } from "../utils";
 
 interface NewOrderAdminProps {
   orderId: string;
@@ -11,6 +12,8 @@ interface NewOrderAdminProps {
   total: number;
   items: Array<{ name: string; price: number; quantity: number }>;
   shippingAddress?: any;
+  logoUrl?: string;
+  shopUrl?: string;
 }
 
 export default function NewOrderAdminNotification({
@@ -19,10 +22,12 @@ export default function NewOrderAdminNotification({
   customerEmail,
   total,
   items,
-  shippingAddress
+  shippingAddress,
+  logoUrl,
+  shopUrl
 }: NewOrderAdminProps) {
-  const shopUrl = process.env.NEXT_PUBLIC_SHOP_URL || "https://yourdomain.com";
-  const adminUrl = `${shopUrl}/admin/orders/${orderId}`;
+  const finalShopUrl = shopUrl || getShopUrl();
+  const adminUrl = `${finalShopUrl}/admin/orders/${orderId}`;
   const shortId = orderId.slice(0, 8).toUpperCase();
 
   return (
@@ -30,6 +35,8 @@ export default function NewOrderAdminNotification({
       previewText={`New Order #${shortId} — Action Required`}
       accentColor="#dc2626"
       accentLabel="Admin Alert — New Order"
+      logoUrl={logoUrl}
+      shopUrl={shopUrl}
     >
       {/* Hero */}
       <Section style={{ textAlign: "center", marginBottom: "28px" }}>

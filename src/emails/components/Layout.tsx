@@ -7,11 +7,13 @@ interface LayoutProps {
   previewText?: string;
   accentColor?: string;    // e.g. "#000000"
   accentLabel?: string;    // e.g. "ORDER UPDATE"
+  logoUrl?: string;
+  shopUrl?: string;
 }
 
-export function BaseLayout({ children, previewText, accentColor = "#000000", accentLabel }: LayoutProps) {
-  const shopUrl = getShopUrl();
-  const logoUrl = process.env.NEXT_PUBLIC_SHOP_LOGO_URL || `${shopUrl}/logo.png`;
+export function BaseLayout({ children, previewText, accentColor = "#000000", accentLabel, logoUrl: propLogo, shopUrl: propShop }: LayoutProps) {
+  const shopUrl = propShop || getShopUrl();
+  const logoUrl = propLogo || process.env.NEXT_PUBLIC_SHOP_LOGO_URL || `${shopUrl}/logo.png`;
   const shopName = "Afra Tech Point";
 
   return (

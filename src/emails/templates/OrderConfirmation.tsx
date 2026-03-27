@@ -12,6 +12,8 @@ interface OrderConfirmationProps {
   total: number;
   shippingAddress: any;
   orderDate: string | Date;
+  logoUrl?: string;
+  shopUrl?: string;
 }
 
 export default function OrderConfirmation({
@@ -20,9 +22,11 @@ export default function OrderConfirmation({
   items,
   total,
   shippingAddress,
-  orderDate
+  orderDate,
+  logoUrl,
+  shopUrl: propShop
 }: OrderConfirmationProps) {
-  const shopUrl = getShopUrl();
+  const shopUrl = propShop || getShopUrl();
   const orderUrl = `${shopUrl}/account?tab=orders`;
   const shortId = orderId.slice(0, 8).toUpperCase();
 
@@ -35,6 +39,8 @@ export default function OrderConfirmation({
       previewText={`Order Confirmed — #${shortId}`}
       accentColor="#000000"
       accentLabel={`Order #${shortId} Confirmed`}
+      logoUrl={logoUrl}
+      shopUrl={shopUrl}
     >
       {/* Hero */}
       <Section style={{ textAlign: "center", marginBottom: "28px" }}>

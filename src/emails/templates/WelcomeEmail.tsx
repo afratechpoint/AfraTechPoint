@@ -6,10 +6,12 @@ import { PrimaryButton } from "../components/Button";
 
 interface WelcomeEmailProps {
   customerName: string;
+  logoUrl?: string;
+  shopUrl?: string;
 }
 
-export default function WelcomeEmail({ customerName }: WelcomeEmailProps) {
-  const shopUrl = getShopUrl();
+export default function WelcomeEmail({ customerName, logoUrl, shopUrl: propShop }: WelcomeEmailProps) {
+  const shopUrl = propShop || getShopUrl();
 
   const perks = [
     { title: "Express Checkout", sub: "Save addresses & pay faster" },
@@ -22,6 +24,8 @@ export default function WelcomeEmail({ customerName }: WelcomeEmailProps) {
       previewText={`Welcome to Afra Tech Point, ${customerName}!`}
       accentColor="#000000"
       accentLabel="Welcome to the Family"
+      logoUrl={logoUrl}
+      shopUrl={shopUrl}
     >
       {/* Hero */}
       <Section style={{ textAlign: "center", marginBottom: "32px" }}>

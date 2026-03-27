@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { storage } from "@/lib/storage";
 import { sendEmail } from "@/lib/email/sendEmail";
 import { ContactAutoReply, ContactAdminNotification } from "@/emails/renderers/index";
 
@@ -20,7 +21,10 @@ export async function POST(req: NextRequest) {
     }
 
     const { name, email, message } = parsed.data;
-    const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+    const settings = await storage.getSettings();
+    const adminEmail = settings?.adminEmail || process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+    const logoUrl = settings?.logoUrl;
+    const shopUrl = settings?.shopUrl;
 
     if (!adminEmail) {
       console.error("ADMIN_EMAIL or SMTP_USER env is not configured.");
@@ -34,7 +38,7 @@ export async function POST(req: NextRequest) {
         to: email,
         subject: "We've received your message!",
         template: ContactAutoReply,
-        props: { name }
+        props: { name, logoUrl, shopUrl }
       }),
       
       // Alert to Administrator
@@ -42,7 +46,7 @@ export async function POST(req: NextRequest) {
         to: adminEmail,
         subject: `New Inquiry from ${name}`,
         template: ContactAdminNotification,
-        props: { name, email, message }
+        props: { name, email, message, logoUrl, shopUrl }
       })
     ]);
 

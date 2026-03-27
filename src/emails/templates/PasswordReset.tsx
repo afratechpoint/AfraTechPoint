@@ -7,16 +7,20 @@ import { PrimaryButton } from "../components/Button";
 interface PasswordResetEmailProps {
   customerName: string;
   resetLink: string;
+  logoUrl?: string;
+  shopUrl?: string;
 }
 
-export default function PasswordResetEmail({ customerName, resetLink }: PasswordResetEmailProps) {
-  const shopUrl = getShopUrl();
+export default function PasswordResetEmail({ customerName, resetLink, logoUrl, shopUrl: propShop }: PasswordResetEmailProps) {
+  const shopUrl = propShop || getShopUrl();
 
   return (
     <BaseLayout
       previewText="Reset your Afra Tech Point password"
       accentColor="#dc2626"
       accentLabel="Security Alert"
+      logoUrl={logoUrl}
+      shopUrl={shopUrl}
     >
       {/* Hero */}
       <Section style={{ textAlign: "center", marginBottom: "28px" }}>

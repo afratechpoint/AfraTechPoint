@@ -48,8 +48,12 @@ export async function POST(request: Request) {
     // We use Promise.allSettled to ensure that even if emails fail 
     // (e.g., missing SMTP config or network issues), the order creation proceeds.
     try {
-      const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER || "afratechpoint@gmail.com";
+      const settings = await storage.getSettings();
+      const adminEmail = settings?.adminEmail || process.env.ADMIN_EMAIL || process.env.SMTP_USER || "afratechpoint@gmail.com";
       const customerEmail = body.userEmail || body.email || body.customer?.email;
+      
+      const logoUrl = settings?.logoUrl;
+      const shopUrl = settings?.shopUrl;
 
       if (customerEmail) {
         const results = await Promise.allSettled([
@@ -64,7 +68,9 @@ export async function POST(request: Request) {
               items: body.items,
               total: body.totalAmount || body.total,
               shippingAddress: body.shippingAddress,
-              orderDate: newOrder.createdAt
+              orderDate: newOrder.createdAt,
+              logoUrl,
+              shopUrl
             }
           }),
           // 2. Sent to Administrator
@@ -78,7 +84,9 @@ export async function POST(request: Request) {
               customerEmail: customerEmail,
               total: body.totalAmount || body.total,
               items: body.items,
-              shippingAddress: body.shippingAddress
+              shippingAddress: body.shippingAddress,
+              logoUrl,
+              shopUrl
             }
           })
         ]);
