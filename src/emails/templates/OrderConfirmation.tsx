@@ -3,6 +3,7 @@ import * as React from "react";
 import { BaseLayout } from "../components/Layout";
 import { OrderSummary } from "../components/OrderSummary";
 import { PrimaryButton } from "../components/Button";
+import { getShopUrl } from "../utils";
 
 interface OrderConfirmationProps {
   customerName: string;
@@ -21,7 +22,7 @@ export default function OrderConfirmation({
   shippingAddress,
   orderDate
 }: OrderConfirmationProps) {
-  const shopUrl = process.env.NEXT_PUBLIC_SHOP_URL || "https://yourdomain.com";
+  const shopUrl = getShopUrl();
   const orderUrl = `${shopUrl}/account?tab=orders`;
   const shortId = orderId.slice(0, 8).toUpperCase();
 

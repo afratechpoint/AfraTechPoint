@@ -1,5 +1,6 @@
 import { Text, Section, Row, Column, Link } from "@react-email/components";
 import * as React from "react";
+import { getShopUrl } from "../utils";
 import { BaseLayout } from "../components/Layout";
 import { PrimaryButton } from "../components/Button";
 
@@ -8,7 +9,7 @@ interface WelcomeEmailProps {
 }
 
 export default function WelcomeEmail({ customerName }: WelcomeEmailProps) {
-  const shopUrl = process.env.NEXT_PUBLIC_SHOP_URL || "http://localhost:3000";
+  const shopUrl = getShopUrl();
 
   const perks = [
     { title: "Express Checkout", sub: "Save addresses & pay faster" },

@@ -28,7 +28,12 @@ export async function createOrderInFirestore(orderData: any) {
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   });
-  return docRef.id;
+  // Return the full object so calling code can access .id, .createdAt, etc.
+  return {
+    id: docRef.id,
+    ...orderData,
+    createdAt: new Date().toISOString(),
+  };
 }
 
 export async function getOrderById(orderId: string) {
@@ -45,11 +50,12 @@ export async function getOrderById(orderId: string) {
 }
 
 export async function getOrdersByUser(userId: string) {
+  // We fetch without orderBy to avoid mandatory composite index requirement
   const q = adminDb.collection("orders")
-    .where("userId", "==", userId)
-    .orderBy("createdAt", "desc");
+    .where("userId", "==", userId);
+    
   const snap = await q.get();
-  return snap.docs.map(d => {
+  const orders = snap.docs.map(d => {
     const data = d.data();
     return {
       id: d.id,
@@ -58,6 +64,9 @@ export async function getOrdersByUser(userId: string) {
       updatedAt: data?.updatedAt?.toDate() || new Date(),
     };
   });
+
+  // Sort in-memory to bypass index blocker
+  return orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export async function getAllOrders() {
@@ -92,7 +101,11 @@ export async function createProductInFirestore(data: any) {
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
     updatedAt: admin.firestore.FieldValue.serverTimestamp()
   });
-  return { id: docRef.id, ...data };
+  return { 
+    id: docRef.id, 
+    ...data,
+    createdAt: new Date().toISOString()
+  };
 }
 
 export async function updateProductInFirestore(id: string, data: any) {

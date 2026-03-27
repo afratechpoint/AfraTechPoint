@@ -1,4 +1,5 @@
 import * as React from "react";
+import { getShopUrl } from "../utils";
 import { Body, Container, Head, Html, Img, Link, Preview, Section, Text, Hr } from "@react-email/components";
 
 interface EmailVerificationEmailProps {
@@ -6,7 +7,7 @@ interface EmailVerificationEmailProps {
   verificationLink: string;
 }
 
-const baseUrl = process.env.NEXT_PUBLIC_SHOP_URL || "http://localhost:3000";
+const baseUrl = getShopUrl();
 
 // Standalone (no BaseLayout) to avoid Tailwind dependency edge cases in this older template
 export default function EmailVerificationEmail({

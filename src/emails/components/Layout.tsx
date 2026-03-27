@@ -1,5 +1,6 @@
 import { Body, Container, Head, Html, Img, Link, Preview, Section, Tailwind, Text, Hr } from "@react-email/components";
 import * as React from "react";
+import { getShopUrl } from "../utils";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -9,7 +10,7 @@ interface LayoutProps {
 }
 
 export function BaseLayout({ children, previewText, accentColor = "#000000", accentLabel }: LayoutProps) {
-  const shopUrl = process.env.NEXT_PUBLIC_SHOP_URL || "http://localhost:3000";
+  const shopUrl = getShopUrl();
   const logoUrl = process.env.NEXT_PUBLIC_SHOP_LOGO_URL || `${shopUrl}/logo.png`;
   const shopName = "Afra Tech Point";
 
