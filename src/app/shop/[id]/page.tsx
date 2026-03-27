@@ -30,7 +30,6 @@ import { Product, Variant } from "./types";
 
 export default function ProductDetailPage() {
   const params = useParams();
-  const { isCartOpen, closeCart } = useUI();
   const settings = useSettings();
 
   // ── Data state ────────────────────────────────────────────────

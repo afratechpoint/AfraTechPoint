@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 import { useCart } from "@/lib/cart";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
-import { useUI } from "@/lib/ui";
 import { useSettings } from "@/components/SettingsProvider";
 import { Suspense } from "react";
 
