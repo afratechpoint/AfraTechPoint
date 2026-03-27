@@ -24,7 +24,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     if (typeof window !== "undefined" && "serviceWorker" in navigator && !isAdminPage) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
-          .register("/sw.js", { scope: "/" })
+          .register("/sw-shop.js", { scope: "/" })
           .then((reg) => {
             // Ensure this SW doesn't claim /admin if we can
             console.log("Shop PWA registered with scope: /");

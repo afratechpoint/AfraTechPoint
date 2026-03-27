@@ -22,7 +22,7 @@ export default function AdminClientLayout({
   useEffect(() => {
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
       navigator.serviceWorker
-        .register("/sw.js", { scope: "/admin/" })
+        .register("/sw-admin.js", { scope: "/admin/" })
         .then((reg) => {
            console.log("Admin PWA registered with scope: /admin/");
         })
