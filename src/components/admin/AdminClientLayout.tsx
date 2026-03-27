@@ -18,6 +18,18 @@ export default function AdminClientLayout({
   const { user, loading, isAdmin, isShopManager, isOrderManager } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
 
+  // Manual PWA registration for Admin
+  useEffect(() => {
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("/sw.js", { scope: "/admin/" })
+        .then((reg) => {
+           console.log("Admin PWA registered with scope: /admin/");
+        })
+        .catch((err) => console.error("Admin PWA failed: ", err));
+    }
+  }, []);
+
   // Still keep some theme-sync for when staying on client
   useEffect(() => {
     // Override theme-color for admin

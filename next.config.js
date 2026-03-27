@@ -18,7 +18,7 @@ let nextConfig = {
 if (!isDev) {
   const withPWA = require("next-pwa")({
     dest: "public",
-    register: true,
+    register: false,
     skipWaiting: true,
     disable: false,
     fallbacks: {
