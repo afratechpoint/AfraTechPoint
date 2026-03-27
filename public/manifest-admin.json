@@ -2,12 +2,13 @@
   "name": "Afra Admin",
   "short_name": "ATP Admin",
   "description": "Admin panel for managing Afra Tech Point store.",
-  "start_url": "/admin",
+  "id": "afra-admin-pwa",
+  "start_url": "/admin?mode=pwa",
   "display": "standalone",
   "background_color": "#111111",
   "theme_color": "#000000",
   "orientation": "portrait",
-  "scope": "/admin",
+  "scope": "/admin/",
   "icons": [
     {
       "src": "/icons/admin-icon-192.png",
