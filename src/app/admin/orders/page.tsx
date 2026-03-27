@@ -32,6 +32,7 @@ interface Order {
 // ── Status config ──────────────────────────────────────────────────────────
 const PMT_OPTIONS = [
   { value: "pending",   label: "Pending",   color: "text-amber-600",  bg: "bg-amber-50",  dot: "bg-amber-400" },
+  { value: "pending_cod", label: "Cash on Delivery", color: "text-blue-700", bg: "bg-blue-50", dot: "bg-blue-500" },
   { value: "confirmed", label: "Confirmed", color: "text-green-700",  bg: "bg-green-50",  dot: "bg-green-500" },
   { value: "failed",    label: "Failed",    color: "text-red-600",    bg: "bg-red-50",    dot: "bg-red-500" },
   { value: "refunded",  label: "Refunded",  color: "text-blue-600",   bg: "bg-blue-50",   dot: "bg-blue-400" },
