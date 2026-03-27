@@ -49,35 +49,50 @@ export async function POST(request: Request) {
     // (e.g., missing SMTP config or network issues), the order creation proceeds.
     try {
       const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER || "afratechpoint@gmail.com";
+      const customerEmail = body.userEmail || body.email || body.customer?.email;
 
-      await Promise.allSettled([
-        // 1. Sent to Customer
-        sendEmail({
-          to: body.userEmail || body.email,
-          subject: `Order Confirmation #${newOrder.id.slice(0, 8).toUpperCase()}`,
-          template: OrderConfirmation,
-          props: {
-            customerName: body.shippingAddress?.fullName || 'Customer',
-            orderId: newOrder.id,
-            items: body.items,
-            total: body.totalAmount || body.total,
-            shippingAddress: body.shippingAddress,
-            orderDate: newOrder.createdAt
+      if (customerEmail) {
+        const results = await Promise.allSettled([
+          // 1. Sent to Customer
+          sendEmail({
+            to: customerEmail,
+            subject: `Order Confirmation #${newOrder.id.slice(0, 8).toUpperCase()}`,
+            template: OrderConfirmation,
+            props: {
+              customerName: body.shippingAddress?.fullName || body.customer?.name || 'Customer',
+              orderId: newOrder.id,
+              items: body.items,
+              total: body.totalAmount || body.total,
+              shippingAddress: body.shippingAddress,
+              orderDate: newOrder.createdAt
+            }
+          }),
+          // 2. Sent to Administrator
+          sendEmail({
+            to: adminEmail,
+            subject: `🚨 New Order Received: #${newOrder.id.slice(0, 8).toUpperCase()}`,
+            template: NewOrderAdminNotification,
+            props: {
+              orderId: newOrder.id,
+              customerName: body.shippingAddress?.fullName || body.customer?.name || 'Customer',
+              customerEmail: customerEmail,
+              total: body.totalAmount || body.total,
+              items: body.items,
+              shippingAddress: body.shippingAddress
+            }
+          })
+        ]);
+
+        results.forEach((res, i) => {
+          if (res.status === 'rejected') {
+            console.error(`Order Email ${i} failed:`, res.reason);
+          } else {
+            console.log(`Order Email ${i} sent successfully.`);
           }
-        }),
-        // 2. Sent to Administrator
-        sendEmail({
-          to: adminEmail,
-          subject: `🚨 New Order Received: #${newOrder.id.slice(0, 8).toUpperCase()}`,
-          template: NewOrderAdminNotification,
-          props: {
-            orderId: newOrder.id,
-            customerName: body.shippingAddress?.fullName || 'Customer',
-            total: body.totalAmount || body.total,
-            items: body.items
-          }
-        })
-      ]);
+        });
+      } else {
+        console.warn("No customer email found in order payload. Skipping customer notification.");
+      }
     } catch (emailErr) {
       console.warn("Non-blocking email notification failure:", emailErr);
     }
