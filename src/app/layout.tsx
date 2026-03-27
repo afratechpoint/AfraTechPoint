@@ -42,7 +42,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: settings.storeName,
     description: settings.shortDescription,
-    manifest: "/manifest.webmanifest",
+    manifest: "/api/manifest/shop",
     icons: {
       icon: settings.logoUrl || "/logo.png",
       shortcut: settings.logoUrl || "/logo.png",

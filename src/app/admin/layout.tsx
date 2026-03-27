@@ -5,7 +5,7 @@ import AdminClientLayout from "@/components/admin/AdminClientLayout";
 export const metadata: Metadata = {
   title: "Admin Panel | Afra Tech Point",
   description: "Manage your Afra Tech Point store.",
-  manifest: "/manifest-admin.json",
+  manifest: "/api/manifest/admin",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
