@@ -28,7 +28,13 @@ const defaultSettings = {
   categories: []
 };
 
+import { headers } from "next/headers";
+
 export async function generateMetadata(): Promise<Metadata> {
+  const headersList = await headers();
+  const host = headersList.get('host') || "";
+  const isAdminSubdomain = host.startsWith('admin.');
+
   let settings: any = {};
   try {
     settings = await storage.getSettings();
@@ -37,6 +43,24 @@ export async function generateMetadata(): Promise<Metadata> {
     }
   } catch (e) {
     settings = defaultSettings;
+  }
+
+  if (isAdminSubdomain) {
+    return {
+      title: "Admin Panel | " + settings.storeName,
+      description: "Manage your Afra Tech Point store.",
+      manifest: "/api/manifest/admin",
+      icons: {
+        icon: "/icons/admin-icon-192.png",
+        shortcut: "/icons/admin-icon-192.png",
+        apple: "/icons/admin-icon-192.png",
+      },
+      appleWebApp: {
+        capable: true,
+        statusBarStyle: "black-translucent",
+        title: "ATP Admin",
+      },
+    };
   }
 
   return {
