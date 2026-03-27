@@ -62,7 +62,7 @@ export default function Home() {
         {/* Hero Slider Section */}
         {slides.length > 0 && (
           <div className="relative mt-4">
-            <div className="relative h-[450px] md:h-[500px] w-full overflow-hidden rounded-[2rem] md:rounded-[2.5rem] border border-gray-100 shadow-xl">
+            <div className="relative h-[320px] sm:h-[400px] md:h-[500px] w-full overflow-hidden rounded-2xl md:rounded-[2.5rem] border border-gray-100 shadow-xl">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentSlide}
@@ -70,7 +70,7 @@ export default function Home() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -100 }}
                   transition={{ duration: 0.6, ease: "easeInOut" }}
-                  className={cn("absolute inset-0 p-8 md:p-20 flex flex-col justify-center", slides[currentSlide].color)}
+                  className={cn("absolute inset-0 p-6 md:p-20 flex flex-col justify-center overflow-hidden", slides[currentSlide].color)}
                 >
                   <div className="z-10 relative max-w-2xl">
                     <motion.h1 
@@ -103,21 +103,21 @@ export default function Home() {
                      initial={{ opacity: 0, scale: 0.8, rotate: 10, y: 40 }}
                      animate={{ opacity: 1, scale: 1, rotate: 0, y: 0 }}
                      transition={{ duration: 0.8, delay: 0.3, type: "spring" }}
-                     className="absolute inset-0 flex items-center justify-center md:justify-end md:pr-12 lg:pr-32 pointer-events-none opacity-20 md:opacity-100"
+                     className="absolute inset-0 flex items-center justify-end pr-4 md:pr-12 lg:pr-32 pointer-events-none opacity-25 md:opacity-100"
                   >
                     {slides[currentSlide].linkUrl ? (
                       <Link href={slides[currentSlide].linkUrl} className="pointer-events-auto block">
                         <img 
                           src={slides[currentSlide].image} 
                           alt="Hero Product" 
-                          className="w-[240px] h-[240px] md:w-[380px] md:h-[380px] object-contain drop-shadow-[0_45px_45px_rgba(0,0,0,0.15)] md:hover:scale-105 transition-transform duration-1000 cursor-pointer"
+                          className="w-[140px] h-[140px] sm:w-[200px] sm:h-[200px] md:w-[380px] md:h-[380px] object-contain drop-shadow-[0_45px_45px_rgba(0,0,0,0.15)] md:hover:scale-105 transition-transform duration-1000 cursor-pointer"
                         />
                       </Link>
                     ) : (
                       <img 
                         src={slides[currentSlide].image} 
                         alt="Hero Product" 
-                        className="w-[240px] h-[240px] md:w-[380px] md:h-[380px] object-contain drop-shadow-[0_45px_45px_rgba(0,0,0,0.15)] md:hover:scale-105 transition-transform duration-1000"
+                        className="w-[140px] h-[140px] sm:w-[200px] sm:h-[200px] md:w-[380px] md:h-[380px] object-contain drop-shadow-[0_45px_45px_rgba(0,0,0,0.15)] md:hover:scale-105 transition-transform duration-1000"
                       />
                     )}
                   </motion.div>

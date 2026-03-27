@@ -21,7 +21,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         {isLoading && <PremiumLoader />}
       </AnimatePresence>
       {children}
-      <Toaster position="bottom-right" toastOptions={{
+      <Toaster position="top-center" toastOptions={{
         style: { background: 'black', color: 'white', border: 'none', borderRadius: '16px' }
       }} />
       <MobileNav onOpenCart={openCart} />
