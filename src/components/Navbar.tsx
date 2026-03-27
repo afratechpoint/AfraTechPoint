@@ -59,8 +59,48 @@ export default function Navbar({
   const finalDisplayName = displayName || (user?.email?.split("@")[0] ?? "Account");
 
   return (
-    <nav className="w-full border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-[100] transition-all">
-      <div className="w-full max-w-[1440px] mx-auto h-16 flex items-center justify-between px-4 md:px-8">
+    <nav className="w-full border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-[100] transition-all pt-safe">
+      {/* ── Mobile top bar ── */}
+      <div className="flex md:hidden items-center justify-between h-14 px-4">
+        <Link href="/" className="shrink-0">
+          <img src={settings.logoUrl || "/logo.png"} alt={settings.storeName} className="h-7 w-auto object-contain" />
+        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onOpenCart}
+            className="relative p-2 rounded-xl bg-gray-50 border border-gray-100 active:scale-95 transition-all"
+          >
+            <ShoppingBag size={18} className="text-gray-700" />
+            {cartCount > 0 && (
+              <span
+                style={{ backgroundColor: "var(--primary)", color: "var(--primary-text)" }}
+                className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center rounded-full border-2 border-white text-[9px] font-bold"
+              >
+                {cartCount}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile search bar */}
+      {searchEnabled && (
+        <div className="md:hidden px-4 pb-3">
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search products…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery?.(e.target.value)}
+              className="w-full h-9 pl-9 pr-4 rounded-xl bg-gray-50 border border-gray-100 outline-none text-sm text-gray-900 placeholder:text-gray-400 font-medium focus:ring-2 focus:ring-black transition-all"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── Desktop full nav ── */}
+      <div className="hidden md:flex w-full max-w-[1440px] mx-auto h-16 items-center justify-between px-4 md:px-8">
 
         {/* ── Left: Logo + Nav links ─────────────────────────────── */}
         <div className="flex items-center gap-6 md:gap-10 shrink-0">

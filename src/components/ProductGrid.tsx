@@ -42,7 +42,7 @@ export default function ProductGrid() {
     : products.filter((p: Product) => p.category === filter);
 
   return (
-    <section id="shop" className="py-24 max-w-[1400px] mx-auto px-4 sm:px-8">
+    <section id="shop" className="py-10 md:py-24 max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-6">
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -79,7 +79,7 @@ export default function ProductGrid() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-10 auto-rows-fr">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 lg:gap-10 auto-rows-fr">
         {isLoading ? (
           [1, 2, 3, 4].map((i) => (
             <div key={i} className="bg-white rounded-[2.5rem] p-6 h-[400px] animate-pulse border border-gray-100" />
@@ -92,7 +92,7 @@ export default function ProductGrid() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.4 }}
-            className="group relative bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-700 flex flex-col h-full"
+            className="group relative bg-white rounded-2xl md:rounded-[2rem] p-3 md:p-4 shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-700 flex flex-col h-full active:scale-[0.98]"
           >
             <Link href={`/shop/${product.id}`} className="block relative aspect-square mb-5 bg-[#f8f9fa] rounded-[1.5rem] overflow-hidden group-hover:scale-[0.98] transition-transform duration-700">
               <img

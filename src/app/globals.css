@@ -7,6 +7,10 @@
   --muted: #f4f4f5;
   --muted-foreground: #71717a;
   --border: #e4e4e7;
+  /* Safe area insets for iOS/PWA */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --mobile-nav-height: 72px;
 }
 
 body {
@@ -14,6 +18,15 @@ body {
   background: var(--background);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Prevent overscroll bounce on non-scroll elements */
+  overscroll-behavior: none;
+}
+
+/* Give mobile pages breathing room above the bottom nav */
+@media (max-width: 767px) {
+  body {
+    padding-bottom: calc(var(--mobile-nav-height) + var(--safe-area-bottom));
+  }
 }
 
 @layer utilities {
@@ -39,9 +52,31 @@ body {
     box-shadow: 0 30px 60px -12px rgba(0,0,0,0.12);
   }
 
-  /* Custom scrollbar for premium touch */
+  /* Momentum scrolling for app-like feel */
+  .scroll-smooth-touch {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    scroll-behavior: smooth;
+  }
+
+  /* No-scrollbar for horizontal category chips */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Touch-optimized tap target */
+  .tap-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Custom scrollbar for premium desktop */
   ::-webkit-scrollbar {
-    width: 6px;
+    width: 5px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
@@ -52,5 +87,13 @@ body {
   }
   ::-webkit-scrollbar-thumb:hover {
     background: #ccc;
+  }
+
+  /* Safe area padding utilities */
+  .pb-safe {
+    padding-bottom: var(--safe-area-bottom);
+  }
+  .pt-safe {
+    padding-top: var(--safe-area-top);
   }
 }

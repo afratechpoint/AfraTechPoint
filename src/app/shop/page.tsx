@@ -267,7 +267,7 @@ function ShopContent() {
           
           {/* Products Grid */}
           <main className="w-full">
-             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-8 auto-rows-fr">
+             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6 lg:gap-8 auto-rows-fr">
               {isLoading ? (
                  [1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                     <div key={i} className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-4 md:p-6 h-[300px] md:h-[400px] animate-pulse border border-gray-100" />
