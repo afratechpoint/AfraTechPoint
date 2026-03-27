@@ -72,7 +72,9 @@ export default function Home() {
                   transition={{ duration: 0.6, ease: "easeInOut" }}
                   className={cn("absolute inset-0 p-6 md:p-20 flex flex-col justify-center overflow-hidden", slides[currentSlide].color)}
                 >
-                  <div className="z-10 relative max-w-2xl">
+                  {/* Text protection overlay on mobile */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/70 to-transparent md:hidden pointer-events-none z-[1]" />
+                  <div className="z-10 relative max-w-md md:max-w-2xl">
                     <motion.h1 
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -103,7 +105,7 @@ export default function Home() {
                      initial={{ opacity: 0, scale: 0.8, rotate: 10, y: 40 }}
                      animate={{ opacity: 1, scale: 1, rotate: 0, y: 0 }}
                      transition={{ duration: 0.8, delay: 0.3, type: "spring" }}
-                     className="absolute inset-0 flex items-center justify-end pr-4 md:pr-12 lg:pr-32 pointer-events-none opacity-25 md:opacity-100"
+                     className="absolute inset-y-0 right-0 w-1/2 flex items-center justify-center md:justify-end md:pr-12 lg:pr-32 pointer-events-none"
                   >
                     {slides[currentSlide].linkUrl ? (
                       <Link href={slides[currentSlide].linkUrl} className="pointer-events-auto block">
