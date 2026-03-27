@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Afra Tech Point",
-    short_name: "Afra Tech",
+    name: "Afra Tech Store",
+    short_name: "Afra Store",
     description: "Your premium destination for the latest electronics and smart home devices.",
     id: "afra-shop-pwa",
     start_url: "/?mode=pwa",

@@ -1,6 +1,6 @@
 {
-  "name": "Afra Admin",
-  "short_name": "ATP Admin",
+  "name": "Afra Tech Admin",
+  "short_name": "Afra Admin",
   "description": "Admin panel for managing Afra Tech Point store.",
   "id": "afra-admin-pwa",
   "start_url": "/admin?mode=pwa",
