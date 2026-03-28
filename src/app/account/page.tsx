@@ -103,11 +103,24 @@ function AccountContent() {
     if (tab === "orders" && user) {
       setOrdersLoading(true);
       fetch(`/api/orders?userId=${user.uid}`)
-        .then(r => r.json())
-        .then((data: Order[]) =>
-          setOrders(data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()))
-        )
-        .catch(() => toast.error("Failed to load orders."))
+        .then(async r => {
+          if (!r.ok) {
+            const err = await r.json().catch(() => ({}));
+            throw new Error(err?.error || `Server error ${r.status}`);
+          }
+          return r.json();
+        })
+        .then((data) => {
+          if (!Array.isArray(data)) {
+            setOrders([]);
+            return;
+          }
+          setOrders(data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+        })
+        .catch((err) => {
+          console.error("Orders fetch failed:", err);
+          toast.error("Could not load orders. Please try again later.", { description: "This may be a temporary issue." });
+        })
         .finally(() => setOrdersLoading(false));
     }
   }, [tab, user]);
