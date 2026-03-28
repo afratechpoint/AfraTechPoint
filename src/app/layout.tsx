@@ -25,7 +25,14 @@ const defaultSettings = {
   footerProducts: [],
   footerCompany: [],
   banners: [],
-  categories: []
+  categories: [],
+  paymentMethods: [
+    { id: "1", name: "bKash", accountNumber: "", enabled: true },
+    { id: "2", name: "Nagad", accountNumber: "", enabled: true },
+    { id: "3", name: "Rocket", accountNumber: "", enabled: true },
+  ],
+  codEnabled: true,
+  deliveryCharge: 0
 };
 
 import { headers } from "next/headers";

@@ -738,6 +738,27 @@ export default function AdminSettings() {
                   </div>
                 </div>
 
+                <div className="flex gap-2 mb-2">
+                  <button 
+                    type="button" 
+                    onClick={() => setPaymentMethods([...paymentMethods, { id: Date.now().toString(), name: "Custom", accountNumber: "", enabled: true }])}
+                    className="text-[10px] font-bold bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-1"
+                  >
+                    <Plus size={12} /> Add Custom Method
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setPaymentMethods([
+                      { id: "1", name: "bKash", accountNumber: "", enabled: true },
+                      { id: "2", name: "Nagad", accountNumber: "", enabled: true },
+                      { id: "3", name: "Rocket", accountNumber: "", enabled: true },
+                    ])}
+                    className="text-[10px] font-bold bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors flex items-center gap-1"
+                  >
+                    <Check size={12} /> Initialize Default Methods
+                  </button>
+                </div>
+
                 <div className="space-y-4">
                   {/* Delivery Charge */}
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 p-4 bg-gray-50 border border-gray-100 rounded-2xl">
