@@ -163,6 +163,25 @@ export async function deleteProductFromFirestore(id: string) {
   await adminDb.collection("products").doc(id).delete();
 }
 
+// ── TRAFFIC STATS ──
+export async function incrementTrafficCount() {
+  const docRef = adminDb.collection("stats").doc("global");
+  const doc = await docRef.get();
+  
+  if (!doc.exists) {
+    await docRef.set({ trafficCount: 1 });
+  } else {
+    await docRef.update({
+      trafficCount: admin.firestore.FieldValue.increment(1)
+    });
+  }
+}
+
+export async function getTrafficCount(): Promise<number> {
+  const doc = await adminDb.collection("stats").doc("global").get();
+  return doc.exists ? (doc.data()?.trafficCount || 0) : 0;
+}
+
 export async function deleteOrderFromFirestore(id: string) {
   await adminDb.collection("orders").doc(id).delete();
 }

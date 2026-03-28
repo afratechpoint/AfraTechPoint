@@ -7,33 +7,36 @@ import Link from "next/link";
 import { useSettings } from "@/components/SettingsProvider";
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({ orders: 0, products: 0, customers: 0 });
+  const [stats, setStats] = useState({ orders: 0, products: 0, customers: 0, completedOrders: 0, traffic: 0 });
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const settings = useSettings();
 
   useEffect(() => {
     Promise.all([
       fetch('/api/orders').then(r => r.json()),
-      fetch('/api/products').then(r => r.json())
-    ]).then(([orders, products]) => {
+      fetch('/api/products').then(r => r.json()),
+      fetch('/api/stats/traffic').then(r => r.json()).catch(() => ({ count: 0 }))
+    ]).then(([orders, products, trafficData]) => {
       // Calculate unique customers based on order history
       const uniqueCustomers = new Set(orders.map((o: any) => o.customer?.email).filter(Boolean));
+      const completed = orders.filter((o: any) => o.status === "delivered" || o.orderStatus === "delivered").length;
       
-      setStats(prev => ({ 
-        ...prev, 
+      setStats({ 
         orders: orders.length, 
         products: products.length,
-        customers: uniqueCustomers.size
-      }));
+        customers: uniqueCustomers.size,
+        completedOrders: completed,
+        traffic: trafficData.count || 0
+      });
       setRecentOrders(orders.slice(0, 5));
     });
   }, []);
 
   const metrics = [
-    { label: "Total Orders", value: stats.orders, icon: ShoppingCart, color: "bg-blue-500" },
-    { label: "Products Catalog", value: stats.products, icon: Package, color: "bg-purple-500" },
-    { label: "Active Customers", value: stats.customers, icon: Users, color: "bg-emerald-500" },
-    { label: "Conversion Rate", value: "3.2%", icon: TrendingUp, color: "bg-orange-500" },
+    { label: "Total Products", value: stats.products, icon: Package, color: "bg-purple-500" },
+    { label: "Total Customers", value: stats.customers, icon: Users, color: "bg-emerald-500" },
+    { label: "Orders Completed", value: stats.completedOrders, icon: Check, color: "bg-blue-500" },
+    { label: "Website Traffic", value: stats.traffic, icon: TrendingUp, color: "bg-orange-500" },
   ];
 
   return (

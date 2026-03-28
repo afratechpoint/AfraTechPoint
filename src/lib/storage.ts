@@ -184,5 +184,21 @@ export const storage = {
       const { updateUserProfileInFirestore } = await getAdapter();
       return await updateUserProfileInFirestore(uid, data);
     }
+  },
+
+  // ── TRAFFIC STATS ──
+  async incrementTraffic() {
+    if (USE_FIREBASE) {
+      const { incrementTrafficCount } = await getAdapter();
+      await incrementTrafficCount();
+    }
+  },
+
+  async getTraffic() {
+    if (USE_FIREBASE) {
+      const { getTrafficCount } = await getAdapter();
+      return await getTrafficCount();
+    }
+    return 0;
   }
 };
