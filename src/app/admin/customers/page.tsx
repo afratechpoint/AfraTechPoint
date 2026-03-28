@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import { Search, Trash2, Users, Crown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getUsers, updateUserRole, deleteUserAccount, getSuperAdminEmail } from "./actions";
+import PremiumLoader from "@/components/PremiumLoader";
+import PremiumSpinner from "@/components/PremiumSpinner";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -109,11 +111,7 @@ export default function CustomersPage() {
   });
 
   if (loading && users.length === 0) {
-    return (
-      <div className="min-h-[50vh] flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-gray-100 border-t-black rounded-full animate-spin" />
-      </div>
-    );
+    return <PremiumLoader />;
   }
 
   return (
@@ -227,7 +225,7 @@ export default function CustomersPage() {
                           title={u.uid === user?.uid ? "You cannot delete yourself" : "Delete user"}
                         >
                           {deletingId === u.uid ? (
-                            <div className="w-4 h-4 border-2 border-red-200 border-t-red-600 rounded-full animate-spin" />
+                            <PremiumSpinner size="sm" />
                           ) : (
                             <Trash2 size={16} />
                           )}
@@ -269,7 +267,7 @@ export default function CustomersPage() {
                     className="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center disabled:opacity-30 transition-colors"
                   >
                     {deletingId === u.uid ? (
-                      <div className="w-4 h-4 border-2 border-red-200 border-t-red-600 rounded-full animate-spin" />
+                      <PremiumSpinner size="sm" />
                     ) : (
                       <Trash2 size={16} />
                     )}

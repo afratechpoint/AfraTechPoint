@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { TrendingUp, Package, Users, ShoppingCart, ArrowRight } from "lucide-react";
+import { TrendingUp, Package, Users, ShoppingCart, ArrowRight, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useSettings } from "@/components/SettingsProvider";
@@ -116,6 +116,18 @@ export default function AdminDashboard() {
                 </div>
                 <ArrowRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
+              
+              {/* Admin Alerts Registration (Mobile Compatibility) */}
+              <button 
+                onClick={() => (window as any).triggerPushPermission?.(true)}
+                className="w-full bg-[#ccff00] hover:bg-[#b8e600] p-3 rounded-xl flex items-center justify-between transition-all group group-hover:scale-[1.02] shadow-lg shadow-[#ccff00]/5"
+              >
+                <div className="flex items-center gap-2.5">
+                  <TrendingUp size={16} className="text-black" />
+                  <span className="text-xs font-black text-black uppercase tracking-tight">Enable Admin Alerts</span>
+                </div>
+                <Check size={12} className="text-black" />
+              </button>
            </div>
 
            <div className="mt-6 pt-6 border-t border-white/10">

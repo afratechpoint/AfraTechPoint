@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { dispatchOrderEmails } from "@/app/actions/email";
+import PremiumLoader from "@/components/PremiumLoader";
 
 const METHOD_COLORS: Record<string, string> = {
   bKash:  "bg-pink-50 border-pink-200 text-pink-700",
@@ -53,25 +54,27 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (user) {
-      let profilePhone = "", profileAddress = "";
-      try {
-        const stored = localStorage.getItem(`profile_extra_${user.uid}`);
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          profilePhone = parsed.phone || "";
-          profileAddress = parsed.address || "";
-        }
-      } catch (e) {}
+      // Step 1: Pre-fill with name from Auth
+      setShip(s => ({ ...s, fullName: user.displayName ?? "" }));
 
-      if (!profilePhone.trim() || !profileAddress.trim()) {
-        toast.error("Please update your profile address and mobile number before checking out.");
-        router.push("/account");
-        return;
-      }
-
-      setShip(s => ({ ...s, fullName: user.displayName ?? "", phone: profilePhone, address: profileAddress }));
+      // Step 2: Fetch extra details (Phone, Address) from PERSISTENT Firestore
+      fetch(`/api/profile?uid=${user.uid}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data && (data.phone || data.address)) {
+            setShip(s => ({ 
+              ...s, 
+              phone: data.phone || "", 
+              address: data.address || "" 
+            }));
+          } else {
+            // Fallback: If no data in DB, check if maybe they need to set it
+            toast.info("Please ensure your profile has a phone and address for faster checkout.");
+          }
+        })
+        .catch(err => console.error("Checkout profile fetch failed:", err));
     }
-  }, [user, router]);
+  }, [user]);
 
   const paymentMethods: { id: string; name: string; accountNumber: string; enabled: boolean }[] =
     (settings?.paymentMethods ?? []).filter((m: any) => m.enabled);
@@ -180,11 +183,7 @@ export default function CheckoutPage() {
   };
 
   if (loading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-gray-100 border-t-black rounded-full animate-spin" />
-      </div>
-    );
+    return <PremiumLoader />;
   }
 
   const canSubmit = isCOD ? (codEnabled) : paymentMethods.length > 0;

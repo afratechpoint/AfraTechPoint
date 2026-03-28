@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { LayoutDashboard, ShoppingCart, Package, Users, ArrowLeft, Settings, Store, Image, ShieldAlert, Menu, X } from "lucide-react";
+import AdminHeader from "./AdminHeader";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import PremiumLoader from "@/components/PremiumLoader";
+import PushNotificationManager from "@/components/PushNotificationManager";
 
 export default function AdminClientLayout({
   children,
@@ -17,18 +20,11 @@ export default function AdminClientLayout({
   const router   = useRouter();
   const { user, loading, isAdmin, isShopManager, isOrderManager } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [newOrdersCount, setNewOrdersCount] = useState(0);
+  const prevCountRef = useRef(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Manual PWA registration for Admin
-  useEffect(() => {
-    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      navigator.serviceWorker
-        .register("/sw-admin.js", { scope: "/admin/" })
-        .then((reg) => {
-           console.log("Admin PWA registered with scope: /admin/");
-        })
-        .catch((err) => console.error("Admin PWA failed: ", err));
-    }
-  }, []);
+  // Note: sw-admin.js registration removed to favor unified firebase-messaging-sw.js
 
   // Still keep some theme-sync for when staying on client
   useEffect(() => {
@@ -70,14 +66,67 @@ export default function AdminClientLayout({
     }
     
   }, [user, loading, hasAccess, isAdmin, isShopManager, isOrderManager, pathname, router]);
+  
+  // Real-time order notifications (using polling as fallback for Firestore client rules)
+  useEffect(() => {
+    if (!hasAccess || loading) return;
 
-  // Show spinner while auth state resolves
+    // Initialize audio
+    audioRef.current = new Audio("/sounds/notification.mp3");
+
+    const bc = new BroadcastChannel("admin_order_updates");
+
+    const playNotification = () => {
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(() => {});
+      }
+    };
+
+    bc.onmessage = (event) => {
+      if (event.data?.type === "UPDATE_ORDER_COUNT") {
+        const newCount = event.data.count;
+        if (newCount > prevCountRef.current) {
+          playNotification();
+        }
+        setNewOrdersCount(newCount);
+        prevCountRef.current = newCount;
+      }
+    };
+
+    const fetchOrderCount = async () => {
+      try {
+        const res = await fetch("/api/admin/order-count", { cache: "no-store" });
+        const data = await res.json();
+        if (data.count !== undefined) {
+          if (data.count > prevCountRef.current) {
+            playNotification();
+            // Broadcast to other tabs
+            bc.postMessage({ type: "UPDATE_ORDER_COUNT", count: data.count });
+          }
+          setNewOrdersCount(data.count);
+          prevCountRef.current = data.count;
+        }
+      } catch (err) {
+        console.error("Failed to poll order count:", err);
+      }
+    };
+
+    // Initial fetch
+    fetchOrderCount();
+
+    // Poll every 5 seconds for "super fast" updates
+    const interval = setInterval(fetchOrderCount, 5000);
+
+    return () => {
+      clearInterval(interval);
+      bc.close();
+    };
+  }, [hasAccess, loading]);
+
+  // Show premium loader while auth state resolves
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="w-10 h-10 border-4 border-gray-200 border-t-black rounded-full animate-spin" />
-      </div>
-    );
+    return <PremiumLoader />;
   }
 
   // Show 403 screen for non-admins
@@ -108,22 +157,9 @@ export default function AdminClientLayout({
   const navItems = allNavItems.filter(item => item.roles.includes(currentRole));
 
   return (
-    <div className="flex flex-col md:flex-row w-full h-[100dvh] bg-gray-50/30 overflow-hidden relative">
-      
-      {/* Mobile Header Bar */}
-      <header className="md:hidden flex items-center justify-between px-5 h-16 bg-white border-b border-gray-100 sticky top-0 z-[60] shadow-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-black rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm">A</div>
-          <span className="font-bold text-base tracking-tighter">Admin.</span>
-        </div>
-        
-        <button 
-          onClick={() => setIsOpen(!isOpen)}
-          className="p-2.5 bg-gray-50 text-black rounded-xl border border-gray-100 active:scale-95 transition-all"
-        >
-          {isOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
-      </header>
+    <div className="flex flex-col w-full h-[100dvh] bg-gray-50/30 overflow-hidden relative">
+      {/* Full-width header with notification bell */}
+      <AdminHeader isOpen={isOpen} setIsOpen={setIsOpen} />
 
       {/* Backdrop for Mobile */}
       <AnimatePresence>
@@ -138,10 +174,11 @@ export default function AdminClientLayout({
         )}
       </AnimatePresence>
 
+      {/* Sidebar + Content Row */}
       <div className="flex flex-1 overflow-hidden relative">
         {/* Sidebar */}
         <aside className={cn(
-          "fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-100 flex flex-col p-5 shadow-2xl z-[50] transition-transform duration-500 ease-in-out md:shadow-sm md:relative md:w-56 md:translate-x-0 md:transition-none",
+          "fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-100 flex flex-col p-5 shadow-2xl z-[50] transition-transform duration-500 ease-in-out md:shadow-sm md:relative md:w-56 md:translate-x-0 md:transition-none md:mt-0",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}>
           <div className="flex items-center gap-3 mb-10">
@@ -168,7 +205,16 @@ export default function AdminClientLayout({
                   )}
                 >
                   <item.icon size={16} className={cn(isActive ? "text-[#ccff00]" : "text-gray-400")} />
-                  {item.label}
+                  <span className="flex-1">{item.label}</span>
+                  {item.label === "Orders" && newOrdersCount > 0 && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-red-500 text-[10px] text-white rounded-full font-black animate-pulse"
+                    >
+                      {newOrdersCount}
+                    </motion.div>
+                  )}
                 </Link>
               );
             })}
@@ -194,6 +240,7 @@ export default function AdminClientLayout({
           </div>
         </main>
       </div>
+      <PushNotificationManager />
     </div>
   );
 }

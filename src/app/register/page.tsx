@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, User, Eye, EyeOff, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { getFirebaseErrorMessage } from "@/lib/firebase/auth";
+import PremiumSpinner from "@/components/PremiumSpinner";
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
@@ -18,8 +19,15 @@ const GoogleIcon = () => (
 );
 
 export default function RegisterPage() {
-  const { signUp, googleSignIn } = useAuth();
+  const { user, loading, signUp, googleSignIn } = useAuth();
   const router = useRouter();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!loading && user) {
+      router.push("/account");
+    }
+  }, [user, loading, router]);
 
   const [firstName, setFirstName]             = useState("");
   const [lastName, setLastName]               = useState("");
@@ -196,7 +204,7 @@ export default function RegisterPage() {
             className="w-full h-12 rounded-xl border border-gray-200 flex items-center justify-center gap-3 hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-semibold text-gray-700 disabled:opacity-60 mb-5"
           >
             {isGoogleLoading
-              ? <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin" />
+              ? <PremiumSpinner size="sm" />
               : <GoogleIcon />
             }
             Continue with Google
@@ -307,7 +315,7 @@ export default function RegisterPage() {
               className="w-full h-11 bg-black text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-gray-900 active:scale-[0.98] transition-all disabled:opacity-60"
             >
               {isLoading
-                ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ? <PremiumSpinner size="sm" light />
                 : "Create Account"
               }
             </button>

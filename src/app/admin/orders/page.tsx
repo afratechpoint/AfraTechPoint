@@ -11,6 +11,7 @@ import {
   XCircle, Package, ChevronDown, RefreshCcw, Truck,
   Ban, CreditCard, Trash2, Banknote
 } from "lucide-react";
+import PremiumLoader from "@/components/PremiumLoader";
 import { cn } from "@/lib/utils";
 
 interface Order {
@@ -145,10 +146,21 @@ export default function AdminOrdersPage() {
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(""), 2500); };
 
   useEffect(() => {
-    fetch("/api/orders")
-      .then(r => r.json())
-      .then((data: Order[]) => { setOrders(data); setLoading(false); })
-      .catch(() => setLoading(false));
+    const fetchOrders = () => {
+      fetch("/api/orders", { cache: "no-store" })
+        .then(r => r.json())
+        .then((data: Order[]) => { 
+          if (Array.isArray(data)) {
+            setOrders(data); 
+          }
+          setLoading(false); 
+        })
+        .catch(() => setLoading(false));
+    };
+
+    fetchOrders();
+    const interval = setInterval(fetchOrders, 5000); // 5s poll for "super fast" updates
+    return () => clearInterval(interval);
   }, []);
 
   const patchOrder = useCallback(async (orderId: string, fields: Record<string, string>) => {
@@ -158,6 +170,7 @@ export default function AdminOrdersPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(fields),
+        cache: "no-store",
       });
       if (!res.ok) throw new Error();
       const updated = await res.json();
@@ -344,9 +357,7 @@ export default function AdminOrdersPage() {
       {/* Mobile Card View */}
       <div className="md:hidden space-y-4">
         {loading ? (
-          <div className="bg-white p-10 rounded-3xl border border-gray-100 flex items-center justify-center">
-            <div className="w-6 h-6 border-4 border-gray-100 border-t-gray-700 rounded-full animate-spin" />
-          </div>
+          <PremiumLoader />
         ) : filtered.length === 0 ? (
           <div className="bg-white p-10 rounded-3xl border border-gray-100 text-center text-gray-400 text-sm italic">
             No orders found.

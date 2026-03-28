@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { getFirebaseErrorMessage } from "@/lib/firebase/auth";
+import PremiumSpinner from "@/components/PremiumSpinner";
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
@@ -19,8 +20,15 @@ const GoogleIcon = () => (
 );
 
 export default function LoginPage() {
-  const { signIn, googleSignIn } = useAuth();
+  const { user, loading, signIn, googleSignIn } = useAuth();
   const router = useRouter();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!loading && user) {
+      router.push("/account");
+    }
+  }, [user, loading, router]);
 
   const [email, setEmail]                     = useState("");
   const [password, setPassword]               = useState("");
@@ -183,7 +191,7 @@ export default function LoginPage() {
                 className="w-full h-12 rounded-xl border border-gray-200 flex items-center justify-center gap-3 hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-semibold text-gray-700 disabled:opacity-60 mb-5"
               >
                 {isGoogleLoading
-                  ? <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin" />
+                  ? <PremiumSpinner size="sm" />
                   : <GoogleIcon />
                 }
                 Continue with Google
@@ -252,7 +260,7 @@ export default function LoginPage() {
                   className="w-full h-11 bg-black text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-gray-900 active:scale-[0.98] transition-all disabled:opacity-60"
                 >
                   {isLoading
-                    ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ? <PremiumSpinner size="sm" light />
                     : <><span>Sign In</span><ArrowRight size={16} /></>
                   }
                 </button>
@@ -265,7 +273,7 @@ export default function LoginPage() {
                   className="w-full h-11 bg-black text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-gray-900 active:scale-[0.98] transition-all disabled:opacity-60"
                 >
                   {resetStatus === "loading"
-                    ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ? <PremiumSpinner size="sm" light />
                     : <><span>Send Reset Link</span><Mail size={16} /></>
                   }
                 </button>

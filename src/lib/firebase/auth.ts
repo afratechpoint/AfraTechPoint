@@ -16,26 +16,8 @@ import {
   type User,
 } from "firebase/auth";
 import { auth } from "./client";
-import { db } from "./firestore";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
-
-import { syncUserToFirestore } from "@/app/actions/auth";
 
 const googleProvider = new GoogleAuthProvider();
-
-// ── Ensure User Exists in Firestore ───────────────────────────────
-async function ensureUserDoc(user: User, additionalData?: any) {
-  try {
-    await syncUserToFirestore(
-      user.uid,
-      user.email || "",
-      user.displayName || additionalData?.displayName || "",
-      user.photoURL || ""
-    );
-  } catch (err) {
-    console.error("Failed to sync user to Admin Firestore via Server Action:", err);
-  }
-}
 
 // ── Sign In ───────────────────────────────────────────────────────
 export async function signInWithEmail(
@@ -54,15 +36,12 @@ export async function signUpWithEmail(
   const cred = await createUserWithEmailAndPassword(auth, email, password);
   // Attach the display name to the Firebase profile
   await updateProfile(cred.user, { displayName: name });
-  // Ensure they have a user document in Firestore with 'customer' role
-  await ensureUserDoc(cred.user, { displayName: name });
   return cred;
 }
 
 // ── Google Sign-In ────────────────────────────────────────────────
 export async function signInWithGoogle(): Promise<UserCredential> {
   const cred = await signInWithPopup(auth, googleProvider);
-  await ensureUserDoc(cred.user);
   return cred;
 }
 

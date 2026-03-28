@@ -14,6 +14,7 @@ import {
   logOut,
   sendPasswordReset,
 } from "@/lib/firebase/auth";
+import { syncUserToFirestore } from "@/app/actions/auth";
 
 // ── Types ─────────────────────────────────────────────────────────
 interface AuthContextValue {
@@ -96,11 +97,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (name: string, email: string, password: string) => {
-    await signUpWithEmail(name, email, password);
+    const cred = await signUpWithEmail(name, email, password);
+    // Sync to Firestore via Server Action
+    if (cred.user) {
+      await syncUserToFirestore(
+        cred.user.uid,
+        cred.user.email || "",
+        name,
+        cred.user.photoURL || ""
+      ).catch(console.error);
+    }
   };
 
   const googleSignIn = async () => {
-    await signInWithGoogle();
+    const cred = await signInWithGoogle();
+    // Sync to Firestore via Server Action
+    if (cred.user) {
+      await syncUserToFirestore(
+        cred.user.uid,
+        cred.user.email || "",
+        cred.user.displayName || "",
+        cred.user.photoURL || ""
+      ).catch(console.error);
+    }
   };
 
   const logout = async () => {

@@ -12,6 +12,7 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { useSettings } from "@/components/SettingsProvider";
 import { Suspense } from "react";
+import PremiumLoader from "@/components/PremiumLoader";
 
 interface Product {
   id: string;
@@ -388,11 +389,7 @@ function ShopContent() {
 
 export default function ShopPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-gray-100 border-t-black rounded-full animate-spin" />
-      </div>
-    }>
+    <Suspense fallback={<PremiumLoader />}>
       <ShopContent />
     </Suspense>
   );

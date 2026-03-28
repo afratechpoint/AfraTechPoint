@@ -17,6 +17,7 @@ import Footer from "@/components/Footer";
 import { useUI } from "@/lib/ui";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/components/SettingsProvider";
+import PremiumLoader from "@/components/PremiumLoader";
 
 const STATUS_STYLES: Record<string, string> = {
   Delivered:  "bg-green-50 text-green-600 border-green-100",
@@ -55,17 +56,22 @@ function AccountContent() {
   const [orders, setOrders]           = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
 
-  // Pre-fill profile fields from Firebase + localStorage
+  // Pre-fill profile fields from Firestore (PERSISTENT)
   useEffect(() => {
     if (user) {
       setDisplayName(user.displayName ?? "");
-      const stored = localStorage.getItem(`profile_extra_${user.uid}`);
-      if (stored) {
-        const { phone: p, address: a, bio: b } = JSON.parse(stored);
-        setPhone(p ?? "");
-        setAddress(a ?? "");
-        setBio(b ?? "");
-      }
+      
+      // Fetch the persistent profile from Firestore
+      fetch(`/api/profile?uid=${user.uid}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data) {
+                setPhone(data.phone ?? "");
+                setAddress(data.address ?? "");
+                setBio(data.bio ?? "");
+            }
+        })
+        .catch(err => console.error("Failed to load profile from Firestore:", err));
     }
   }, [user]);
 
@@ -87,11 +93,7 @@ function AccountContent() {
   }, [user, loading, router]);
 
   if (loading || !user) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-gray-100 border-t-black rounded-full animate-spin" />
-      </div>
-    );
+    return <PremiumLoader />;
   }
 
   // ── Save profile ────────────────────────────────────────────────
@@ -102,13 +104,20 @@ function AccountContent() {
     }
     setIsSaving(true);
     try {
-      // 1. Update Firebase displayName (only field Firebase profile supports without extra DB)
+      // 1. Update Firebase displayName (Authentication profile)
       await updateProfile(user, { displayName: displayName.trim() });
 
-      // 2. Persist extra fields (phone, address, bio) in localStorage per user
-      localStorage.setItem(`profile_extra_${user.uid}`, JSON.stringify({ phone, address, bio }));
+      // 2. Persist extra fields (phone, address, bio) in Firestore for all devices
+      await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          uid: user.uid, 
+          data: { phone, address, bio, displayName } 
+        }),
+      });
 
-      toast.success("Profile updated!");
+      toast.success("Profile saved to database!");
       setIsEditing(false);
     } catch {
       toast.error("Failed to save. Please try again.");
@@ -118,14 +127,21 @@ function AccountContent() {
   };
 
   const handleCancel = () => {
-    // Reset to current Firebase values
-    setDisplayName(user.displayName ?? "");
-    const stored = localStorage.getItem(`profile_extra_${user.uid}`);
-    if (stored) {
-      const { phone: p, address: a, bio: b } = JSON.parse(stored);
-      setPhone(p ?? ""); setAddress(a ?? ""); setBio(b ?? "");
-    }
+    // Re-trigger the initial fetch logic by simply resetting the state or re-fetching
     setIsEditing(false);
+    // (In a real app, you might want to re-run the fetch useEffect here)
+    if (user) {
+      fetch(`/api/profile?uid=${user.uid}`)
+        .then(r => r.json())
+        .then(data => {
+            setDisplayName(user.displayName ?? "");
+            if (data) {
+                setPhone(data.phone ?? "");
+                setAddress(data.address ?? "");
+                setBio(data.bio ?? "");
+            }
+        });
+    }
   };
 
   const handleSignOut = async () => { await logout(); router.push("/"); };
@@ -373,6 +389,27 @@ function AccountContent() {
                       </div>
                     </div>
 
+                    {/* Notification Settings (Mobile Compatibility) */}
+                    <div className="flex flex-col gap-4 p-4 bg-black rounded-[2rem] border border-gray-800 text-white mt-12 shadow-xl shadow-black/10">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/5 shrink-0">
+                          <Package size={16} className="text-[#ccff00]" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1.5 font-mono">Order Status Alerts</p>
+                          <h3 className="text-sm font-bold text-gray-100 italic">Push Notifications</h3>
+                        </div>
+                        <button
+                          onClick={() => (window as any).triggerPushPermission?.(false)}
+                          className="px-5 h-10 bg-[#ccff00] text-black text-[10px] font-black uppercase tracking-wider rounded-xl hover:bg-[#b8e600] active:scale-95 transition-all shadow-lg shadow-[#ccff00]/10"
+                        >
+                          Enable Alerts
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-gray-400 font-medium leading-relaxed opacity-80">
+                        Stay updated on the go! Get instant mobile alerts for your order tracking, status changes, and exclusive shop offers.
+                      </p>
+                    </div>
 
                   </motion.div>
                 )}
@@ -477,11 +514,7 @@ function AccountContent() {
 
 export default function AccountPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-gray-100 border-t-black rounded-full animate-spin" />
-      </div>
-    }>
+    <Suspense fallback={<PremiumLoader />}>
       <AccountContent />
     </Suspense>
   );

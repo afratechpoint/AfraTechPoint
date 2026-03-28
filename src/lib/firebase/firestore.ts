@@ -16,6 +16,7 @@ import {
   orderBy,
   Timestamp,
   serverTimestamp,
+  onSnapshot,
 } from "firebase/firestore";
 import type { Order } from "@/types/order";
 
@@ -93,6 +94,43 @@ export async function getAllOrders(): Promise<Order[]> {
       createdAt: (data.createdAt as Timestamp)?.toDate() ?? new Date(),
       updatedAt: (data.updatedAt as Timestamp)?.toDate() ?? new Date(),
     } as Order;
+  });
+}
+
+// ── Real-time subscription for ALL orders (admin) ─────────────────────────
+export function subscribeToAllOrders(callback: (orders: Order[]) => void) {
+  const q = query(
+    collection(db, "orders"),
+    orderBy("createdAt", "desc")
+  );
+
+  return onSnapshot(q, (snap) => {
+    const orders = snap.docs.map((d) => {
+      const data = d.data();
+      return {
+        id: d.id,
+        ...data,
+        createdAt: (data.createdAt as Timestamp)?.toDate() ?? new Date(),
+        updatedAt: (data.updatedAt as Timestamp)?.toDate() ?? new Date(),
+      } as Order;
+    });
+    callback(orders);
+  }, (error) => {
+    console.error("Error subscribing to orders:", error);
+  });
+}
+
+// ── Real-time count of NEW orders (pending) ───────────────────────────
+export function subscribeToNewOrdersCount(callback: (count: number) => void) {
+  const q = query(
+    collection(db, "orders"),
+    where("orderStatus", "==", "pending")
+  );
+
+  return onSnapshot(q, (snap) => {
+    callback(snap.size);
+  }, (error) => {
+    console.error("Error subscribing to new orders count:", error);
   });
 }
 

@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useCart } from "@/lib/cart";
 import { useSettings } from "@/components/SettingsProvider";
 import { useAuth } from "@/contexts/AuthContext";
+import ShopNotificationBell from "@/components/ShopNotificationBell";
 
 interface NavbarProps {
   searchEnabled?: boolean;
@@ -66,6 +67,7 @@ export default function Navbar({
         </Link>
         {!isAuthPage && (
           <div className="flex items-center gap-2">
+            <ShopNotificationBell />
             <Link
               href="/cart"
               className="p-2.5 rounded-2xl bg-gray-50 text-gray-900 border border-gray-100 shadow-sm relative active:scale-95 transition-all"
@@ -152,6 +154,7 @@ export default function Navbar({
 
           {/* Cart button */}
           <div className="hidden md:flex items-center gap-3">
+            <ShopNotificationBell />
             <Link
               href="/cart"
               className="p-2.5 rounded-full bg-white shadow-sm border border-gray-100 hover:bg-gray-50 transition-all relative group block"

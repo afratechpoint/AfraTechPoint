@@ -101,14 +101,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className="bg-[#f9fafb] overscroll-y-none" suppressHydrationWarning>
       <head>
-        <meta name="application-name" content="Afra Tech Point" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Afra Tech" />
         <meta name="format-detection" content="telephone=no" />
-        <meta name="theme-color" content="#111111" />
-        <link rel="apple-touch-icon" href="/icons/shop-icon-192.png" />
         <style
           suppressHydrationWarning
           dangerouslySetInnerHTML={{

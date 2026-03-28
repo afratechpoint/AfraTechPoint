@@ -86,6 +86,15 @@ export const storage = {
     await writeData(ordersFile, filtered);
   },
 
+  async getPendingOrdersCount() {
+    if (USE_FIREBASE) {
+      const { getPendingOrdersCount } = await getAdapter();
+      return await getPendingOrdersCount();
+    }
+    const orders = await readData(ordersFile);
+    return orders.filter((o: any) => o.orderStatus === "pending").length;
+  },
+
   // ── Products ──────────────────────────────────────────────────────────
   async getProducts() {
     if (USE_FIREBASE) {
@@ -128,5 +137,52 @@ export const storage = {
     const products = await readData(productsFile);
     const filtered = products.filter((p: any) => p.id !== id);
     await writeData(productsFile, filtered);
+  },
+
+  // ── Notifications ─────────────────────────────────────────────────────
+  async getNotifications(recipient: string = "admin", limit: number = 20) {
+    if (USE_FIREBASE) {
+      const { getNotifications } = await getAdapter();
+      return await getNotifications(recipient, limit);
+    }
+    // Fallback for local storage (optional, for now return empty)
+    return [];
+  },
+
+  async markNotificationAsRead(id: string) {
+    if (USE_FIREBASE) {
+      const { markNotificationAsRead } = await getAdapter();
+      return await markNotificationAsRead(id);
+    }
+  },
+
+  async markAllNotificationsAsRead(recipient: string = "admin") {
+    if (USE_FIREBASE) {
+      const { markAllNotificationsAsRead } = await getAdapter();
+      return await markAllNotificationsAsRead(recipient);
+    }
+  },
+
+  async savePushToken(uid: string, token: string) {
+    if (USE_FIREBASE) {
+      const { savePushTokenInFirestore } = await getAdapter();
+      return await savePushTokenInFirestore(uid, token);
+    }
+  },
+
+  // ── User Profiles ─────────────────────────────────────────────────────
+  async getUserProfile(uid: string) {
+    if (USE_FIREBASE) {
+      const { getUserProfileFromFirestore } = await getAdapter();
+      return await getUserProfileFromFirestore(uid);
+    }
+    return null;
+  },
+
+  async updateUserProfile(uid: string, data: any) {
+    if (USE_FIREBASE) {
+      const { updateUserProfileInFirestore } = await getAdapter();
+      return await updateUserProfileInFirestore(uid, data);
+    }
   }
 };

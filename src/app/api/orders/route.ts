@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { storage } from '@/lib/storage';
+export const dynamic = 'force-dynamic';
 import { sendEmail } from "@/lib/email/sendEmail";
 import { OrderConfirmation, NewOrderAdminNotification } from "@/emails/renderers/index";
 

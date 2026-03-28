@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import PremiumSpinner from "@/components/PremiumSpinner";
 
 interface MediaFile {
   name: string;
@@ -172,7 +173,7 @@ export default function AdminMediaPage() {
         />
         {isUploading ? (
           <>
-            <Loader2 size={32} className="animate-spin text-gray-400" />
+            <PremiumSpinner size="lg" />
             <p className="text-sm font-bold text-gray-500">Uploading...</p>
           </>
         ) : (
@@ -275,7 +276,7 @@ export default function AdminMediaPage() {
                         disabled={deleting === file.name}
                       >
                         {deleting === file.name
-                          ? <Loader2 size={14} className="animate-spin text-red-500" />
+                          ? <PremiumSpinner size="sm" />
                           : <Trash2 size={14} className="text-red-500" />}
                       </button>
                     </div>
@@ -359,7 +360,7 @@ export default function AdminMediaPage() {
                     className="w-9 h-9 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-colors disabled:opacity-50"
                   >
                     {deleting === selected.name
-                      ? <Loader2 size={14} className="animate-spin" />
+                      ? <PremiumSpinner size="sm" />
                       : <Trash2 size={14} />}
                   </button>
                 </div>
