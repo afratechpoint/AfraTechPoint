@@ -1,9 +1,9 @@
-console.log('[SW] Firebase Messaging Service Worker Loading v4.4...');
+console.log('[SW] Firebase Messaging Service Worker Loading v5.0...');
 
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
 
-const CACHE_NAME = 'afra-tech-point-v4.1';
+const CACHE_NAME = 'afra-tech-point-v5.0';
 const ASSETS_TO_CACHE = [
   '/',
   '/logo.png',
@@ -113,16 +113,40 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   
   const url = new URL(event.request.url);
-  // Do not cache API, Next.js internal, or Firebase scripts
+
+  // Skip: API calls, Next.js internals, Firebase CDN scripts — never cache these
   if (
     url.pathname.startsWith('/api/') || 
     url.pathname.startsWith('/_next/') || 
     url.hostname.includes('gstatic.com') ||
     url.hostname.includes('firebasejs')
   ) {
+    return; // Let the browser handle it normally
+  }
+
+  // NAVIGATION (HTML pages) → Network-First strategy
+  // This ensures every regular page refresh shows the LATEST content.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          // Update cache with the fresh response
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+          }
+          return response;
+        })
+        .catch(() => {
+          // Offline fallback: serve cached page or offline.html
+          return caches.match(event.request).then((cached) => cached || caches.match('/offline.html'));
+        })
+    );
     return;
   }
 
+  // STATIC ASSETS (images, icons, fonts) → Cache-First strategy
+  // Fast load from cache, fall back to network.
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) return cachedResponse;
@@ -130,16 +154,10 @@ self.addEventListener('fetch', (event) => {
       return fetch(event.request).then((response) => {
         if (response && response.status === 200 && response.type === 'basic') {
           const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
         }
         return response;
-      }).catch(() => {
-        if (event.request.mode === 'navigate') {
-          return caches.match('/offline.html');
-        }
-      });
+      }).catch(() => null);
     })
   );
 });
