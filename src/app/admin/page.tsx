@@ -98,46 +98,46 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="lg:col-span-4 bg-black rounded-3xl p-6 text-white flex flex-col justify-between shadow-xl shadow-black/10">
+        <div className="lg:col-span-4 bg-white rounded-3xl p-6 text-gray-900 flex flex-col justify-between shadow-sm border border-gray-100">
            <div>
-              <h3 className="text-lg font-bold mb-1.5">Quick Actions</h3>
+              <h3 className="text-lg font-bold mb-1.5 text-gray-900">Quick Actions</h3>
               <p className="text-[10px] text-gray-400 font-medium leading-relaxed">Instantly manage your store's inventory and view customer feedback.</p>
            </div>
            
            <div className="space-y-2 mt-6">
-              <Link href="/admin/products" className="w-full bg-white/10 hover:bg-white/20 p-3 rounded-xl flex items-center justify-between transition-all group">
+              <Link href="/admin/products" className="w-full bg-gray-50 hover:bg-gray-100 border border-gray-100 p-3 rounded-xl flex items-center justify-between transition-all group">
                 <div className="flex items-center gap-2.5">
-                  <Package size={16} className="text-[#ccff00]" />
-                  <span className="text-xs font-bold">Manage Catalog</span>
+                  <Package size={16} className="text-purple-500" />
+                  <span className="text-xs font-bold text-gray-700">Manage Catalog</span>
                 </div>
-                <ArrowRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                <ArrowRight size={12} className="text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
-              <Link href="/admin/orders" className="w-full bg-white/10 hover:bg-white/20 p-3 rounded-xl flex items-center justify-between transition-all group">
+              <Link href="/admin/orders" className="w-full bg-gray-50 hover:bg-gray-100 border border-gray-100 p-3 rounded-xl flex items-center justify-between transition-all group">
                 <div className="flex items-center gap-2.5">
-                  <ShoppingCart size={16} className="text-blue-400" />
-                  <span className="text-xs font-bold">Process Orders</span>
+                  <ShoppingCart size={16} className="text-blue-500" />
+                  <span className="text-xs font-bold text-gray-700">Process Orders</span>
                 </div>
-                <ArrowRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                <ArrowRight size={12} className="text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
               
               {/* Admin Alerts Registration (Mobile Compatibility) */}
               <button 
                 onClick={() => (window as any).triggerPushPermission?.(true)}
-                className="w-full bg-[#ccff00] hover:bg-[#b8e600] p-3 rounded-xl flex items-center justify-between transition-all group group-hover:scale-[1.02] shadow-lg shadow-[#ccff00]/5"
+                className="w-full bg-black hover:bg-gray-900 p-3 rounded-xl flex items-center justify-between transition-all group shadow-md"
               >
                 <div className="flex items-center gap-2.5">
-                  <TrendingUp size={16} className="text-black" />
-                  <span className="text-xs font-black text-black uppercase tracking-tight">Enable Admin Alerts</span>
+                  <TrendingUp size={16} className="text-[#ccff00]" />
+                  <span className="text-xs font-black text-white uppercase tracking-tight">Enable Admin Alerts</span>
                 </div>
-                <Check size={12} className="text-black" />
+                <Check size={12} className="text-[#ccff00]" />
               </button>
            </div>
 
-           <div className="mt-6 pt-6 border-t border-white/10">
-              <p className="text-[8px] text-gray-500 font-bold uppercase tracking-widest mb-1">Store Status</p>
+           <div className="mt-6 pt-6 border-t border-gray-100">
+              <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest mb-1">Store Status</p>
               <div className="flex items-center gap-2">
                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-                 <p className="text-[10px] font-bold text-gray-300">Online & Accepting Payments</p>
+                 <p className="text-[10px] font-bold text-gray-500">Online & Accepting Payments</p>
               </div>
            </div>
         </div>
