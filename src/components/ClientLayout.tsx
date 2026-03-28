@@ -53,7 +53,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         {isLoading && <PremiumLoader />}
       </AnimatePresence>
       {children}
-      <PushNotificationManager />
+      <Suspense fallback={null}>
+        <PushNotificationManager />
+      </Suspense>
       <Toaster position="top-center" toastOptions={{
         style: { background: 'black', color: 'white', border: 'none', borderRadius: '16px' }
       }} />
