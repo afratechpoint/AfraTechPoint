@@ -75,21 +75,22 @@ export async function updateProduct(id: string, formData: FormData) {
   redirect("/admin/products");
 }
 
-// ── DELETE ───────────────────────────────────────────────────────
-
 /**
  * deleteProduct — called from the product table after confirmation.
+ * Refactored to call storage directly for better reliability and performance.
  */
 export async function deleteProduct(id: string) {
-  const res = await fetch(`${API_BASE}/api/products/${id}`, { method: "DELETE" });
+  try {
+    const { storage } = await import("@/lib/storage");
+    await storage.deleteProduct(id);
 
-  if (!res.ok) {
+    revalidatePath("/admin/products");
+    revalidatePath("/shop");
+    return { success: true };
+  } catch (error: any) {
+    console.error(`[AdminAction] deleteProduct failed for ID: ${id}`, error.message);
     return { success: false, message: "Failed to delete product." };
   }
-
-  revalidatePath("/admin/products");
-  revalidatePath("/shop");
-  return { success: true };
 }
 
 // ── Helper ───────────────────────────────────────────────────────

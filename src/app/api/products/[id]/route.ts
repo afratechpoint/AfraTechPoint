@@ -37,11 +37,17 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-  await storage.deleteProduct(id);
+  try {
+    const { id } = await params;
+    console.log(`[API] Deleting product: ${id}`);
+    await storage.deleteProduct(id);
 
-  revalidatePath("/");
-  revalidatePath("/shop");
+    revalidatePath("/");
+    revalidatePath("/shop");
 
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error("[API] Product deletion error:", error.message);
+    return NextResponse.json({ error: "Failed to delete product" }, { status: 500 });
+  }
 }
