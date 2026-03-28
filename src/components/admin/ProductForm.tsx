@@ -1,8 +1,9 @@
 "use client";
+// Tags feature added — supports SEO keywords & related products
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, Loader2, Image as ImageIcon, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Image as ImageIcon, Plus, Trash2, Tag, X } from "lucide-react";
 import Link from "next/link";
 import { useSettings } from "@/components/SettingsProvider";
 import MediaPickerModal from "@/components/admin/MediaPickerModal";
@@ -30,6 +31,7 @@ interface Product {
   specifications?: { label: string; value: string }[];
   price?: number; // Deprecated: Use regularPrice/salePrice
   variants?: Variant[];
+  tags?: string[];
 }
 
 interface ProductFormProps {
@@ -54,6 +56,27 @@ export default function ProductForm({ initialData }: ProductFormProps) {
   const [specs, setSpecs] = useState<{label: string, value: string}[]>(
     Array.isArray((initialData as any)?.specifications) ? (initialData as any).specifications : []
   );
+
+  // Tags state
+  const [tags, setTags] = useState<string[]>(Array.isArray((initialData as any)?.tags) ? (initialData as any).tags : []);
+  const [tagInput, setTagInput] = useState("");
+
+  const addTag = (raw: string) => {
+    const cleaned = raw.trim().toLowerCase().replace(/[^a-z0-9\u0980-\u09FF\s_-]/gi, "");
+    if (cleaned && !tags.includes(cleaned)) {
+      setTags(prev => [...prev, cleaned]);
+    }
+    setTagInput("");
+  };
+
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      addTag(tagInput);
+    } else if (e.key === "Backspace" && tagInput === "" && tags.length > 0) {
+      setTags(prev => prev.slice(0, -1));
+    }
+  };
 
   // Sync variants when regularPrice/salePrice changes
   useEffect(() => {
@@ -93,6 +116,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
           variants,
           gallery,
           specifications: specs,
+          tags,
         }),
       });
 
@@ -281,6 +305,45 @@ export default function ProductForm({ initialData }: ProductFormProps) {
               placeholder="Detailed product overview for the robust description tab..."
               className="w-full h-32 p-4 rounded-xl bg-gray-50 border-none ring-1 ring-gray-100 focus:ring-2 focus:ring-black outline-none transition-all text-sm font-medium resize-none leading-relaxed whitespace-pre-line" 
             />
+          </div>
+
+          {/* ── Tags ── */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between ml-1">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                <Tag size={11} /> Tags
+                {tags.length > 0 && <span className="bg-gray-100 text-gray-500 rounded-full px-2 py-0.5 text-[9px] font-black">{tags.length}</span>}
+              </label>
+              <span className="text-[9px] text-gray-300 font-medium">Press Enter or comma to add</span>
+            </div>
+
+            <div className="min-h-[48px] flex flex-wrap gap-2 p-3 bg-gray-50 rounded-xl ring-1 ring-gray-100 focus-within:ring-2 focus-within:ring-black transition-all cursor-text"
+              onClick={(e) => { (e.currentTarget.querySelector('input') as HTMLInputElement)?.focus(); }}
+            >
+              {tags.map(tag => (
+                <span key={tag} className="inline-flex items-center gap-1 px-2.5 py-1 bg-black text-white text-[10px] font-bold rounded-full shrink-0">
+                  #{tag}
+                  <button type="button" onClick={() => setTags(prev => prev.filter(t => t !== tag))}
+                    className="hover:text-red-300 transition-colors leading-none">
+                    <X size={10} />
+                  </button>
+                </span>
+              ))}
+              <input
+                value={tagInput}
+                onChange={e => setTagInput(e.target.value)}
+                onKeyDown={handleTagKeyDown}
+                onBlur={() => tagInput.trim() && addTag(tagInput)}
+                placeholder={tags.length === 0 ? "e.g. smartphone, wireless, android..." : ""}
+                className="flex-1 min-w-[160px] bg-transparent outline-none text-sm font-medium text-gray-700 placeholder:text-gray-300"
+              />
+            </div>
+
+            {tags.length > 0 && (
+              <p className="text-[9px] text-gray-300 font-medium ml-1">
+                {tags.length} tag{tags.length > 1 ? 's' : ''} · Used for SEO & related products
+              </p>
+            )}
           </div>
 
           <div className="space-y-4 pt-2">

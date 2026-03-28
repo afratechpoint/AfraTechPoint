@@ -42,4 +42,6 @@ export interface Product {
   stock?: number;
   /** Rating out of 5 */
   rating?: number;
+  /** SEO & related product tags */
+  tags?: string[];
 }
