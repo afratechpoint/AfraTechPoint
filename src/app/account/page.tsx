@@ -389,28 +389,6 @@ function AccountContent() {
                       </div>
                     </div>
 
-                    {/* Notification Settings (Mobile Compatibility) */}
-                    <div className="flex flex-col gap-4 p-4 bg-black rounded-[2rem] border border-gray-800 text-white mt-12 shadow-xl shadow-black/10">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/5 shrink-0">
-                          <Package size={16} className="text-[#ccff00]" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1.5 font-mono">Order Status Alerts</p>
-                          <h3 className="text-sm font-bold text-gray-100 italic">Push Notifications</h3>
-                        </div>
-                        <button
-                          onClick={() => (window as any).triggerPushPermission?.(false)}
-                          className="px-5 h-10 bg-[#ccff00] text-black text-[10px] font-black uppercase tracking-wider rounded-xl hover:bg-[#b8e600] active:scale-95 transition-all shadow-lg shadow-[#ccff00]/10"
-                        >
-                          Enable Alerts
-                        </button>
-                      </div>
-                      <p className="text-[10px] text-gray-400 font-medium leading-relaxed opacity-80">
-                        Stay updated on the go! Get instant mobile alerts for your order tracking, status changes, and exclusive shop offers.
-                      </p>
-                    </div>
-
                   </motion.div>
                 )}
 
