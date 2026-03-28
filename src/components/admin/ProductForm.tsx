@@ -448,21 +448,21 @@ export default function ProductForm({ initialData }: ProductFormProps) {
           <div className="lg:col-span-4 space-y-5">
 
             {/* Publish / Save */}
-            <div className="bg-black rounded-[1.5rem] p-5 text-white">
+            <div className="bg-white rounded-[1.5rem] border border-gray-100 p-5 shadow-sm text-gray-900">
               <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
                 {initialData ? "Update Product" : "Publish Product"}
               </p>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full h-12 bg-white text-black rounded-xl font-black text-sm hover:bg-gray-100 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full h-12 bg-black text-white rounded-xl font-black text-sm hover:bg-gray-800 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                 {isSubmitting ? "Saving…" : (initialData ? "Save Changes" : "Create Product")}
               </button>
               <Link
                 href="/admin/products"
-                className="mt-2 w-full h-10 rounded-xl text-xs font-bold text-gray-500 hover:text-white hover:bg-white/10 flex items-center justify-center transition-all"
+                className="mt-2 w-full h-10 rounded-xl text-xs font-bold text-gray-500 hover:text-black hover:bg-gray-50 flex items-center justify-center transition-all"
               >
                 Cancel
               </Link>
