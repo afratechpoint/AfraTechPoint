@@ -1,9 +1,9 @@
-console.log('[SW] Firebase Messaging Service Worker Loading v5.0...');
+console.log('[SW] Firebase Messaging Service Worker Loading v5.1...');
 
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
 
-const CACHE_NAME = 'afra-tech-point-v5.0';
+const CACHE_NAME = 'afra-tech-point-v5.1';
 const ASSETS_TO_CACHE = [
   '/',
   '/logo.png',
@@ -13,12 +13,12 @@ const ASSETS_TO_CACHE = [
 ];
 
 firebase.initializeApp({
-  apiKey: "AIzaSyBmYiVrrzBByjY_XZQPffFKp928ba3fNYQ",
-  authDomain: "afra-tech-point.firebaseapp.com",
-  projectId: "afra-tech-point",
-  storageBucket: "afra-tech-point.firebasestorage.app",
-  messagingSenderId: "715017478991",
-  appId: "1:715017478991:web:6ddfe0f45f5e93121bdb3a"
+  apiKey: "AIzaSyDtgYq8LipfH9utcvi-V93TTe-QAeKQn5c",
+  authDomain: "afra-tech-backup.firebaseapp.com",
+  projectId: "afra-tech-backup",
+  storageBucket: "afra-tech-backup.firebasestorage.app",
+  messagingSenderId: "964585460815",
+  appId: "1:964585460815:web:371460059841e85aab063a"
 });
 
 const messaging = firebase.messaging();
