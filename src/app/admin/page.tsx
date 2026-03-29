@@ -14,9 +14,8 @@ export default function AdminDashboard() {
   useEffect(() => {
     Promise.all([
       fetch('/api/orders').then(r => r.json()),
-      fetch('/api/products').then(r => r.json()),
-      fetch('/api/stats/traffic').then(r => r.json()).catch(() => ({ count: 0 }))
-    ]).then(([orders, products, trafficData]) => {
+      fetch('/api/products').then(r => r.json())
+    ]).then(([orders, products]) => {
       // Calculate unique customers based on order history
       const uniqueCustomers = new Set(orders.map((o: any) => o.customer?.email).filter(Boolean));
       const completed = orders.filter((o: any) => o.status === "delivered" || o.orderStatus === "delivered").length;
@@ -26,7 +25,7 @@ export default function AdminDashboard() {
         products: products.length,
         customers: uniqueCustomers.size,
         completedOrders: completed,
-        traffic: trafficData.count || 0
+        traffic: 0
       });
       setRecentOrders(orders.slice(0, 5));
     });
@@ -35,8 +34,8 @@ export default function AdminDashboard() {
   const metrics = [
     { label: "Total Products", value: stats.products, icon: Package, color: "bg-purple-500" },
     { label: "Total Customers", value: stats.customers, icon: Users, color: "bg-emerald-500" },
+    { label: "Orders Placed", value: stats.orders, icon: ShoppingCart, color: "bg-orange-500" },
     { label: "Orders Completed", value: stats.completedOrders, icon: Check, color: "bg-blue-500" },
-    { label: "Website Traffic", value: stats.traffic, icon: TrendingUp, color: "bg-orange-500" },
   ];
 
   return (

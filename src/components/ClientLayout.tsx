@@ -9,7 +9,6 @@ import { AnimatePresence } from "framer-motion";
 import NavigationObserver from "@/components/NavigationObserver";
 import PremiumLoader from "@/components/PremiumLoader";
 import PushNotificationManager from "@/components/PushNotificationManager";
-import TrafficTracker from "@/components/TrafficTracker";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const { isLoading } = useUI();
@@ -35,7 +34,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <Toaster position="top-center" toastOptions={{
         style: { background: 'black', color: 'white', border: 'none', borderRadius: '16px' }
       }} />
-      <TrafficTracker />
       {!hideMobileNav && <MobileNav />}
     </>
   );
