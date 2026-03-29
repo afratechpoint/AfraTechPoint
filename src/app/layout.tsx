@@ -1,4 +1,12 @@
+import React from "react";
 import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { storage } from "@/lib/storage";
+import ClientLayout from "@/components/ClientLayout";
+import SettingsProvider from "@/components/SettingsProvider";
+import { THEMES, ThemeId } from "@/lib/themes";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -7,13 +15,6 @@ export const viewport: Viewport = {
   userScalable: false,
   viewportFit: "cover",
 };
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { storage } from "@/lib/storage";
-import ClientLayout from "@/components/ClientLayout";
-import SettingsProvider from "@/components/SettingsProvider";
-import { THEMES, ThemeId } from "@/lib/themes";
-import { AuthProvider } from "@/contexts/AuthContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
