@@ -12,6 +12,7 @@ import { useCart } from "@/lib/cart";
 import { addToCartAction } from "../actions";
 import { Variant } from "../types";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 interface AddToCartButtonProps {
   productId: string;
@@ -82,35 +83,47 @@ export default function AddToCartButton({
     router.push("/checkout");
   };
 
+  const isSelectionRequired = hasVariants && !selectedVariant;
+  const isDisabled = isLoading || isSelectionRequired;
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
       {/* Add to Cart */}
       <button
         onClick={handleAddToCart}
-        disabled={isLoading}
+        disabled={isDisabled}
         style={{
-          backgroundColor: "var(--primary)",
-          color: "var(--primary-text)",
-          boxShadow: "0 10px 15px -3px var(--primary-accent)",
+          backgroundColor: isSelectionRequired ? "#e5e7eb" : "var(--primary)",
+          color: isSelectionRequired ? "#9ca3af" : "var(--primary-text)",
+          boxShadow: isSelectionRequired ? "none" : "0 10px 15px -3px var(--primary-accent)",
         }}
-        className="h-9 md:h-11 rounded-xl font-black text-[8px] md:text-[9px] uppercase tracking-widest flex items-center justify-center gap-2 hover:scale-[1.03] active:scale-[0.97] transition-all group overflow-hidden relative disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+        className="h-9 md:h-11 rounded-xl font-black text-[8px] md:text-[9px] uppercase tracking-widest flex items-center justify-center gap-2 hover:scale-[1.03] active:scale-[0.97] transition-all group overflow-hidden relative disabled:opacity-80 disabled:cursor-not-allowed disabled:hover:scale-100"
       >
-        <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+        {!isSelectionRequired && (
+          <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+        )}
         {isLoading ? (
           <Loader2 size={12} className="animate-spin relative z-10" />
         ) : (
           <ShoppingBag size={12} className="relative z-10" />
         )}
-        <span className="relative z-10">{isLoading ? "Adding…" : "Add to Cart"}</span>
+        <span className="relative z-10">
+          {isLoading ? "Adding…" : isSelectionRequired ? "Select Variant" : "Add to Cart"}
+        </span>
       </button>
 
       {/* Buy Now */}
       <button
         onClick={handleBuyNow}
-        disabled={isLoading}
-        className="h-9 md:h-11 bg-white text-black border md:border-2 border-black rounded-xl font-black text-[8px] md:text-[9px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-black hover:text-white transition-all hover:scale-[1.03] active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed"
+        disabled={isDisabled}
+        className={cn(
+          "h-9 md:h-11 rounded-xl font-black text-[8px] md:text-[9px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+          isSelectionRequired
+            ? "bg-gray-100 text-gray-400 border border-transparent"
+            : "bg-white text-black border md:border-2 border-black hover:bg-black hover:text-white hover:scale-[1.03] active:scale-[0.97]"
+        )}
       >
-        Buy Now
+        {isSelectionRequired ? "Pick Options" : "Buy Now"}
       </button>
     </div>
   );

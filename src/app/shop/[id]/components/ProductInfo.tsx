@@ -86,22 +86,10 @@ export default function ProductInfo({
             <div className="flex justify-between items-center">
               <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Select Variant</p>
               <span className="text-[8px] md:text-[9px] font-bold text-black bg-white px-2 py-1 rounded-md border border-gray-100">
-                Selected: {selectedVariant ? selectedVariant.name : "Default"}
+                Selected: {selectedVariant ? selectedVariant.name : "Choose an option"}
               </span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {/* Default option */}
-              <button
-                onClick={() => onVariantChange(null)}
-                className={cn(
-                  "px-4 md:px-5 py-2 rounded-xl text-[8px] md:text-[9px] font-bold uppercase tracking-widest transition-all",
-                  selectedVariant === null
-                    ? "bg-black text-white shadow-sm scale-105"
-                    : "bg-white text-gray-500 hover:text-black hover:border-black border border-gray-100"
-                )}
-              >
-                Default
-              </button>
               {product.variants!.map((v) => (
                 <button
                   key={v.id}
