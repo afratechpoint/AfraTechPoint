@@ -162,16 +162,6 @@ export default function CheckoutPage() {
       if (!res.ok) throw new Error("Order failed");
       const data = await res.json();
 
-      dispatchOrderEmails(
-        user!.email || ship.fullName,
-        data.id,
-        ship.fullName,
-        items,
-        grandTotal,
-        ship,
-        new Date().toISOString()
-      );
-
       submitted.current = true;
       clearCart();
       router.push(`/checkout/success?orderId=${data.id}`);

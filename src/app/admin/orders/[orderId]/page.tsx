@@ -19,6 +19,8 @@ interface Order {
   createdAt: string;
   total?: number;
   totalAmount?: number;
+  subtotal?: number;
+  deliveryCharge?: number;
   paymentStatus?: string;
   orderStatus?: string;
   status?: string;
@@ -329,9 +331,21 @@ export default function AdminOrderDetailPage() {
           ))}
         </div>
 
-        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-          <span className="text-sm font-bold text-gray-500">Order Total</span>
-          <span className="text-xl font-black text-gray-900">{currency}{Number(total).toFixed(2)}</span>
+        <div className="flex flex-col mt-4 pt-4 border-t border-gray-100 space-y-2">
+          <div className="flex items-center justify-between text-sm text-gray-500">
+            <span>Subtotal</span>
+            <span className="font-bold">{currency}{Number(order.subtotal ?? total).toFixed(2)}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm text-gray-500">
+            <span>Delivery Charge</span>
+            <span className={cn("font-bold", order.deliveryCharge === 0 ? "text-green-600" : "")}>
+              {order.deliveryCharge === 0 ? "Free" : `${currency}${Number(order.deliveryCharge ?? 0).toFixed(2)}`}
+            </span>
+          </div>
+          <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+            <span className="text-sm font-bold text-gray-500">Order Total {pmt.method === "Cash on Delivery" && <span className="text-[10px] text-blue-600">(COD)</span>}</span>
+            <span className="text-xl font-black text-gray-900">{currency}{Number(total).toFixed(2)}</span>
+          </div>
         </div>
       </div>
 
