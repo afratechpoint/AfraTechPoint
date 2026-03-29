@@ -5,6 +5,7 @@ const dataDir = path.join(process.cwd(), 'data');
 export const productsFile = path.join(dataDir, 'products.json');
 export const ordersFile = path.join(dataDir, 'orders.json');
 export const settingsFile = path.join(dataDir, 'settings.json');
+export const profilesFile = path.join(dataDir, 'profiles.json');
 
 export async function readData(filePath: string) {
   try {
