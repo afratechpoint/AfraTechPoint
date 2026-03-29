@@ -36,3 +36,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Failed to update notification" }, { status: 500 });
   }
 }
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    const clearAll = searchParams.get("all");
+    const recipient = searchParams.get("recipient") || "admin";
+
+    if (clearAll === "true") {
+      await storage.clearAllNotifications(recipient);
+    } else if (id) {
+      await storage.deleteNotification(id);
+    } else {
+      return NextResponse.json({ error: "Missing id or all=true param" }, { status: 400 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Failed to delete notification(s):", error);
+    return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
+  }
+}

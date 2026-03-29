@@ -1,5 +1,7 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { storage } from '@/lib/storage';
+
 import { revalidatePath } from 'next/cache';
 
 const defaultSettings = {

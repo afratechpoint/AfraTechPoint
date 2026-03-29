@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { getToken, onMessage } from "firebase/messaging";
-import { messaging } from "@/lib/firebase/client";
+import { getPushMessaging } from "@/lib/firebase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -16,6 +16,7 @@ export default function PushNotificationManager() {
 
   // --- Manual Permission Function (Mobile Compatibility) ---
   const triggerManualPermission = async (isForAdmin = false) => {
+    const messaging = await getPushMessaging();
     if (!messaging) return false;
     
     try {
@@ -52,14 +53,17 @@ export default function PushNotificationManager() {
   // Expose to window for other components to trigger
   useEffect(() => {
     (window as any).triggerPushPermission = triggerManualPermission;
-  }, [user, messaging]);
+  }, [user]);
 
   useEffect(() => {
-    // console.log("[Push] Manager Effect Triggered. User:", user?.email, "Messaging:", !!messaging);
-    if (!user || !messaging || hasRegistered.current) return;
+    // console.log("[Push] Manager Effect Triggered. User:", user?.email);
+    if (!user || hasRegistered.current) return;
 
     const setupPush = async () => {
       try {
+        const messaging = await getPushMessaging();
+        if (!messaging) return;
+        
         // console.log("[Push] Requesting permission...");
         const permission = await Notification.requestPermission();
         

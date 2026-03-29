@@ -36,9 +36,15 @@ export default function NotificationBell() {
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 10000);
+    // Poll every 5 minutes to save Firebase quota (was 10s = 8,640 reads/day!)
+    const interval = setInterval(fetchNotifications, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Also refresh when bell is opened
+  useEffect(() => {
+    if (isOpen) fetchNotifications();
+  }, [isOpen]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

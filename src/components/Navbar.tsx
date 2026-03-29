@@ -62,8 +62,15 @@ export default function Navbar({
     <nav className="w-full border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-[100] transition-all pt-safe">
       {/* ── Mobile top bar ── */}
       <div className="flex md:hidden items-center justify-between h-14 px-4">
-        <Link href="/" className="shrink-0">
-          <img src={settings.logoUrl || "/logo.png"} alt={settings.storeName} className="h-14 w-auto object-contain" />
+        <Link href="/" className="shrink-0 relative h-10 w-24">
+          <Image 
+            src={settings.logoUrl || "/logo.png"} 
+            alt={settings.storeName} 
+            fill
+            priority
+            sizes="96px"
+            className="object-contain" 
+          />
         </Link>
         {!isAuthPage && (
           <div className="flex items-center gap-2">
@@ -104,8 +111,15 @@ export default function Navbar({
 
         {/* ── Left: Logo + Nav links ─────────────────────────────── */}
         <div className="flex items-center gap-6 md:gap-10 shrink-0">
-          <Link href="/" className="shrink-0">
-            <img src={settings.logoUrl || "/logo.png"} alt={settings.storeName} className="h-7 md:h-9 w-auto object-contain" />
+          <Link href="/" className="shrink-0 relative h-9 w-32">
+            <Image 
+              src={settings.logoUrl || "/logo.png"} 
+              alt={settings.storeName} 
+              fill
+              priority
+              sizes="128px"
+              className="object-contain" 
+            />
           </Link>
 
           <div className="hidden lg:flex items-center gap-8">

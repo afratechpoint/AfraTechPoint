@@ -13,9 +13,10 @@ import {
 export async function dispatchWelcomeEmail(email: string, name: string) {
   try {
     const settings = await storage.getSettings();
+    const storeName = settings?.storeName || "Afra Tech Point";
     await sendEmail({
       to: email,
-      subject: "Welcome to Nitec Ecosystem!",
+      subject: `Welcome to ${storeName}!`,
       template: WelcomeEmail,
       props: { 
         customerName: name,

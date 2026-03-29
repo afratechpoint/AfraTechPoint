@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { readData, writeData, settingsFile, productsFile, ordersFile, profilesFile } from "./db";
 import path from "path";
 import crypto from "crypto";
@@ -5,28 +6,59 @@ import { FALLBACK_PRODUCTS, FALLBACK_SETTINGS, FALLBACK_ORDERS } from "./fallbac
 
 const USE_FIREBASE = process.env.NEXT_PUBLIC_USE_FIREBASE === "true";
 
+// Simple in-memory cache for high-frequency settings
+let memoryCache: { 
+  settings?: any; 
+  products?: any[]; 
+  lastFetch: number;
+  deletedProductIds: Set<string>;
+  deletedOrderIds: Set<string>;
+} = { 
+  lastFetch: 0,
+  deletedProductIds: new Set(),
+  deletedOrderIds: new Set()
+};
+const CACHE_TTL = 10 * 60 * 1000; // 10 minutes — reduces Firestore reads by 10x
+
 // Server-side only Firestore / Firebase adapter
 const getAdapter = async () => {
+
   return await import("./firebase/server_firestore");
 };
 
 export const storage = {
   // ── Settings ──────────────────────────────────────────────────────────
-  async getSettings() {
+  getSettings: cache(async function() {
+    const now = Date.now();
+    if (memoryCache.settings && (now - memoryCache.lastFetch < CACHE_TTL)) {
+      return memoryCache.settings;
+    }
+
+    let settings = null;
     if (USE_FIREBASE) {
       try {
         const { getSettingsFromFirestore } = await getAdapter();
-        const data = await getSettingsFromFirestore();
-        if (data && Object.keys(data).length > 0) return data;
+        settings = await getSettingsFromFirestore();
       } catch (err) {
         console.warn("Firestore settings fetch failed. Using local fallback.", err);
       }
     }
-    const local = await readData(settingsFile, {});
-    if (local && Object.keys(local).length > 0) return local;
-    return FALLBACK_SETTINGS;
-  },
+
+    if (!settings || Object.keys(settings).length === 0) {
+      settings = await readData(settingsFile, {});
+    }
+
+    if (!settings || Object.keys(settings).length === 0) {
+      settings = FALLBACK_SETTINGS;
+    }
+
+    memoryCache.settings = settings;
+    memoryCache.lastFetch = now;
+    return settings;
+  }),
+
   async updateSettings(data: any) {
+    memoryCache.settings = undefined; // Invalidate cache
     if (USE_FIREBASE) {
       try {
         const { updateSettingsInFirestore } = await getAdapter();
@@ -49,19 +81,20 @@ export const storage = {
         } else {
           orders = await adapter.getAllOrders();
         }
-        if (orders && orders.length > 0) return orders;
+        if (orders && orders.length > 0) return orders.filter((o: any) => !memoryCache.deletedOrderIds.has(o.id));
       } catch (err) {
         console.warn("Firestore orders fetch failed. Using local fallback.", err);
       }
     }
     const local = await readData(ordersFile, []);
-    if (local && local.length > 0) return local;
+    if (local && local.length > 0) return local.filter((o: any) => !memoryCache.deletedOrderIds.has(o.id));
     
     // In-memory or static fallback if fs read fails
+    let res = FALLBACK_ORDERS as any[];
     if (filters?.userId) {
-      return (FALLBACK_ORDERS as any[]).filter((o: any) => o.userId === filters.userId);
+      res = res.filter((o: any) => o.userId === filters.userId);
     }
-    return FALLBACK_ORDERS;
+    return res.filter((o: any) => !memoryCache.deletedOrderIds.has(o.id));
   },
 
   async getOrderById(id: string) {
@@ -112,6 +145,7 @@ export const storage = {
   },
 
   async deleteOrder(id: string) {
+    memoryCache.deletedOrderIds.add(id);
     if (USE_FIREBASE) {
       try {
         const { deleteOrderFromFirestore } = await getAdapter();
@@ -140,22 +174,37 @@ export const storage = {
   },
 
   // ── Products ──────────────────────────────────────────────────────────
-  async getProducts() {
+  getProducts: cache(async function() {
+    const now = Date.now();
+    if (memoryCache.products && (now - memoryCache.lastFetch < CACHE_TTL)) {
+      return memoryCache.products.filter((p: any) => !memoryCache.deletedProductIds.has(p.id));
+    }
+
+    let products = null;
     if (USE_FIREBASE) {
       try {
         const { getProductsFromFirestore } = await getAdapter();
-        const products = await getProductsFromFirestore();
-        if (products && products.length > 0) return products;
+        products = await getProductsFromFirestore();
       } catch (err) {
         console.warn("Firestore products fetch failed. Using local fallback.", err);
       }
     }
-    const local = await readData(productsFile, []);
-    if (local && local.length > 0) return local;
-    return FALLBACK_PRODUCTS;
-  },
+
+    if (!products || products.length === 0) {
+      products = await readData(productsFile, []);
+    }
+
+    if (!products || products.length === 0) {
+      products = FALLBACK_PRODUCTS;
+    }
+
+    memoryCache.products = products;
+    memoryCache.lastFetch = now;
+    return products.filter((p: any) => !memoryCache.deletedProductIds.has(p.id));
+  }),
 
   async createProduct(data: any) {
+    memoryCache.products = undefined; // Invalidate
     if (USE_FIREBASE) {
       try {
         const { createProductInFirestore } = await getAdapter();
@@ -172,6 +221,7 @@ export const storage = {
   },
 
   async updateProduct(id: string, data: any) {
+    memoryCache.products = undefined; // Invalidate
     if (USE_FIREBASE) {
       try {
         const { updateProductInFirestore } = await getAdapter();
@@ -189,6 +239,8 @@ export const storage = {
   },
 
   async deleteProduct(id: string) {
+    memoryCache.deletedProductIds.add(id);
+    memoryCache.products = undefined; // Invalidate
     if (USE_FIREBASE) {
       try {
         const { deleteProductFromFirestore } = await getAdapter();
@@ -233,6 +285,28 @@ export const storage = {
         return await markAllNotificationsAsRead(recipient);
       } catch (err) {
         console.warn("Firestore markAllNotificationsAsRead failed.", err);
+      }
+    }
+  },
+
+  async deleteNotification(id: string) {
+    if (USE_FIREBASE) {
+      try {
+        const { deleteNotification } = await getAdapter();
+        return await deleteNotification(id);
+      } catch (err) {
+        console.warn("Firestore deleteNotification failed.", err);
+      }
+    }
+  },
+
+  async clearAllNotifications(recipient: string = "admin") {
+    if (USE_FIREBASE) {
+      try {
+        const { clearAllNotifications } = await getAdapter();
+        return await clearAllNotifications(recipient);
+      } catch (err) {
+        console.warn("Firestore clearAllNotifications failed.", err);
       }
     }
   },

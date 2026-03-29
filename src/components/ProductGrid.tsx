@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 import { Plus, ShoppingCart, Search, X, Star, ArrowRight } from "lucide-react";
 import { useCart } from "@/lib/cart";
@@ -96,9 +97,12 @@ export default function ProductGrid() {
           >
             {/* Image Container - Full Bleed on Mobile */}
             <Link href={`/shop/${product.id}`} className="block w-full !m-0 relative aspect-square bg-[#f8f9fa] md:rounded-[1.8rem] overflow-hidden md:m-1">
-               <img
+               <Image
                  src={product.image}
                  alt={product.name}
+                 fill
+                 priority={i < 4}
+                 sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                  className="w-full h-full object-contain md:p-4 group-hover:scale-110 transition-transform duration-1000 ease-out"
                />
                {/* Sale Badge */}

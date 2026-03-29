@@ -159,7 +159,7 @@ export default function AdminOrdersPage() {
     };
 
     fetchOrders();
-    const interval = setInterval(fetchOrders, 5000); // 5s poll for "super fast" updates
+    const interval = setInterval(fetchOrders, 3 * 60 * 1000); // 3 minutes — saves Firestore quota
     return () => clearInterval(interval);
   }, []);
 

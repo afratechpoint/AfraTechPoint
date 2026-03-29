@@ -4,7 +4,6 @@ import React, { Suspense } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useUI } from "@/lib/ui";
 import MobileNav from "@/components/MobileNav";
-
 import { Toaster } from "sonner";
 import { AnimatePresence } from "framer-motion";
 import NavigationObserver from "@/components/NavigationObserver";
@@ -20,30 +19,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const isAuthPage = ['/login', '/register', '/reset-password', '/verify-email'].includes(pathname);
   const isAdminPage = pathname.startsWith('/admin');
   const hideMobileNav = isAuthPage || isAdminPage;
-
-  React.useEffect(() => {
-    const cleanup = () => {
-      const selectors = [
-        '#__next-hot-reload-indicator',
-        '#nextjs-dev-overlay-container',
-        '[data-nextjs-toast]',
-        '[data-vercel-indicator]',
-        '[data-nextjs-indicator]',
-        'nextjs-portal',
-        '#vk-indicator'
-      ];
-      selectors.forEach(selector => {
-        try {
-          const elements = document.querySelectorAll(selector);
-          elements.forEach(el => el.remove());
-        } catch (e) {}
-      });
-    };
-
-    const interval = setInterval(cleanup, 1000);
-    cleanup();
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <>

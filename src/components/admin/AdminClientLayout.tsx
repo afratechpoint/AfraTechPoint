@@ -115,8 +115,8 @@ export default function AdminClientLayout({
     // Initial fetch
     fetchOrderCount();
 
-    // Poll every 5 seconds for "super fast" updates
-    const interval = setInterval(fetchOrderCount, 5000);
+    // Poll every 5 minutes to stay within Firebase free quota (was 5s = 17,280 reads/day!)
+    const interval = setInterval(fetchOrderCount, 5 * 60 * 1000);
 
     return () => {
       clearInterval(interval);
@@ -185,7 +185,7 @@ export default function AdminClientLayout({
             <div className="w-8 h-8 bg-black rounded-xl flex items-center justify-center text-white font-bold text-base shadow-md shadow-black/20">A</div>
             <div>
               <span className="font-bold text-lg tracking-tighter block leading-none">Admin.</span>
-              <span className="text-[8px] text-gray-400 font-bold uppercase tracking-widest mt-0.5 block">Nitec Ecosystem</span>
+              <span className="text-[8px] text-gray-400 font-bold uppercase tracking-widest mt-0.5 block">Afra Tech Point</span>
             </div>
           </div>
 

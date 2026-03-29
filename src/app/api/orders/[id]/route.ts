@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { storage } from '@/lib/storage';
 import { sendEmail } from "@/lib/email/sendEmail";

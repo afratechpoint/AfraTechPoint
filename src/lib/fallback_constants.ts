@@ -1,79 +1,8 @@
 // src/lib/fallback_constants.ts
 
-export const FALLBACK_PRODUCTS = [
-  {
-    "id": "1",
-    "name": "Sequoia Inspiring Musico",
-    "price": 299.99,
-    "category": "Mobile",
-    "image": "/images/blue_headphones.png",
-    "description": "High-fidelity audio with active noise cancellation and ergonomic design.",
-    "variants": [],
-    "regularPrice": 299.99,
-    "aboutItem": "High-fidelity audio with active noise cancellation and ergonomic design.",
-    "specifications": [],
-    "gallery": [
-      "/uploads/1773832766125_Nagad.png",
-      "/uploads/1773837355475_cropped-logo-1773837355460.jpg"
-    ]
-  },
-  {
-    "id": "2",
-    "name": "New Gen X-Bud",
-    "price": 129.5,
-    "category": "Earbuds",
-    "image": "/images/white_earbuds.png",
-    "description": "True wireless experience with immersive sound and crystal-clear calls."
-  },
-  {
-    "id": "3",
-    "name": "Surface Pro Headphone",
-    "price": 199,
-    "category": "Headphones",
-    "image": "/images/vr_headset.png",
-    "description": "Minimalist design with maximum comfort and premium sound quality."
-  },
-  {
-    "id": "4",
-    "name": "Tech Cube Smart Watch",
-    "price": 450,
-    "category": "Wearables",
-    "image": "/images/silver_watch.png",
-    "description": "The ultimate companion for your fitness and productivity goals."
-  },
-  {
-    "id": "5",
-    "name": "Aura Beam Speaker",
-    "price": 89.99,
-    "category": "Audio",
-    "image": "/images/blue_headphones.png",
-    "description": "Compact speaker with room-filling sound and deep bass."
-  },
-  {
-    "id": "6",
-    "name": "Nexa Pods Pro",
-    "price": 159.99,
-    "category": "Earbuds",
-    "image": "/images/white_earbuds.png",
-    "description": "Advanced noise cancellation and spatial audio for an immersive experience."
-  },
-  {
-    "id": "7",
-    "name": "Infinity VR Goggles",
-    "price": 599,
-    "category": "Gaming",
-    "image": "/images/vr_headset.png",
-    "description": "Step into new worlds with our most advanced VR headset yet."
-  },
-  {
-    "id": "8",
-    "name": "Cyber Chrono Watch",
-    "price": 320,
-    "category": "Wearables",
-    "image": "/images/silver_watch.png",
-    "description": "Futuristic design meets precision timekeeping and health monitoring."
-  }
-];
+export const FALLBACK_PRODUCTS: any[] = [];
+
+
 
 export const FALLBACK_SETTINGS = {
   "storeName": "Afra Tech Point",

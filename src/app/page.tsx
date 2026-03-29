@@ -80,19 +80,27 @@ export default function Home() {
                      className="relative md:absolute md:inset-y-0 md:right-0 w-full md:w-1/2 flex items-center justify-center md:justify-end pr-0 md:pr-12 lg:pr-32 z-0 mt-2 md:mt-0"
                   >
                     {slides[currentSlide].linkUrl ? (
-                      <Link href={slides[currentSlide].linkUrl} className="pointer-events-auto block">
-                        <img 
+                      <Link href={slides[currentSlide].linkUrl} className="pointer-events-auto block relative w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] md:w-[380px] md:h-[380px]">
+                        <Image 
                           src={slides[currentSlide].image} 
                           alt="Hero Product" 
-                          className="w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] md:w-[380px] md:h-[380px] object-contain drop-shadow-[0_45px_45px_rgba(0,0,0,0.15)] md:hover:scale-105 transition-transform duration-1000 cursor-pointer"
+                          fill
+                          priority
+                          sizes="(max-width: 768px) 220px, 380px"
+                          className="object-contain drop-shadow-[0_45px_45px_rgba(0,0,0,0.15)] md:hover:scale-105 transition-transform duration-1000 cursor-pointer"
                         />
                       </Link>
                     ) : (
-                      <img 
-                        src={slides[currentSlide].image} 
-                        alt="Hero Product" 
-                        className="w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] md:w-[380px] md:h-[380px] object-contain drop-shadow-[0_45px_45px_rgba(0,0,0,0.15)] md:hover:scale-105 transition-transform duration-1000"
-                      />
+                      <div className="relative w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] md:w-[380px] md:h-[380px]">
+                        <Image 
+                          src={slides[currentSlide].image} 
+                          alt="Hero Product" 
+                          fill
+                          priority
+                          sizes="(max-width: 768px) 220px, 380px"
+                          className="object-contain drop-shadow-[0_45px_45px_rgba(0,0,0,0.15)] md:hover:scale-105 transition-transform duration-1000"
+                        />
+                      </div>
                     )}
                   </motion.div>
 

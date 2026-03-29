@@ -1,5 +1,12 @@
 import React from "react";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { storage } from "@/lib/storage";
@@ -8,7 +15,7 @@ import SettingsProvider from "@/components/SettingsProvider";
 import { THEMES, ThemeId } from "@/lib/themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 const defaultSettings = {
   storeName: "Afra Tech Point",

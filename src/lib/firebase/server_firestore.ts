@@ -243,6 +243,18 @@ export async function markAllNotificationsAsRead(recipient: string = "admin") {
   await batch.commit();
 }
 
+export async function deleteNotification(id: string) {
+  await adminDb.collection("notifications").doc(id).delete();
+}
+
+export async function clearAllNotifications(recipient: string = "admin") {
+  const q = adminDb.collection("notifications").where("recipient", "==", recipient);
+  const snap = await q.get();
+  const batch = adminDb.batch();
+  snap.docs.forEach((d: any) => batch.delete(d.ref));
+  await batch.commit();
+}
+
 // --- Web Push Tokens ---
 export async function savePushTokenInFirestore(uid: string, token: string) {
   console.log(`[Push] Attempting to save token for UID: ${uid}`);

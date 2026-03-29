@@ -4,7 +4,7 @@
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getMessaging, Messaging } from "firebase/messaging";
+import { getMessaging, Messaging, isSupported } from "firebase/messaging";
 
 const firebaseConfig = {
   apiKey:            process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
@@ -19,15 +19,18 @@ const firebaseConfig = {
 const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
-// Messaging is only available in the browser
-let messaging: Messaging | null = null;
-if (typeof window !== "undefined") {
+// Messaging is only available in the browser and if supported
+export const getPushMessaging = async (): Promise<Messaging | null> => {
+  if (typeof window === "undefined") return null;
   try {
-    messaging = getMessaging(app);
+    const supported = await isSupported();
+    if (supported) {
+      return getMessaging(app);
+    }
   } catch (error) {
     console.error("Firebase Messaging could not be initialized:", error);
   }
-}
+  return null;
+};
 
-export { messaging };
 export default app;

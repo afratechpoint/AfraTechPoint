@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Link as LinkIcon, Truck, ShieldCheck, Headphones } from "lucide-react";
+import Image from "next/image";
 import { useSettings } from "@/components/SettingsProvider";
 
 const getIcon = (platform: string) => {
@@ -60,11 +61,13 @@ export default function Footer() {
 
           {/* Brand */}
           <div className="md:col-span-5 space-y-5">
-            <Link href="/">
-              <img
+            <Link href="/" className="relative block h-14 w-40">
+              <Image
                 src={settings.logoUrl || "/logo.png"}
                 alt={settings.storeName}
-                className="h-9 w-auto object-contain"
+                fill
+                sizes="160px"
+                className="object-contain"
               />
             </Link>
             <p className="text-gray-500 text-sm leading-relaxed max-w-xs">

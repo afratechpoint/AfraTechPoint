@@ -11,20 +11,23 @@ export default function TrafficTracker() {
   const tracked = useRef(false);
 
   useEffect(() => {
-    // Only track if not already tracked in this session and only once per mount
     if (tracked.current) return;
-    
-    const sessionKey = "afra_site_visited";
-    if (sessionStorage.getItem(sessionKey)) return;
+
+    // Limit to once per day per browser (saves Firestore writes significantly)
+    const today = new Date().toISOString().split("T")[0]; // "2026-03-29"
+    const storageKey = `afra_visited_${today}`;
+    if (localStorage.getItem(storageKey)) return;
 
     tracked.current = true;
 
-    // Fire and forget
     fetch("/api/stats/traffic", { method: "POST" })
       .then(() => {
-        sessionStorage.setItem(sessionKey, "true");
+        localStorage.setItem(storageKey, "1");
+        // Clean up yesterday's key to prevent localStorage growth
+        const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+        localStorage.removeItem(`afra_visited_${yesterday}`);
       })
-      .catch((err) => console.error("[TrafficTracker] Failed to record visit:", err));
+      .catch(() => {}); // Silent fail - traffic tracking is non-critical
   }, []);
 
   return null; // Silent component
