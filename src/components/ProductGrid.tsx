@@ -54,11 +54,11 @@ export default function ProductGrid() {
             Explore our curated selection of high-end technology, combining futuristic aesthetics with unparalleled performance.
           </p>
         </div>
-        <div className="flex items-center gap-3 bg-white p-2 rounded-3xl shadow-sm border border-gray-100 overflow-x-auto no-scrollbar">
+        <div className="w-full md:w-auto flex items-center gap-2 bg-white p-2 rounded-3xl shadow-sm border border-gray-100 overflow-x-auto no-scrollbar scroll-smooth">
            <button 
              onClick={() => setFilter('All')}
              className={cn(
-               "px-6 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap",
+                "px-6 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap shrink-0",
                filter === 'All' ? "bg-[var(--primary)] text-white" : "text-gray-400 hover:text-black"
              )}
            >
@@ -69,7 +69,7 @@ export default function ProductGrid() {
                key={cat.id}
                onClick={() => setFilter(cat.label)}
                className={cn(
-                 "px-6 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap",
+                  "px-6 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap shrink-0",
                  filter === cat.label ? "bg-[var(--primary)] text-white" : "text-gray-400 hover:text-black"
                )}
              >
