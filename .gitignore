@@ -46,3 +46,9 @@ next-env.d.ts
 /data/
 /deploy_to_vercel/
 create_zip.ps1
+README_DEPLOY.md
+
+# Ignored Secrets/Test files
+test-admin.js
+.env_backup_firebase
+.env.local.backup_original
