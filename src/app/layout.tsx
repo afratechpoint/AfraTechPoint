@@ -6,6 +6,7 @@ import ClientLayout from "@/components/ClientLayout";
 import SettingsProvider from "@/components/SettingsProvider";
 import { THEMES, ThemeId } from "@/lib/themes";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -142,6 +143,7 @@ export default async function RootLayout({
             </ClientLayout>
           </SettingsProvider>
         </AuthProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
