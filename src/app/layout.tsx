@@ -1,12 +1,7 @@
 import React from "react";
 import type { Metadata, Viewport } from "next";
 
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-};
+
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { storage } from "@/lib/storage";
@@ -14,6 +9,13 @@ import ClientLayout from "@/components/ClientLayout";
 import SettingsProvider from "@/components/SettingsProvider";
 import { THEMES, ThemeId } from "@/lib/themes";
 import { AuthProvider } from "@/contexts/AuthContext";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
