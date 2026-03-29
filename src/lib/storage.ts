@@ -242,7 +242,60 @@ export const storage = {
   },
 
   // ── User Profiles (ULTIMATE RESILIENCE STRATEGY) ──────────────────────
-  // ... existing profile methods ...
+  async getUserProfile(uid: string) {
+    let result = null;
+
+    if (USE_FIREBASE) {
+      try {
+        const adapter = await getAdapter();
+        
+        // 1. Try Firestore (Primary)
+        result = await adapter.getUserProfileFromFirestore(uid);
+        if (result) return result;
+
+        // 2. Try RTDB (Stable Server Backup)
+        result = await adapter.getUserProfileFromRTDB(uid);
+        if (result) return result;
+        
+      } catch (err: any) {
+        console.warn(`[Storage] Firebase fetch skipped. ${err.message}`);
+      }
+    }
+
+    // 3. Fallback to local files
+    const profiles = await readData(profilesFile, {});
+    return (profiles as any)[uid] || null;
+  },
+
+  async updateUserProfile(uid: string, data: any) {
+    // 1. ALWAYS write to Local JSON (Backup truth for local servers)
+    // Wrap in try-catch to be Vercel (Read-only disk) compatible
+    try {
+      const profiles = await readData(profilesFile, {});
+      (profiles as any)[uid] = { ...(profiles as any)[uid], ...data, updatedAt: new Date().toISOString() };
+      await writeData(profilesFile, profiles);
+    } catch (e) {}
+
+    // 2. Sync with Cloud Firebase
+    if (USE_FIREBASE) {
+      try {
+        const adapter = await getAdapter();
+        
+        // A. Sync to Firestore (Global primary)
+        await adapter.updateUserProfileInFirestore(uid, data).catch(err => {
+            console.warn(`[Storage] Firestore sync failed: ${err.message}`);
+        });
+
+        // B. Sync to RTDB (Global secondary / quota-safe)
+        await adapter.updateUserProfileInRTDB(uid, data).catch(err => {
+            console.warn(`[Storage] RTDB sync failed: ${err.message}`);
+        });
+
+      } catch (err: any) {
+        console.warn(`[Storage] Cloud sync failed. Working with local backup.`);
+      }
+    }
+  },
 
   // ── Media Storage (ImgBB Metadata Sync) ──────────────────────────────
   async getMedia() {
