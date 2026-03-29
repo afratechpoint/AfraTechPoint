@@ -27,7 +27,7 @@ export default function PushNotificationManager() {
       }
 
       const token = await getToken(messaging, { 
-        vapidKey: "BHNbeQAsl20Xsh6i2q6Zkox3r3nS9O8zW946x5aYv5p5p_5Yf5p_5Yf5p_5Yf5p_5Yf5p_5Yf5p_5Yf5" // VAPID
+        vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || ""
       });
 
       if (token) {
