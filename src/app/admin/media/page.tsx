@@ -23,6 +23,8 @@ interface MediaFile {
   url: string;
   size: number;
   uploadedAt: string;
+  deleteUrl?: string;
+  imgbbId?: string;
 }
 
 function formatBytes(bytes: number) {
@@ -347,22 +349,35 @@ export default function AdminMediaPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2 pt-2">
-                  <button
-                    onClick={() => copyUrl(selected.url)}
-                    className="flex-1 h-9 rounded-xl bg-black text-white text-[10px] font-black flex items-center justify-center gap-1.5 hover:scale-[1.02] transition-transform"
-                  >
-                    <Copy size={12} /> Copy URL
-                  </button>
-                  <button
-                    onClick={() => handleDelete(selected)}
-                    disabled={deleting === selected.name}
-                    className="w-9 h-9 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-colors disabled:opacity-50"
-                  >
-                    {deleting === selected.name
-                      ? <PremiumSpinner size="sm" />
-                      : <Trash2 size={14} />}
-                  </button>
+                <div className="flex flex-col gap-2 pt-2">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => copyUrl(selected.url)}
+                      className="flex-1 h-9 rounded-xl bg-black text-white text-[10px] font-black flex items-center justify-center gap-1.5 hover:scale-[1.02] transition-transform"
+                    >
+                      <Copy size={12} /> Copy URL
+                    </button>
+                    <button
+                      onClick={() => handleDelete(selected)}
+                      disabled={deleting === selected.name}
+                      className="w-9 h-9 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-colors disabled:opacity-50 shrink-0"
+                    >
+                      {deleting === selected.name
+                        ? <PremiumSpinner size="sm" />
+                        : <Trash2 size={14} />}
+                    </button>
+                  </div>
+
+                  {selected.deleteUrl && (
+                    <a
+                      href={selected.deleteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full h-8 rounded-xl border border-red-100 bg-red-50/30 text-red-400 text-[9px] font-bold flex items-center justify-center gap-1.5 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all uppercase tracking-tighter"
+                    >
+                      <X size={10} /> Manual ImgBB Delete
+                    </a>
+                  )}
                 </div>
               </div>
             </motion.div>

@@ -31,6 +31,7 @@ async function uploadToImgBB(file: File) {
         name: data.data.image.filename,
         size: data.data.size,
         deleteUrl: data.data.delete_url,
+        id: data.data.id,
       };
     }
   } catch (err) {
@@ -66,6 +67,7 @@ export async function POST(request: Request) {
       let finalName = '';
       let finalSize = file.size;
       let finalDeleteUrl = '';
+      let finalImgbbId = '';
 
       // 1. Try ImgBB if Key exists
       const imgbb = await uploadToImgBB(file);
@@ -74,6 +76,7 @@ export async function POST(request: Request) {
         finalName = imgbb.name;
         finalSize = imgbb.size;
         finalDeleteUrl = imgbb.deleteUrl;
+        finalImgbbId = imgbb.id;
       } else {
         // 2. Try Local Filesystem (Dev/VPS)
         try {
@@ -105,6 +108,7 @@ export async function POST(request: Request) {
           url: finalUrl,
           size: finalSize,
           deleteUrl: finalDeleteUrl,
+          imgbbId: finalImgbbId,
           uploadedAt: new Date().toISOString()
         };
         // 3. Sync to Resilient Cloud Storage
@@ -126,27 +130,35 @@ export async function DELETE(request: Request) {
     const { filename } = await request.json();
     if (!filename) return NextResponse.json({ error: 'No filename provided' }, { status: 400 });
 
-    // 0. Find the media item to get the deleteUrl
+    // 0. Find the media item to get the deleteUrl and imgbbId
     const mediaList = await storage.getMedia();
     const mediaItem = mediaList.find((m: any) => m.name === filename);
 
-    // 1. Trigger ImgBB Deletion (if exists)
-    if (mediaItem?.deleteUrl) {
-      console.log(`[ImgBB] Triggering remote deletion for: ${filename}`);
+    // 1. Trigger ImgBB Deletion (Programmatic ID-based)
+    if (mediaItem?.imgbbId) {
+      console.log(`[ImgBB] Remote deletion for ID: ${mediaItem.imgbbId}`);
       try {
-        // We use a simple fetch to the delete_url. 
-        // ImgBB delete links are typically GET/POST pages.
+         // Attempt official but unofficial-ish ID-based delete API
+         await fetch(`https://api.imgbb.com/1/delete?key=${IMGBB_API_KEY}&id=${mediaItem.imgbbId}`, {
+           method: 'POST'
+         }).catch(() => {});
+      } catch (e) {}
+    }
+
+    // 2. Secondary Deletion attempt via deleteUrl (Legacy)
+    if (mediaItem?.deleteUrl) {
+      try {
         await fetch(mediaItem.deleteUrl, { method: 'GET' }).catch(() => {});
       } catch (e) {}
     }
 
-    // 2. Local Delete (Best effort)
+    // 3. Local Delete (Best effort)
     try {
       const filePath = path.join(UPLOAD_DIR, path.basename(filename));
       await unlink(filePath);
     } catch {}
 
-    // 3. Cloud/Sync Delete
+    // 4. Cloud/Sync Delete
     await storage.deleteMedia(filename);
 
     return NextResponse.json({ success: true });
