@@ -17,5 +17,11 @@ export async function readData(filePath: string, defaultVal: any = []) {
 }
 
 export async function writeData(filePath: string, data: any) {
+  const dir = path.dirname(filePath);
+  try {
+    await fs.access(dir);
+  } catch {
+    await fs.mkdir(dir, { recursive: true });
+  }
   await fs.writeFile(filePath, JSON.stringify(data, null, 2));
 }
