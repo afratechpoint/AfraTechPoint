@@ -1,5 +1,5 @@
 // lib/firebase/server_firestore.ts
-import { adminDb, adminMessaging } from "./admin";
+import { adminDb, adminMessaging, adminRtDb } from "./admin";
 import admin from "firebase-admin";
 
 const SETTINGS_DOC_ID = "main";
@@ -323,6 +323,31 @@ export async function updateUserProfileInFirestore(uid: string, data: any) {
     ...data,
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   }, { merge: true });
+}
+
+// --- Realtime Database (RTDB) Fallback ---
+export async function updateUserProfileInRTDB(uid: string, data: any) {
+  try {
+    const ref = adminRtDb.ref(`profiles/${uid}`);
+    await ref.update({
+      ...data,
+      updatedAt: new Date().toISOString()
+    });
+    console.log(`[RTDB] Profile sync success for ${uid}`);
+  } catch (err: any) {
+    console.error(`[RTDB] Sync failed: ${err.message}`);
+  }
+}
+
+export async function getUserProfileFromRTDB(uid: string) {
+  try {
+    const ref = adminRtDb.ref(`profiles/${uid}`);
+    const snap = await ref.get();
+    return snap.exists() ? snap.val() : null;
+  } catch (err: any) {
+    console.error(`[RTDB] Fetch failed: ${err.message}`);
+    return null;
+  }
 }
 
 
