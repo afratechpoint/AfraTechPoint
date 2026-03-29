@@ -1,5 +1,5 @@
 // lib/firebase/server_firestore.ts
-import { adminDb, adminMessaging, adminRtDb } from "./admin";
+import { adminDb, adminMessaging, getAdminRtDb } from "./admin";
 import admin from "firebase-admin";
 
 const SETTINGS_DOC_ID = "main";
@@ -328,6 +328,7 @@ export async function updateUserProfileInFirestore(uid: string, data: any) {
 // --- Realtime Database (RTDB) Fallback ---
 export async function updateUserProfileInRTDB(uid: string, data: any) {
   try {
+    const adminRtDb = getAdminRtDb();
     const ref = adminRtDb.ref(`profiles/${uid}`);
     await ref.update({
       ...data,
@@ -341,6 +342,7 @@ export async function updateUserProfileInRTDB(uid: string, data: any) {
 
 export async function getUserProfileFromRTDB(uid: string) {
   try {
+    const adminRtDb = getAdminRtDb();
     const ref = adminRtDb.ref(`profiles/${uid}`);
     const snap = await ref.get();
     return snap.exists() ? snap.val() : null;

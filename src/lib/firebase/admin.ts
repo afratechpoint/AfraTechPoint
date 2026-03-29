@@ -19,4 +19,10 @@ if (!admin.apps.length) {
 export const adminDb = admin.firestore();
 export const adminAuth = admin.auth();
 export const adminMessaging = admin.messaging();
-export const adminRtDb = admin.database();
+
+export const getAdminRtDb = () => {
+  if (!process.env.FIREBASE_DATABASE_URL) {
+    console.warn("[Firebase Admin] FIREBASE_DATABASE_URL is missing.");
+  }
+  return admin.database();
+};
