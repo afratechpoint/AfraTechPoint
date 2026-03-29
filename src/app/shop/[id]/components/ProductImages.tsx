@@ -89,17 +89,7 @@ export default function ProductImages({
           }}
         />
 
-        {/* Hover hint — desktop only */}
-        <div
-          className={cn(
-            "hidden md:flex absolute inset-0 items-center justify-center transition-opacity bg-black/5 pointer-events-none z-20 object-contain",
-            isZoomed ? "opacity-0" : "opacity-100 group-hover:opacity-100"
-          )}
-        >
-          <div className="bg-white/90 backdrop-blur-md px-6 py-3 rounded-full shadow-sm font-bold text-[10px] uppercase tracking-widest flex items-center gap-2">
-            Hover to zoom
-          </div>
-        </div>
+
       </div>
 
       {/* ── Thumbnail strip (only when > 1 image) ── */}
