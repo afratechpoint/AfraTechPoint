@@ -86,17 +86,36 @@ function AccountContent() {
   useEffect(() => {
     if (user && !isEditing) {
       setDisplayName(user.displayName ?? "");
+
+      // 1. First, check for local data in browser storage (Immediate load)
+      const localData = localStorage.getItem(`afra_profile_${user.uid}`);
+      if (localData) {
+        try {
+          const parsed = JSON.parse(localData);
+          if (parsed.displayName) setDisplayName(parsed.displayName);
+          setPhone(parsed.phone ?? "");
+          setAddress(parsed.address ?? "");
+          setBio(parsed.bio ?? "");
+          console.log("[Account] Initialized with local browser data.");
+        } catch (e) {}
+      }
+
+      // 2. Then, fetch from Server to sync
       fetch(`/api/profile?uid=${user.uid}`)
         .then(r => r.json())
         .then(data => {
-          if (data) {
+          if (data && Object.keys(data).length > 0) {
             if (data.displayName) setDisplayName(data.displayName);
             setPhone(data.phone ?? "");
             setAddress(data.address ?? "");
             setBio(data.bio ?? "");
+            // Sync local storage with server data
+            localStorage.setItem(`afra_profile_${user.uid}`, JSON.stringify(data));
           }
         })
-        .catch(() => {});
+        .catch(() => {
+          console.warn("[Account] Server fetch failed. Using local browser data only.");
+        });
     }
   }, [user, isEditing]);
 
@@ -135,33 +154,35 @@ function AccountContent() {
   const handleSave = async () => {
     if (!displayName.trim()) { toast.error("Name cannot be empty."); return; }
     setIsSaving(true);
+    
+    // Prepare data
+    const profileData = { phone, address, bio, displayName };
+
     try {
       // 1. Update Auth Profile
       await updateProfile(user, { displayName: displayName.trim() });
 
-      // 2. Update Firestore Profile
+      // 2. Attempt Update to Server (will fail if quota or read-only)
       const res = await fetch("/api/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uid: user.uid, data: { phone, address, bio, displayName } }),
+        body: JSON.stringify({ uid: user.uid, data: profileData }),
       });
 
-      if (!res.ok) throw new Error("Failed to save to database");
+      if (!res.ok) throw new Error("Server limit reached");
 
+      // Success
+      localStorage.setItem(`afra_profile_${user.uid}`, JSON.stringify(profileData));
       toast.success("Profile saved!");
       setIsEditing(false);
 
-      // 3. Immediately refresh data to ensure sync
-      const updated = await fetch(`/api/profile?uid=${user.uid}`).then(r => r.json());
-      if (updated) {
-        if (updated.displayName) setDisplayName(updated.displayName);
-        setPhone(updated.phone ?? "");
-        setAddress(updated.address ?? "");
-        setBio(updated.bio ?? "");
-      }
     } catch (err) {
       console.error("Save error:", err);
-      toast.error("Failed to save. Please try again.");
+      
+      // FALLBACK: Save to LocalBrowser Storage
+      localStorage.setItem(`afra_profile_${user.uid}`, JSON.stringify(profileData));
+      toast.success("Profile saved locally (Server limit reached)");
+      setIsEditing(false);
     } finally {
       setIsSaving(false);
     }
