@@ -9,6 +9,7 @@ if (!admin.apps.length) {
         // The private key might have escaped newlines if coming from certain env sources
         privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
       }),
+      databaseURL: process.env.FIREBASE_DATABASE_URL,
     });
   } catch (error) {
     console.error('Firebase admin initialization error', error);
