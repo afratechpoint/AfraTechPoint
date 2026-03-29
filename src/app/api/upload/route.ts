@@ -30,6 +30,7 @@ async function uploadToImgBB(file: File) {
         url: data.data.url,
         name: data.data.image.filename,
         size: data.data.size,
+        deleteUrl: data.data.delete_url,
       };
     }
   } catch (err) {
@@ -64,6 +65,7 @@ export async function POST(request: Request) {
       let finalUrl = '';
       let finalName = '';
       let finalSize = file.size;
+      let finalDeleteUrl = '';
 
       // 1. Try ImgBB if Key exists
       const imgbb = await uploadToImgBB(file);
@@ -71,6 +73,7 @@ export async function POST(request: Request) {
         finalUrl = imgbb.url;
         finalName = imgbb.name;
         finalSize = imgbb.size;
+        finalDeleteUrl = imgbb.deleteUrl;
       } else {
         // 2. Try Local Filesystem (Dev/VPS)
         try {
@@ -87,7 +90,6 @@ export async function POST(request: Request) {
           finalName = uniqueName;
         } catch (fsErr) {
           console.error('[Upload API] Local FS Write Failed:', fsErr);
-          // If we reach here and no ImgBB, we have a total failure on Vercel
           if (!IMGBB_API_KEY) {
              return NextResponse.json({ 
                error: 'Upload failed. Please provide IMGBB_API_KEY for hosted environments.',
@@ -102,6 +104,7 @@ export async function POST(request: Request) {
           name: finalName,
           url: finalUrl,
           size: finalSize,
+          deleteUrl: finalDeleteUrl,
           uploadedAt: new Date().toISOString()
         };
         // 3. Sync to Resilient Cloud Storage
@@ -123,13 +126,27 @@ export async function DELETE(request: Request) {
     const { filename } = await request.json();
     if (!filename) return NextResponse.json({ error: 'No filename provided' }, { status: 400 });
 
-    // 1. Local Delete (Best effort)
+    // 0. Find the media item to get the deleteUrl
+    const mediaList = await storage.getMedia();
+    const mediaItem = mediaList.find((m: any) => m.name === filename);
+
+    // 1. Trigger ImgBB Deletion (if exists)
+    if (mediaItem?.deleteUrl) {
+      console.log(`[ImgBB] Triggering remote deletion for: ${filename}`);
+      try {
+        // We use a simple fetch to the delete_url. 
+        // ImgBB delete links are typically GET/POST pages.
+        await fetch(mediaItem.deleteUrl, { method: 'GET' }).catch(() => {});
+      } catch (e) {}
+    }
+
+    // 2. Local Delete (Best effort)
     try {
       const filePath = path.join(UPLOAD_DIR, path.basename(filename));
       await unlink(filePath);
     } catch {}
 
-    // 2. Cloud/Sync Delete
+    // 3. Cloud/Sync Delete
     await storage.deleteMedia(filename);
 
     return NextResponse.json({ success: true });
