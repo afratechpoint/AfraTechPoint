@@ -241,31 +241,41 @@ export const storage = {
 
   // ── User Profiles ─────────────────────────────────────────────────────
   async getUserProfile(uid: string) {
+    let firestoreData = null;
     if (USE_FIREBASE) {
       try {
         const { getUserProfileFromFirestore } = await getAdapter();
-        const profile = await getUserProfileFromFirestore(uid);
-        if (profile) return profile;
-      } catch (err) {
-        console.warn("Firestore profile fetch failed. Using local fallback.", err);
+        firestoreData = await getUserProfileFromFirestore(uid);
+      } catch (err: any) {
+        console.warn(`[Profile] Firestore fetch skipped/failed (code: ${err.code || "unknown"}). Falling back to local.`);
       }
     }
+
     const profiles = await readData(profilesFile, {});
-    return (profiles as any)[uid] || null;
+    const localData = (profiles as any)[uid] || null;
+
+    // Merge strategy: Firestore wins if available and newer, else local
+    if (firestoreData) return firestoreData;
+    return localData;
   },
 
   async updateUserProfile(uid: string, data: any) {
-    if (USE_FIREBASE) {
-      try {
-        const { updateUserProfileInFirestore } = await getAdapter();
-        return await updateUserProfileInFirestore(uid, data);
-      } catch (err) {
-        console.warn("Firestore profile update failed. Using local fallback.", err);
-      }
-    }
+    // 1. ALWAYS write to local file first (Guaranteed Persistence)
+    console.log(`[Profile] Saving ${uid} to local disk...`);
     const profiles = await readData(profilesFile, {});
     (profiles as any)[uid] = { ...(profiles as any)[uid], ...data, updatedAt: new Date().toISOString() };
     await writeData(profilesFile, profiles);
+
+    // 2. Attempt Background Write to Firebase
+    if (USE_FIREBASE) {
+      try {
+        const { updateUserProfileInFirestore } = await getAdapter();
+        await updateUserProfileInFirestore(uid, data);
+        console.log(`[Profile] Syncing ${uid} to Firebase successful.`);
+      } catch (err: any) {
+        console.warn(`[Profile] Firebase sync failed (but local data is safe). Error: ${err.message}`);
+      }
+    }
   },
 
   // ── TRAFFIC STATS ──
