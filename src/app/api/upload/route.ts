@@ -1,39 +1,48 @@
 import { NextResponse } from 'next/server';
-import { writeFile, unlink, readdir, stat } from 'fs/promises';
+import { writeFile, unlink, readdir, stat, mkdir } from 'fs/promises';
 import path from 'path';
+import { storage } from '@/lib/storage';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
+const IMGBB_API_KEY = process.env.IMGBB_API_KEY;
 
-// Ensure uploads directory exists
+// Ensure uploads directory exists (local only)
 async function ensureDir() {
-  const { mkdir } = await import('fs/promises');
   try {
     await mkdir(UPLOAD_DIR, { recursive: true });
   } catch {}
 }
 
-// GET: List all uploaded files
+async function uploadToImgBB(file: File) {
+  if (!IMGBB_API_KEY) return null;
+  
+  const formData = new FormData();
+  formData.append('image', file);
+  
+  try {
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await res.json();
+    if (data.success) {
+      return {
+        url: data.data.url,
+        name: data.data.image.filename,
+        size: data.data.size,
+      };
+    }
+  } catch (err) {
+    console.error('[ImgBB] Upload Error:', err);
+  }
+  return null;
+}
+
+// GET: List all media via storage sync
 export async function GET() {
   try {
-    await ensureDir();
-    const files = await readdir(UPLOAD_DIR);
-    const fileDetails = await Promise.all(
-      files
-        .filter((f) => /\.(png|jpg|jpeg|gif|webp|svg|ico)$/i.test(f))
-        .map(async (filename) => {
-          const filePath = path.join(UPLOAD_DIR, filename);
-          const info = await stat(filePath);
-          return {
-            name: filename,
-            url: `/uploads/${filename}`,
-            size: info.size,
-            uploadedAt: info.mtime.toISOString(),
-          };
-        })
-    );
-    // Sort by most recent first
-    fileDetails.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
-    return NextResponse.json(fileDetails);
+    const media = await storage.getMedia();
+    return NextResponse.json(media || []);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to list files' }, { status: 500 });
   }
@@ -42,7 +51,6 @@ export async function GET() {
 // POST: Upload one or more files
 export async function POST(request: Request) {
   try {
-    await ensureDir();
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
 
@@ -53,36 +61,76 @@ export async function POST(request: Request) {
     const uploaded: { name: string; url: string }[] = [];
 
     for (const file of files) {
-      // Sanitize filename and make unique with timestamp prefix
-      const ext = path.extname(file.name);
-      const baseName = path.basename(file.name, ext).replace(/[^a-zA-Z0-9-_]/g, '_');
-      const uniqueName = `${Date.now()}_${baseName}${ext}`;
-      const filePath = path.join(UPLOAD_DIR, uniqueName);
+      let finalUrl = '';
+      let finalName = '';
+      let finalSize = file.size;
 
-      const bytes = await file.arrayBuffer();
-      await writeFile(filePath, Buffer.from(bytes));
-      uploaded.push({ name: uniqueName, url: `/uploads/${uniqueName}` });
+      // 1. Try ImgBB if Key exists
+      const imgbb = await uploadToImgBB(file);
+      if (imgbb) {
+        finalUrl = imgbb.url;
+        finalName = imgbb.name;
+        finalSize = imgbb.size;
+      } else {
+        // 2. Try Local Filesystem (Dev/VPS)
+        try {
+          await ensureDir();
+          const ext = path.extname(file.name);
+          const baseName = path.basename(file.name, ext).replace(/[^a-zA-Z0-9-_]/g, '_');
+          const uniqueName = `${Date.now()}_${baseName}${ext}`;
+          const filePath = path.join(UPLOAD_DIR, uniqueName);
+          
+          const bytes = await file.arrayBuffer();
+          await writeFile(filePath, Buffer.from(bytes));
+          
+          finalUrl = `/uploads/${uniqueName}`;
+          finalName = uniqueName;
+        } catch (fsErr) {
+          console.error('[Upload API] Local FS Write Failed:', fsErr);
+          // If we reach here and no ImgBB, we have a total failure on Vercel
+          if (!IMGBB_API_KEY) {
+             return NextResponse.json({ 
+               error: 'Upload failed. Please provide IMGBB_API_KEY for hosted environments.',
+               reason: 'Read-only filesystem detected.' 
+             }, { status: 500 });
+          }
+        }
+      }
+
+      if (finalUrl) {
+        const mediaData = {
+          name: finalName,
+          url: finalUrl,
+          size: finalSize,
+          uploadedAt: new Date().toISOString()
+        };
+        // 3. Sync to Resilient Cloud Storage
+        await storage.saveMedia(mediaData);
+        uploaded.push({ name: finalName, url: finalUrl });
+      }
     }
 
     return NextResponse.json({ success: true, files: uploaded });
   } catch (error) {
-    console.error('Upload error:', error);
+    console.error('Master Upload error:', error);
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
   }
 }
 
-// DELETE: Remove a file by filename
+// DELETE: Remove from storage sync
 export async function DELETE(request: Request) {
   try {
     const { filename } = await request.json();
-    if (!filename) {
-      return NextResponse.json({ error: 'No filename provided' }, { status: 400 });
-    }
+    if (!filename) return NextResponse.json({ error: 'No filename provided' }, { status: 400 });
 
-    // Security: strip any path traversal attempts
-    const safeName = path.basename(filename);
-    const filePath = path.join(UPLOAD_DIR, safeName);
-    await unlink(filePath);
+    // 1. Local Delete (Best effort)
+    try {
+      const filePath = path.join(UPLOAD_DIR, path.basename(filename));
+      await unlink(filePath);
+    } catch {}
+
+    // 2. Cloud/Sync Delete
+    await storage.deleteMedia(filename);
 
     return NextResponse.json({ success: true });
   } catch (error) {

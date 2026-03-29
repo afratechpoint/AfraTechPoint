@@ -1,5 +1,7 @@
 // lib/storage.ts
 import { readData, writeData, settingsFile, productsFile, ordersFile, profilesFile } from "./db";
+import path from "path";
+import crypto from "crypto";
 
 const USE_FIREBASE = process.env.NEXT_PUBLIC_USE_FIREBASE === "true";
 
@@ -240,62 +242,99 @@ export const storage = {
   },
 
   // ── User Profiles (ULTIMATE RESILIENCE STRATEGY) ──────────────────────
-  async getUserProfile(uid: string) {
-    let result = null;
+  // ... existing profile methods ...
 
+  // ── Media Storage (ImgBB Metadata Sync) ──────────────────────────────
+  async getMedia() {
+    let result = null;
     if (USE_FIREBASE) {
       try {
         const adapter = await getAdapter();
-        
-        // 1. Try Firestore (Primary)
-        result = await adapter.getUserProfileFromFirestore(uid);
-        if (result) return result;
+        // 1. Try Firestore
+        const snap = await adapter.adminDb.collection("media").orderBy("uploadedAt", "desc").get();
+        if (!snap.empty) return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-        // 2. Try RTDB (Stable Server Backup)
-        result = await adapter.getUserProfileFromRTDB(uid);
-        if (result) return result;
-        
-      } catch (err: any) {
-        console.warn(`[Storage] Firebase fetch skipped. ${err.message}`);
+        // 2. Try RTDB Fallback
+        const rtdb = adapter.getAdminRtDb();
+        const rtsnap = await rtdb.ref("media").get();
+        if (rtsnap.exists()) {
+           const data = rtsnap.val();
+           return Object.values(data).sort((a: any, b: any) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
+        }
+      } catch (err) {
+        console.warn("[Media Store] Cloud fetch failed. Using local fallback.", err);
       }
     }
-
-    // 3. Fallback to local files
-    const profiles = await readData(profilesFile, {});
-    return (profiles as any)[uid] || null;
+    // 3. Local JSON Fallback
+    return await readData(path.join(process.cwd(), 'data', 'media.json'), []);
   },
 
-  async updateUserProfile(uid: string, data: any) {
-    // 1. ALWAYS write to Local JSON (Backup truth for local servers)
-    // Wrap in try-catch to be Vercel (Read-only disk) compatible
+  async saveMedia(mediaData: any) {
+    // A. Local Backup
     try {
-      const profiles = await readData(profilesFile, {});
-      (profiles as any)[uid] = { ...(profiles as any)[uid], ...data, updatedAt: new Date().toISOString() };
-      await writeData(profilesFile, profiles);
+      const mediaFile = path.join(process.cwd(), 'data', 'media.json');
+      const list = await readData(mediaFile, []);
+      list.unshift({ ...mediaData, id: crypto.randomUUID() });
+      await writeData(mediaFile, list);
     } catch (e) {}
 
-    // 2. Sync with Cloud Firebase
+    // B. Cloud Sync
     if (USE_FIREBASE) {
       try {
         const adapter = await getAdapter();
-        
-        // A. Sync to Firestore (Global primary)
-        await adapter.updateUserProfileInFirestore(uid, data).catch(err => {
-            console.warn(`[Storage] Firestore sync failed: ${err.message}`);
+        // 1. Firestore
+        await adapter.adminDb.collection("media").add({
+          ...mediaData,
+          uploadedAt: new Date().toISOString()
         });
-
-        // B. Sync to RTDB (Global secondary / quota-safe)
-        await adapter.updateUserProfileInRTDB(uid, data).catch(err => {
-            console.warn(`[Storage] RTDB sync failed: ${err.message}`);
+        // 2. RTDB
+        const rtdb = adapter.getAdminRtDb();
+        await rtdb.ref("media").push({
+          ...mediaData,
+          uploadedAt: new Date().toISOString()
         });
+      } catch (err) {
+        console.warn("[Media Store] Cloud sync failed.", err);
+      }
+    }
+  },
 
-      } catch (err: any) {
-        console.warn(`[Storage] Cloud sync failed. Working with local backup.`);
+  async deleteMedia(filename: string) {
+    // A. Local
+    try {
+       const mediaFile = path.join(process.cwd(), 'data', 'media.json');
+       const list = await readData(mediaFile, []);
+       const filtered = list.filter((m: any) => m.name !== filename);
+       await writeData(mediaFile, filtered);
+    } catch (e) {}
+
+    // B. Cloud
+    if (USE_FIREBASE) {
+      try {
+        const adapter = await getAdapter();
+        // 1. Firestore
+        const snap = await adapter.adminDb.collection("media").where("name", "==", filename).get();
+        const batch = adapter.adminDb.batch();
+        snap.docs.forEach(d => batch.delete(d.ref));
+        await batch.commit();
+
+        // 2. RTDB
+        const rtdb = adapter.getAdminRtDb();
+        const rtsnap = await rtdb.ref("media").orderByChild("name").equalTo(filename).get();
+        if (rtsnap.exists()) {
+           rtsnap.forEach((child) => {
+             child.ref.remove();
+             return true; // continue iteration
+           });
+        }
+      } catch (err) {
+        console.warn("[Media Store] Cloud delete failed.", err);
       }
     }
   },
 
   // ── TRAFFIC STATS ──
+  // ... existing traffic methods ...
   async incrementTraffic() {
     if (USE_FIREBASE) {
       try {

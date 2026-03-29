@@ -1,6 +1,8 @@
 // lib/firebase/server_firestore.ts
-import { adminDb, adminMessaging, getAdminRtDb } from "./admin";
+import { adminDb, adminMessaging, getAdminRtDb, adminAuth } from "./admin";
 import admin from "firebase-admin";
+
+export { adminDb, adminMessaging, getAdminRtDb, adminAuth };
 
 const SETTINGS_DOC_ID = "main";
 const SETTINGS_COLLECTION = "config";
