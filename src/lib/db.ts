@@ -11,7 +11,12 @@ export async function readData(filePath: string, defaultVal: any = []) {
   try {
     const data = await fs.readFile(filePath, 'utf-8');
     return JSON.parse(data);
-  } catch (error) {
+  } catch (error: any) {
+    console.error(`[DB Error] Failed to read ${filePath}:`, error.message);
+    // Attach error to return value for debug visibility if it's an array
+    if (Array.isArray(defaultVal)) {
+       return [];
+    }
     return defaultVal;
   }
 }

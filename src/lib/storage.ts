@@ -1,7 +1,7 @@
-// lib/storage.ts
 import { readData, writeData, settingsFile, productsFile, ordersFile, profilesFile } from "./db";
 import path from "path";
 import crypto from "crypto";
+import { FALLBACK_PRODUCTS, FALLBACK_SETTINGS, FALLBACK_ORDERS } from "./fallback_data";
 
 const USE_FIREBASE = process.env.NEXT_PUBLIC_USE_FIREBASE === "true";
 
@@ -22,7 +22,9 @@ export const storage = {
         console.warn("Firestore settings fetch failed. Using local fallback.", err);
       }
     }
-    return await readData(settingsFile, {});
+    const local = await readData(settingsFile, {});
+    if (local && Object.keys(local).length > 0) return local;
+    return FALLBACK_SETTINGS;
   },
   async updateSettings(data: any) {
     if (USE_FIREBASE) {
@@ -52,11 +54,13 @@ export const storage = {
         console.warn("Firestore orders fetch failed. Using local fallback.", err);
       }
     }
-    const orders = await readData(ordersFile, []);
+    const local = await readData(ordersFile, []);
+    if (local && local.length > 0) return local;
+    
     if (filters?.userId) {
-      return orders.filter((o: any) => o.userId === filters.userId);
+      return (FALLBACK_ORDERS as any[]).filter((o: any) => o.userId === filters.userId);
     }
-    return orders;
+    return FALLBACK_ORDERS;
   },
 
   async getOrderById(id: string) {
@@ -145,7 +149,9 @@ export const storage = {
         console.warn("Firestore products fetch failed. Using local fallback.", err);
       }
     }
-    return await readData(productsFile, []);
+    const local = await readData(productsFile, []);
+    if (local && local.length > 0) return local;
+    return FALLBACK_PRODUCTS;
   },
 
   async createProduct(data: any) {
