@@ -39,11 +39,39 @@ export default function ProductImages({
   };
 
   const scrollLeft = () => {
-    if (scrollRef.current) scrollRef.current.scrollBy({ left: -150, behavior: "smooth" });
+    if (images.length === 0) return;
+    const currentIndex = images.indexOf(activeImage);
+    const prevIndex = currentIndex > 0 ? currentIndex - 1 : images.length - 1;
+    
+    // Switch main image
+    onImageChange(images[prevIndex]);
+    
+    // Scroll thumbnail strip
+    if (scrollRef.current) {
+      if (currentIndex === 0) {
+        scrollRef.current.scrollTo({ left: scrollRef.current.scrollWidth, behavior: "smooth" });
+      } else {
+        scrollRef.current.scrollBy({ left: -75, behavior: "smooth" });
+      }
+    }
   };
 
   const scrollRight = () => {
-    if (scrollRef.current) scrollRef.current.scrollBy({ left: 150, behavior: "smooth" });
+    if (images.length === 0) return;
+    const currentIndex = images.indexOf(activeImage);
+    const nextIndex = currentIndex < images.length - 1 ? currentIndex + 1 : 0;
+    
+    // Switch main image
+    onImageChange(images[nextIndex]);
+
+    // Scroll thumbnail strip
+    if (scrollRef.current) {
+      if (currentIndex === images.length - 1) {
+        scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        scrollRef.current.scrollBy({ left: 75, behavior: "smooth" });
+      }
+    }
   };
 
   return (
