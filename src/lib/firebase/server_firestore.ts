@@ -71,7 +71,7 @@ export async function getOrdersByUser(userId: string) {
     .where("userId", "==", userId);
     
   const snap = await q.get();
-  const orders = snap.docs.map(d => {
+  const orders = snap.docs.map((d: any) => {
     const data = d.data();
     return {
       id: d.id,
@@ -82,13 +82,13 @@ export async function getOrdersByUser(userId: string) {
   });
 
   // Sort in-memory to bypass index blocker
-  return orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  return orders.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export async function getAllOrders() {
   const q = adminDb.collection("orders").orderBy("createdAt", "desc");
   const snap = await q.get();
-  return snap.docs.map(d => {
+  return snap.docs.map((d: any) => {
     const data = d.data();
     return {
       id: d.id,
@@ -140,7 +140,7 @@ export async function getPendingOrdersCount() {
 export async function getProductsFromFirestore() {
   const q = adminDb.collection("products").orderBy("createdAt", "desc");
   const snap = await q.get();
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
 }
 
 export async function createProductInFirestore(data: any) {
@@ -209,7 +209,7 @@ export async function getNotifications(recipient: string = "admin", limit: numbe
       .limit(limit);
       
     const snap = await q.get();
-    return snap.docs.map(d => ({
+    return snap.docs.map((d: any) => ({
       id: d.id,
       ...d.data(),
       createdAt: d.data().createdAt?.toDate() || new Date(),
@@ -219,7 +219,7 @@ export async function getNotifications(recipient: string = "admin", limit: numbe
     console.warn("getNotifications: index may be missing, retrying without orderBy:", err.message);
     const q = adminDb.collection("notifications").where("recipient", "==", recipient).limit(limit);
     const snap = await q.get();
-    return snap.docs.map(d => ({
+    return snap.docs.map((d: any) => ({
       id: d.id,
       ...d.data(),
       createdAt: d.data().createdAt?.toDate() || new Date(),
@@ -239,7 +239,7 @@ export async function markAllNotificationsAsRead(recipient: string = "admin") {
     
   const snap = await q.get();
   const batch = adminDb.batch();
-  snap.docs.forEach(d => batch.update(d.ref, { isRead: true }));
+  snap.docs.forEach((d: any) => batch.update(d.ref, { isRead: true }));
   await batch.commit();
 }
 
@@ -260,7 +260,7 @@ export async function sendPushToUser(uid: string, title: string, body: string, l
   // Find all tokens for this user
   const q = adminDb.collection("push_tokens").where("uid", "==", uid);
   const snap = await q.get();
-  const tokens = snap.docs.map(d => d.id);
+  const tokens = snap.docs.map((d: any) => d.id);
   
   console.log(`[FCM] Found ${tokens.length} tokens for UID: ${uid}`);
   if (tokens.length > 0) {
@@ -285,7 +285,7 @@ export async function sendPushToUser(uid: string, title: string, body: string, l
     // Cleanup failed tokens (invalid/unsubscribed)
     if (response.failureCount > 0) {
       const failedTokens: string[] = [];
-      response.responses.forEach((resp, idx) => {
+      response.responses.forEach((resp: any, idx: number) => {
         if (!resp.success && resp.error?.code?.includes("registration-token-not-registered")) {
           failedTokens.push(tokens[idx]);
         }

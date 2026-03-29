@@ -61,10 +61,10 @@ export async function getUsers(token: string) {
   // 2. Fetch all Firestore docs in one go for role/profile data
   const snapshot = await adminDb.collection("users").get();
   const firestoreMap: Record<string, any> = {};
-  snapshot.forEach(doc => { firestoreMap[doc.id] = doc.data(); });
+  snapshot.forEach((doc: any) => { firestoreMap[doc.id] = doc.data(); });
 
   // 3. Merge: Auth user + Firestore enrichment
-  return listResult.users.map(authUser => {
+  return listResult.users.map((authUser: any) => {
     const fs = firestoreMap[authUser.uid] || {};
     return {
       uid:         authUser.uid,
@@ -73,7 +73,7 @@ export async function getUsers(token: string) {
       role:        fs.role || "customer",
       createdAt:   authUser.metadata.creationTime || new Date().toISOString(),
     };
-  }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 /** Expose super-admin email to the client so the UI can enforce restrictions. */

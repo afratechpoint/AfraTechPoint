@@ -305,7 +305,7 @@ export const storage = {
         const adapter = await getAdapter();
         // 1. Try Firestore
         const snap = await adapter.adminDb.collection("media").orderBy("uploadedAt", "desc").get();
-        if (!snap.empty) return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        if (!snap.empty) return snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
 
         // 2. Try RTDB Fallback
         const rtdb = adapter.getAdminRtDb();
@@ -368,14 +368,14 @@ export const storage = {
         // 1. Firestore
         const snap = await adapter.adminDb.collection("media").where("name", "==", filename).get();
         const batch = adapter.adminDb.batch();
-        snap.docs.forEach(d => batch.delete(d.ref));
+        snap.docs.forEach((d: any) => batch.delete(d.ref));
         await batch.commit();
 
         // 2. RTDB
         const rtdb = adapter.getAdminRtDb();
         const rtsnap = await rtdb.ref("media").orderByChild("name").equalTo(filename).get();
         if (rtsnap.exists()) {
-           rtsnap.forEach((child) => {
+           rtsnap.forEach((child: any) => {
              child.ref.remove();
              return true; // continue iteration
            });

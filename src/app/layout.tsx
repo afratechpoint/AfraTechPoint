@@ -47,35 +47,31 @@ const defaultSettings = {
 import { headers } from "next/headers";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const headersList = await headers();
-  const host = headersList.get('host') || "";
-  const isAdminSubdomain = host.startsWith('admin.');
-
-  let settings: any = {};
+  let settings: any = defaultSettings;
   try {
-    settings = await storage.getSettings();
-    if (!settings || Object.keys(settings).length === 0 || Array.isArray(settings)) {
-      settings = defaultSettings;
+    const fetchedSettings = await storage.getSettings();
+    if (fetchedSettings && !Array.isArray(fetchedSettings)) {
+      settings = fetchedSettings;
     }
   } catch (e) {
-    settings = defaultSettings;
+    console.warn("[Layout Metadata] Failed to fetch settings, using defaults.");
+  }
+
+  // Safe host detection for admin subdomain
+  let isAdminSubdomain = false;
+  try {
+    const headersList = await headers();
+    const host = headersList.get('host') || "";
+    isAdminSubdomain = host.startsWith('admin.');
+  } catch (e) {
+    // Silent fail for non-browser/build contexts
   }
 
   if (isAdminSubdomain) {
     return {
       title: "Admin Panel | " + settings.storeName,
-      description: "Manage your Afra Tech Point store.",
+      description: "Manage your store.",
       manifest: "/api/manifest/admin",
-      icons: {
-        icon: "/icons/admin-icon-192.png",
-        shortcut: "/icons/admin-icon-192.png",
-        apple: "/icons/admin-icon-192.png",
-      },
-      appleWebApp: {
-        capable: true,
-        statusBarStyle: "black-translucent",
-        title: "ATP Admin",
-      },
     };
   }
 
@@ -85,13 +81,7 @@ export async function generateMetadata(): Promise<Metadata> {
     manifest: "/api/manifest/shop",
     icons: {
       icon: settings.logoUrl || "/logo.png",
-      shortcut: settings.logoUrl || "/logo.png",
       apple: settings.logoUrl || "/logo.png",
-    },
-    appleWebApp: {
-      capable: true,
-      statusBarStyle: "default",
-      title: settings.storeName,
     },
   };
 }
@@ -101,14 +91,15 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  let settings: any = {};
+  let settings: any = defaultSettings;
+  
   try {
-    settings = await storage.getSettings();
-    if (!settings || Object.keys(settings).length === 0 || Array.isArray(settings)) {
-      settings = defaultSettings;
+    const fetchedSettings = await storage.getSettings();
+    if (fetchedSettings && !Array.isArray(fetchedSettings) && Object.keys(fetchedSettings).length > 0) {
+      settings = fetchedSettings;
     }
   } catch (e) {
-    settings = defaultSettings;
+    console.error("[RootLayout] Critical settings fetch error, falling back to static defaults.");
   }
 
   const themeId = (settings.themeId as ThemeId) || "midnight";
