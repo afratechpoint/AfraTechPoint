@@ -20,7 +20,7 @@ export const storage = {
         console.warn("Firestore settings fetch failed. Using local fallback.", err);
       }
     }
-    return await readData(settingsFile);
+    return await readData(settingsFile, {});
   },
   async updateSettings(data: any) {
     if (USE_FIREBASE) {
@@ -50,7 +50,7 @@ export const storage = {
         console.warn("Firestore orders fetch failed. Using local fallback.", err);
       }
     }
-    const orders = await readData(ordersFile);
+    const orders = await readData(ordersFile, []);
     if (filters?.userId) {
       return orders.filter((o: any) => o.userId === filters.userId);
     }
@@ -67,7 +67,7 @@ export const storage = {
         console.warn("Firestore getOrderById failed. Using local fallback.", err);
       }
     }
-    const orders = await readData(ordersFile);
+    const orders = await readData(ordersFile, []);
     return orders.find((o: any) => o.id === id) || null;
   },
 
@@ -80,7 +80,7 @@ export const storage = {
         console.warn("Firestore createOrder failed. Using local fallback.", err);
       }
     }
-    const orders = await readData(ordersFile);
+    const orders = await readData(ordersFile, []);
     const newOrder = { id: crypto.randomUUID(), ...data, createdAt: new Date().toISOString() };
     orders.push(newOrder);
     await writeData(ordersFile, orders);
@@ -96,7 +96,7 @@ export const storage = {
         console.warn("Firestore updateOrder failed. Using local fallback.", err);
       }
     }
-    const orders = await readData(ordersFile);
+    const orders = await readData(ordersFile, []);
     const idx = orders.findIndex((o: any) => o.id === id);
     if (idx !== -1) {
       orders[idx] = { ...orders[idx], ...fields, updatedAt: new Date().toISOString() };
@@ -114,7 +114,7 @@ export const storage = {
         console.warn("Firestore deleteOrder failed. Using local fallback.", err);
       }
     }
-    const orders = await readData(ordersFile);
+    const orders = await readData(ordersFile, []);
     const filtered = orders.filter((o: any) => o.id !== id);
     await writeData(ordersFile, filtered);
   },
@@ -128,7 +128,7 @@ export const storage = {
         console.warn("Firestore getPendingOrdersCount failed. Using local fallback.", err);
       }
     }
-    const orders = await readData(ordersFile);
+    const orders = await readData(ordersFile, []);
     return orders.filter((o: any) => o.orderStatus === "pending").length;
   },
 
@@ -143,7 +143,7 @@ export const storage = {
         console.warn("Firestore products fetch failed. Using local fallback.", err);
       }
     }
-    return await readData(productsFile);
+    return await readData(productsFile, []);
   },
 
   async createProduct(data: any) {
@@ -155,7 +155,7 @@ export const storage = {
         console.warn("Firestore createProduct failed. Using local fallback.", err);
       }
     }
-    const products = await readData(productsFile);
+    const products = await readData(productsFile, []);
     const newProduct = { id: crypto.randomUUID(), ...data };
     products.push(newProduct);
     await writeData(productsFile, products);
@@ -171,7 +171,7 @@ export const storage = {
         console.warn("Firestore updateProduct failed. Using local fallback.", err);
       }
     }
-    const products = await readData(productsFile);
+    const products = await readData(productsFile, []);
     const idx = products.findIndex((p: any) => p.id === id);
     if (idx !== -1) {
       products[idx] = { ...products[idx], ...data };
@@ -188,7 +188,7 @@ export const storage = {
         console.warn("Firestore deleteProduct failed. Using local fallback.", err);
       }
     }
-    const products = await readData(productsFile);
+    const products = await readData(productsFile, []);
     const filtered = products.filter((p: any) => p.id !== id);
     await writeData(productsFile, filtered);
   },
@@ -250,7 +250,7 @@ export const storage = {
         console.warn("Firestore profile fetch failed. Using local fallback.", err);
       }
     }
-    const profiles = await readData(profilesFile).catch(() => ({}));
+    const profiles = await readData(profilesFile, {});
     return (profiles as any)[uid] || null;
   },
 
@@ -263,7 +263,7 @@ export const storage = {
         console.warn("Firestore profile update failed. Using local fallback.", err);
       }
     }
-    const profiles = await readData(profilesFile).catch(() => ({}));
+    const profiles = await readData(profilesFile, {});
     (profiles as any)[uid] = { ...(profiles as any)[uid], ...data, updatedAt: new Date().toISOString() };
     await writeData(profilesFile, profiles);
   },

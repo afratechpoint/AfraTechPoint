@@ -7,12 +7,12 @@ export const ordersFile = path.join(dataDir, 'orders.json');
 export const settingsFile = path.join(dataDir, 'settings.json');
 export const profilesFile = path.join(dataDir, 'profiles.json');
 
-export async function readData(filePath: string) {
+export async function readData(filePath: string, defaultVal: any = []) {
   try {
     const data = await fs.readFile(filePath, 'utf-8');
     return JSON.parse(data);
   } catch (error) {
-    return [];
+    return defaultVal;
   }
 }
 
