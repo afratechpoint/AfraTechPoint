@@ -84,12 +84,13 @@ function AccountContent() {
   const [ordersLoading, setOrdersLoading] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (user && !isEditing) {
       setDisplayName(user.displayName ?? "");
       fetch(`/api/profile?uid=${user.uid}`)
         .then(r => r.json())
         .then(data => {
           if (data) {
+            if (data.displayName) setDisplayName(data.displayName);
             setPhone(data.phone ?? "");
             setAddress(data.address ?? "");
             setBio(data.bio ?? "");
@@ -97,7 +98,7 @@ function AccountContent() {
         })
         .catch(() => {});
     }
-  }, [user]);
+  }, [user, isEditing]);
 
   useEffect(() => {
     if (tab === "orders" && user) {
@@ -135,15 +136,31 @@ function AccountContent() {
     if (!displayName.trim()) { toast.error("Name cannot be empty."); return; }
     setIsSaving(true);
     try {
+      // 1. Update Auth Profile
       await updateProfile(user, { displayName: displayName.trim() });
-      await fetch("/api/profile", {
+
+      // 2. Update Firestore Profile
+      const res = await fetch("/api/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ uid: user.uid, data: { phone, address, bio, displayName } }),
       });
+
+      if (!res.ok) throw new Error("Failed to save to database");
+
       toast.success("Profile saved!");
       setIsEditing(false);
-    } catch {
+
+      // 3. Immediately refresh data to ensure sync
+      const updated = await fetch(`/api/profile?uid=${user.uid}`).then(r => r.json());
+      if (updated) {
+        if (updated.displayName) setDisplayName(updated.displayName);
+        setPhone(updated.phone ?? "");
+        setAddress(updated.address ?? "");
+        setBio(updated.bio ?? "");
+      }
+    } catch (err) {
+      console.error("Save error:", err);
       toast.error("Failed to save. Please try again.");
     } finally {
       setIsSaving(false);

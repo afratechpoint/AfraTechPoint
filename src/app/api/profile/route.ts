@@ -18,9 +18,11 @@ export async function POST(request: Request) {
     const { uid, data } = await request.json();
 
     if (!uid) {
+      console.warn("[Profile API] Missing UID in request.");
       return NextResponse.json({ error: 'UID is required' }, { status: 400 });
     }
 
+    console.log(`[Profile API] Updating profile for UID: ${uid}`, data);
     await storage.updateUserProfile(uid, data);
     return NextResponse.json({ success: true });
   } catch (err: any) {
