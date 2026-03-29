@@ -137,8 +137,8 @@ export default function ProductGrid() {
                </Link>
 
                {/* Desktop Only Description */}
-               <p className="hidden md:block text-xs text-gray-400 leading-relaxed font-medium mt-2 line-clamp-2">
-                 {product.description}
+               <p className="hidden md:block text-[10px] text-gray-400 leading-loose font-medium mt-1.5 min-h-[40px]">
+                 {product.description?.length > 75 ? `${product.description.substring(0, 75)}...` : (product.description || "")}
                </p>
 
                {/* Desktop Buttons */}
