@@ -367,7 +367,7 @@ export default function CheckoutPage() {
             <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6 sticky top-6">
               <div className="flex items-center justify-between mb-5">
                 <h2 className="font-black text-gray-900">Order Summary</h2>
-                <Link href="/shop" className="text-xs text-gray-400 hover:text-black transition-colors font-semibold">Edit Cart</Link>
+                <Link href="/cart" className="text-xs text-gray-400 hover:text-black transition-colors font-semibold">Edit Cart</Link>
               </div>
 
               <div className="space-y-3 mb-5 max-h-64 overflow-y-auto pr-1">

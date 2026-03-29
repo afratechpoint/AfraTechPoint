@@ -39,7 +39,7 @@ export default function AddToCartButton({
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (isBuyNow = false) => {
     // Guard: require variant selection when variants exist
     if (hasVariants && !selectedVariant) {
       toast.error("Please select a variant first!");
@@ -67,20 +67,17 @@ export default function AddToCartButton({
 
     if (result.success) {
       toast.success(result.message);
-      router.push("/cart");
+      if (isBuyNow) {
+        router.push("/checkout");
+      }
+      // If not BuyNow, let the user stay on the page (or open a sidebar if you have one)
     } else {
       toast.error(result.message);
     }
   };
 
   const handleBuyNow = async () => {
-    if (hasVariants && !selectedVariant) {
-      toast.error("Please select a variant first!");
-      return;
-    }
-    // Add to cart first then redirect
-    await handleAddToCart();
-    router.push("/checkout");
+    await handleAddToCart(true);
   };
 
   const isSelectionRequired = hasVariants && !selectedVariant;
@@ -90,7 +87,7 @@ export default function AddToCartButton({
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
       {/* Add to Cart */}
       <button
-        onClick={handleAddToCart}
+        onClick={() => handleAddToCart(false)}
         disabled={isDisabled}
         style={{
           backgroundColor: isSelectionRequired ? "#e5e7eb" : "var(--primary)",
