@@ -53,9 +53,9 @@ export default function CustomersPage() {
       ]);
       setUsers(data as UserProfile[]);
       setSuperAdminEmail(saEmail);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to load users. Are you sure you're an admin?");
+    } catch (err: any) {
+      console.error("Load Users Error:", err);
+      toast.error(err.message || "Failed to load users. Are you sure you're an admin?");
     } finally {
       setLoading(false);
     }

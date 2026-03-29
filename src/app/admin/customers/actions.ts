@@ -25,16 +25,18 @@ async function verifyAdmin(token: string) {
   // ── BOOTSTRAPPING LOGIC ──────────────────────────────────────────
   // If there are NO admins in the system at all, the first person 
   // to hit this becomes an admin. Or if their email matches ADMIN_EMAIL.
-  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminEmail = process.env.ADMIN_EMAIL || process.env.NEXT_PUBLIC_ADMIN_EMAILS;
   const isFirstOrConfiguredAdmin = 
-    (adminEmail && decodedToken.email === adminEmail);
+    (adminEmail && adminEmail.includes(decodedToken.email || "---"));
 
   if (isFirstOrConfiguredAdmin) {
     console.log(`Bootstrapping admin privileges for: ${decodedToken.email}`);
-    // Set Custom Claims
-    await adminAuth.setCustomUserClaims(decodedToken.uid, { role: "admin" });
-    // Update Firestore
-    await adminDb.collection("users").doc(decodedToken.uid).set({ role: "admin" }, { merge: true });
+    try {
+      await adminAuth.setCustomUserClaims(decodedToken.uid, { role: "admin" });
+      await adminDb.collection("users").doc(decodedToken.uid).set({ role: "admin" }, { merge: true });
+    } catch (e: any) {
+      console.warn("Could not write admin role to DB/Auth, but granting access since email matches ADMIN_EMAIL", e.message);
+    }
     return decodedToken.uid;
   }
 
@@ -42,10 +44,10 @@ async function verifyAdmin(token: string) {
   const adminQuery = await adminDb.collection("users").where("role", "==", "admin").limit(1).get();
   if (adminQuery.empty) {
     console.log(`No admins found in system. Auto-elevating: ${decodedToken.email}`);
-    // Set Custom Claims
-    await adminAuth.setCustomUserClaims(decodedToken.uid, { role: "admin" });
-    // Update Firestore
-    await adminDb.collection("users").doc(decodedToken.uid).set({ role: "admin" }, { merge: true });
+    try {
+      await adminAuth.setCustomUserClaims(decodedToken.uid, { role: "admin" });
+      await adminDb.collection("users").doc(decodedToken.uid).set({ role: "admin" }, { merge: true });
+    } catch(e) {}
     return decodedToken.uid;
   }
   
