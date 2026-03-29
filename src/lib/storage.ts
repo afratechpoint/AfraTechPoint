@@ -1,7 +1,7 @@
 import { readData, writeData, settingsFile, productsFile, ordersFile, profilesFile } from "./db";
 import path from "path";
 import crypto from "crypto";
-import { FALLBACK_PRODUCTS, FALLBACK_SETTINGS, FALLBACK_ORDERS } from "./fallback_data";
+import { FALLBACK_PRODUCTS, FALLBACK_SETTINGS, FALLBACK_ORDERS } from "./fallback_constants";
 
 const USE_FIREBASE = process.env.NEXT_PUBLIC_USE_FIREBASE === "true";
 
@@ -57,6 +57,7 @@ export const storage = {
     const local = await readData(ordersFile, []);
     if (local && local.length > 0) return local;
     
+    // In-memory or static fallback if fs read fails
     if (filters?.userId) {
       return (FALLBACK_ORDERS as any[]).filter((o: any) => o.userId === filters.userId);
     }
