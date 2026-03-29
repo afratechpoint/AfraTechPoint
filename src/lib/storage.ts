@@ -17,7 +17,7 @@ export const storage = {
       try {
         const { getSettingsFromFirestore } = await getAdapter();
         const data = await getSettingsFromFirestore();
-        if (data) return data;
+        if (data && Object.keys(data).length > 0) return data;
       } catch (err) {
         console.warn("Firestore settings fetch failed. Using local fallback.", err);
       }
@@ -47,7 +47,7 @@ export const storage = {
         } else {
           orders = await adapter.getAllOrders();
         }
-        if (orders) return orders;
+        if (orders && orders.length > 0) return orders;
       } catch (err) {
         console.warn("Firestore orders fetch failed. Using local fallback.", err);
       }
@@ -64,7 +64,7 @@ export const storage = {
       try {
         const { getOrderById } = await getAdapter();
         const order = await getOrderById(id);
-        if (order) return order;
+        if (order && Object.keys(order).length > 0) return order;
       } catch (err) {
         console.warn("Firestore getOrderById failed. Using local fallback.", err);
       }
@@ -140,7 +140,7 @@ export const storage = {
       try {
         const { getProductsFromFirestore } = await getAdapter();
         const products = await getProductsFromFirestore();
-        if (products) return products;
+        if (products && products.length > 0) return products;
       } catch (err) {
         console.warn("Firestore products fetch failed. Using local fallback.", err);
       }
