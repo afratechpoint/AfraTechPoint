@@ -1,8 +1,17 @@
 import { verifyAdmin } from '@/lib/auth-server';
 import { NextRequest, NextResponse } from 'next/server';
 import { storage } from '@/lib/storage';
-import { adminStorage } from '@/lib/firebase/admin';
 import path from 'path';
+
+// ImageKit configuration
+const IMAGEKIT_PUBLIC_KEY  = "public_q6EAh8AgOv6qeEBIe6xLUlWF2XI=";
+const IMAGEKIT_PRIVATE_KEY = "private_/bOCaYv2iR0Z83fl32njT2mo+B4=";
+const IMAGEKIT_ENDPOINT    = "https://ik.imagekit.io/afratechpoint";
+
+// Helper for ImageKit Authorization Header (Basic Auth)
+const getImageKitAuthHeader = () => {
+  return 'Basic ' + Buffer.from(IMAGEKIT_PRIVATE_KEY + ':').toString('base64');
+};
 
 // GET: List all media via storage sync
 export async function GET(request: NextRequest) {
@@ -19,7 +28,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST: Upload one or more files to Firebase Storage
+// POST: Upload one or more files to ImageKit.io
 export async function POST(request: NextRequest) {
   try {
     const adminToken = await verifyAdmin(request);
@@ -34,57 +43,59 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No files provided' }, { status: 400 });
     }
 
-    if (!adminStorage) {
-      return NextResponse.json({ error: 'Firebase Storage is not initialized on the server.' }, { status: 500 });
-    }
-
-    const bucket = adminStorage.bucket();
     const uploaded: { name: string; url: string }[] = [];
 
     for (const file of files) {
-      const ext = path.extname(file.name);
-      const baseName = path.basename(file.name, ext).replace(/[^a-zA-Z0-9-_]/g, '_');
-      const uniqueName = `media/${Date.now()}_${baseName}${ext}`;
-      
-      const fileRef = bucket.file(uniqueName);
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
-      
-      await fileRef.save(buffer, {
-        metadata: { contentType: file.type }
+
+      // Prepare ImageKit Upload Request
+      const ikFormData = new FormData();
+      ikFormData.append('file', new Blob([buffer]));
+      ikFormData.append('fileName', file.name);
+      ikFormData.append('useUniqueFileName', 'true');
+      ikFormData.append('folder', '/products');
+
+      const ikResponse = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': getImageKitAuthHeader(),
+        },
+        body: ikFormData,
       });
-      
-      // Make it public so it can be viewed by anyone
-      try {
-        await fileRef.makePublic();
-      } catch (e) {
-        console.warn("[Firebase Storage] Couldn't make object explicitly public. It might be handled by bucket-level IAM policies.");
+
+      const ikData = await ikResponse.json();
+
+      if (!ikResponse.ok) {
+        console.error('[ImageKit Error]', ikData);
+        throw new Error(ikData.message || 'ImageKit upload failed');
       }
-      
-      // Formulate standard Firebase Storage HTTPS URL 
-      const finalUrl = `https://storage.googleapis.com/${bucket.name}/${uniqueName}`;
-      
+
+      const finalUrl = ikData.url;
+      const finalName = ikData.name;
+      const fileId = ikData.fileId; // Important for deletion
+
       const mediaData = {
-        name: uniqueName,
+        name: finalName,
         url: finalUrl,
         size: file.size,
-        deleteUrl: uniqueName, // Store path so we can delete it easily later
-        imgbbId: '', // Blank for Firebase files
+        deleteUrl: fileId, // Store ImageKit fileId here for later deletion
+        imgbbId: '',       // Blank for ImageKit
         uploadedAt: new Date().toISOString()
       };
       
       await storage.saveMedia(mediaData);
-      uploaded.push({ name: uniqueName, url: finalUrl });
+      uploaded.push({ name: finalName, url: finalUrl });
     }
 
     return NextResponse.json({ success: true, files: uploaded });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Master Upload error:', error);
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Upload failed' }, { status: 500 });
   }
 }
 
-// DELETE: Remove from Firebase Storage & sync
+// DELETE: Remove from ImageKit & sync
 export async function DELETE(request: NextRequest) {
   try {
     const adminToken = await verifyAdmin(request);
@@ -98,27 +109,30 @@ export async function DELETE(request: NextRequest) {
     const mediaList = await storage.getMedia();
     const mediaItem = mediaList.find((m: any) => m.name === filename);
 
-    if (mediaItem && adminStorage) {
-      const bucket = adminStorage.bucket();
-      
-      // Legacy Delete attempts for any old ImgBB files
+    if (mediaItem) {
+      // 1. If it's an ImageKit file (deleteUrl is fileId)
+      if (mediaItem.deleteUrl && !mediaItem.deleteUrl.startsWith('media/')) {
+        try {
+          await fetch(`https://api.imagekit.io/v1/files/${mediaItem.deleteUrl}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': getImageKitAuthHeader(),
+            },
+          });
+        } catch (e) {
+          console.warn(`[ImageKit] Deletion failed for ${mediaItem.deleteUrl}`, e);
+        }
+      }
+
+      // 2. Legacy: ImgBB Deletion
       if (mediaItem.imgbbId && process.env.IMGBB_API_KEY) {
         try {
           await fetch(`https://api.imgbb.com/1/delete?key=${process.env.IMGBB_API_KEY}&id=${mediaItem.imgbbId}`, { method: 'POST' }).catch(() => {});
         } catch (e) {}
       }
-      
-      // Delete from Firebase Storage if path (deleteUrl) exists
-      if (mediaItem.deleteUrl && mediaItem.deleteUrl.startsWith('media/')) {
-         try {
-           await bucket.file(mediaItem.deleteUrl).delete();
-         } catch (e) {
-           console.warn(`Failed to delete ${mediaItem.deleteUrl} from Firebase Storage.`, e);
-         }
-      }
     }
 
-    // Cloud/Sync Delete
+    // Cloud/Sync Delete (removes from Firestore/RTDB)
     await storage.deleteMedia(filename);
 
     return NextResponse.json({ success: true });
