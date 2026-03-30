@@ -40,13 +40,13 @@ export async function dispatchOrderEmails(email: string, orderId: string, custom
         to: email,
         subject: `Your Order Confirmation #${orderId.slice(0, 8).toUpperCase()}`,
         template: OrderConfirmation,
-        props: { customerName, orderId, items, total, shippingAddress, orderDate, logoUrl, shopUrl }
+        props: { customerName, orderId, items, total, deliveryCharge: settings?.deliveryCharge, shippingAddress, orderDate, logoUrl, shopUrl }
       }),
       sendEmail({
         to: adminEmail,
         subject: `[ACTION REQUIRED] New Order #${orderId.slice(0, 8).toUpperCase()}`,
         template: NewOrderAdminNotification,
-        props: { customerName, orderId, items, total, shippingAddress, logoUrl, shopUrl }
+        props: { customerName, orderId, items, total, deliveryCharge: settings?.deliveryCharge, shippingAddress, logoUrl, shopUrl }
       })
     ]);
 

@@ -165,11 +165,12 @@ export async function POST(request: NextRequest) {
             subject: `Order Confirmation #${newOrder.id.slice(0, 8).toUpperCase()}`,
             template: OrderConfirmation,
             props: {
-              customerName: body.shippingAddress?.fullName || body.customer?.name || 'Customer',
+              customerName: shippingAddress?.fullName || body.customer?.name || 'Customer',
               orderId: newOrder.id,
-              items: body.items,
-              total: body.totalAmount || body.total,
-              shippingAddress: body.shippingAddress,
+              items: validatedItems,
+              total: calculatedTotal,
+              deliveryCharge: deliveryCharge,
+              shippingAddress: shippingAddress,
               orderDate: newOrder.createdAt,
               logoUrl,
               shopUrl
@@ -182,11 +183,12 @@ export async function POST(request: NextRequest) {
             template: NewOrderAdminNotification,
             props: {
               orderId: newOrder.id,
-              customerName: body.shippingAddress?.fullName || body.customer?.name || 'Customer',
+              customerName: shippingAddress?.fullName || body.customer?.name || 'Customer',
               customerEmail: customerEmail,
-              total: body.totalAmount || body.total,
-              items: body.items,
-              shippingAddress: body.shippingAddress,
+              total: calculatedTotal,
+              items: validatedItems,
+              deliveryCharge: deliveryCharge,
+              shippingAddress: shippingAddress,
               logoUrl,
               shopUrl
             }

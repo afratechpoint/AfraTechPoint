@@ -1,117 +1,79 @@
+import { Text, Section, Link, Row, Column } from "@react-email/components";
 import * as React from "react";
 import { getShopUrl } from "../utils";
-import { Body, Container, Head, Html, Img, Link, Preview, Section, Text, Hr } from "@react-email/components";
+import { BaseLayout } from "../components/Layout";
+import { PrimaryButton } from "../components/Button";
 
-interface EmailVerificationEmailProps {
+interface EmailVerificationProps {
   customerName: string;
   verificationLink: string;
   logoUrl?: string;
   shopUrl?: string;
 }
 
-const baseUrl = getShopUrl();
+export default function EmailVerification({ customerName, verificationLink, logoUrl, shopUrl: propShop }: EmailVerificationProps) {
+  const shopUrl = propShop || getShopUrl();
 
-export default function EmailVerificationEmail({
-  customerName,
-  verificationLink,
-  logoUrl,
-  shopUrl
-}: EmailVerificationEmailProps) {
-  const finalShopUrl = shopUrl || getShopUrl();
-  const finalLogoUrl = logoUrl || `${finalShopUrl}/logo.png`;
   return (
-    <Html>
-      <Head>
-        <meta name="color-scheme" content="light" />
-        <meta name="supported-color-schemes" content="light" />
-      </Head>
-      <Preview>Activate your Afra Tech Point account</Preview>
-      <Body style={{ backgroundColor: "#f0f0f0", fontFamily: "'Helvetica Neue',Helvetica,Arial,sans-serif", margin: "0", padding: "0" }}>
-        <Container style={{ maxWidth: "600px", margin: "40px auto", padding: "0 20px" }}>
+    <BaseLayout
+      previewText="Verify your email address — Afra Tech Point ✉️"
+      accentColor="#3b82f6"
+      accentLabel="Support Service"
+      badgeEmoji="✉️"
+      logoUrl={logoUrl}
+      shopUrl={shopUrl}
+    >
+      {/* Hero */}
+      <Section style={{ textAlign: "center", marginBottom: "32px" }}>
+        <Text style={heroEmoji}>📬</Text>
+        <Text style={heroTitle}>Verify Your Email</Text>
+        <Text style={heroSub}>
+          Hi <strong style={{ color: "#111111" }}>{customerName}</strong>, thank you for joining Afra Tech Point!
+          Please verify your email address to complete your account setup.
+        </Text>
+      </Section>
 
-          {/* Badge */}
-          <Section style={{ textAlign: "center", marginBottom: "12px" }}>
-            <Text style={{ display: "inline-block", backgroundColor: "#0ea5e9", color: "#ffffff", fontSize: "9px", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.25em", padding: "5px 16px", borderRadius: "100px", margin: "0" }}>
-              Account Activation
-            </Text>
-          </Section>
+      {/* CTA */}
+      <Section style={{ textAlign: "center", marginBottom: "32px" }}>
+        <PrimaryButton href={verificationLink} color="#3b82f6">
+          Verify Email Address →
+        </PrimaryButton>
+        <Text style={ctaNote}>
+          This link will expire in <strong style={{ color: "#333333" }}>24 hours</strong>.
+        </Text>
+      </Section>
 
-          {/* Card */}
-          <Section style={{ backgroundColor: "#ffffff", borderRadius: "28px", overflow: "hidden", boxShadow: "0 8px 40px rgba(0,0,0,0.10)" }}>
+      {/* Info Box */}
+      <Section style={infoBox}>
+        <Text style={infoText}>
+          <strong>Why verify?</strong> Verification ensures that you can securely access your account,
+          receive order updates, and recover your password if needed.
+        </Text>
+      </Section>
 
-            {/* Header */}
-            <Section style={{ backgroundColor: "#0ea5e9", padding: "36px 40px", textAlign: "center" }}>
-              <Img src={finalLogoUrl} width="130" alt="Afra Tech Point" style={{ display: "block", margin: "0 auto" }} />
-            </Section>
-
-            {/* Body */}
-            <Section style={{ padding: "40px" }}>
-              <Text style={{ fontSize: "28px", fontWeight: "900", color: "#000000", textAlign: "center", margin: "0 0 12px", letterSpacing: "-0.02em" }}>
-                Verify Your Email
-              </Text>
-              <Text style={{ fontSize: "15px", color: "#666666", lineHeight: "26px", textAlign: "center", margin: "0 0 28px" }}>
-                Hi <strong style={{ color: "#000000" }}>{customerName}</strong>, you're almost ready!<br />
-                Click the button below to activate your Afra Tech Point account.
-              </Text>
-
-              {/* CTA Button */}
-              <Section style={{ textAlign: "center", marginBottom: "28px" }}>
-                <a
-                  href={verificationLink}
-                  style={{
-                    backgroundColor: "#0ea5e9",
-                    color: "#ffffff",
-                    borderRadius: "14px",
-                    fontWeight: "800",
-                    fontSize: "14px",
-                    padding: "14px 32px",
-                    textDecoration: "none",
-                    display: "inline-block",
-                    letterSpacing: "0.02em",
-                  }}
-                >
-                  Activate My Account →
-                </a>
-                <Text style={{ fontSize: "12px", color: "#aaaaaa", margin: "12px 0 0", textAlign: "center" }}>
-                  This link expires in <strong style={{ color: "#333333" }}>1 hour</strong>.
-                </Text>
-              </Section>
-
-              {/* Security note */}
-              <Section style={{ backgroundColor: "#f0f9ff", border: "1.5px solid #bae6fd", borderRadius: "16px", padding: "16px 20px", marginBottom: "20px" }}>
-                <Text style={{ fontSize: "13px", color: "#075985", lineHeight: "22px", margin: "0" }}>
-                  <strong>Didn't create this account?</strong> You can safely ignore this email. No account will be activated without clicking the link above.
-                </Text>
-              </Section>
-
-              {/* Fallback link */}
-              <Section style={{ backgroundColor: "#f8f8f8", borderRadius: "16px", padding: "16px 20px" }}>
-                <Text style={{ fontSize: "11px", color: "#aaaaaa", margin: "0 0 6px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.15em" }}>
-                  Button not working? Copy this link:
-                </Text>
-                <Text style={{ fontSize: "12px", color: "#0ea5e9", margin: "0", wordBreak: "break-all" }}>
-                  <Link href={verificationLink} style={{ color: "#0ea5e9" }}>{verificationLink}</Link>
-                </Text>
-              </Section>
-            </Section>
-
-            {/* Footer */}
-            <Hr style={{ borderColor: "#f0f0f0", margin: "0" }} />
-            <Section style={{ padding: "24px 40px", backgroundColor: "#fafafa", textAlign: "center" }}>
-              <Text style={{ fontSize: "12px", color: "#aaaaaa", margin: "0", lineHeight: "20px" }}>
-                © {new Date().getFullYear()} Afra Tech Point. All rights reserved.<br />
-                <Link href={finalShopUrl} style={{ color: "#000000", fontWeight: "700", textDecoration: "none" }}>Visit Afra Tech Point →</Link>
-              </Text>
-            </Section>
-          </Section>
-
-          <Section style={{ textAlign: "center", marginTop: "20px" }}>
-            <Text style={{ fontSize: "11px", color: "#cccccc", margin: "0" }}>
-              Afra Tech Point · Dhaka, Bangladesh
-            </Text>
-          </Section>
-        </Container>
-      </Body>
-    </Html>
+      {/* Fallback link */}
+      <Section style={fallbackBox}>
+        <Text style={fallbackLabel}>
+          Button not working? Copy this link:
+        </Text>
+        <Text style={fallbackValue}>
+          <Link href={verificationLink} style={{ color: "#3b82f6" }}>{verificationLink}</Link>
+        </Text>
+      </Section>
+    </BaseLayout>
   );
 }
+
+/* ── Styles ──────────────────────────────────────────────────────────── */
+const heroEmoji: React.CSSProperties   = { fontSize: "48px", margin: "0 0 8px", textAlign: "center" };
+const heroTitle: React.CSSProperties   = { fontSize: "32px", fontWeight: "900", color: "#111111", margin: "0 0 14px", letterSpacing: "-0.03em" };
+const heroSub: React.CSSProperties     = { fontSize: "15px", color: "#555555", lineHeight: "26px", margin: "0" };
+
+const infoBox: React.CSSProperties     = { backgroundColor: "#eff6ff", border: "1.5px solid #bfdbfe", borderRadius: "16px", padding: "20px 24px", marginBottom: "28px" };
+const infoText: React.CSSProperties    = { fontSize: "14px", color: "#1e3a8a", lineHeight: "22px", margin: "0" };
+
+const fallbackBox: React.CSSProperties = { backgroundColor: "#f8f8f8", borderRadius: "16px", padding: "16px 20px" };
+const fallbackLabel: React.CSSProperties = { fontSize: "11px", color: "#aaaaaa", margin: "0 0 6px", fontWeight: "700", textTransform: "uppercase" as const, letterSpacing: "0.15em" };
+const fallbackValue: React.CSSProperties = { fontSize: "12px", color: "#3b82f6", margin: "0", wordBreak: "break-all" };
+
+const ctaNote: React.CSSProperties     = { fontSize: "12px", color: "#aaaaaa", margin: "16px 0 0" };

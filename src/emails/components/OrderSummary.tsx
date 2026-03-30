@@ -5,61 +5,98 @@ interface OrderItem {
   name: string;
   price: number;
   quantity: number;
+  variantName?: string;
 }
 
 interface OrderSummaryProps {
   items: OrderItem[];
   total: number;
   currency?: string;
+  deliveryCharge?: number;
 }
 
-export function OrderSummary({ items, total, currency = "৳" }: OrderSummaryProps) {
+export function OrderSummary({ items, total, currency = "৳", deliveryCharge }: OrderSummaryProps) {
+  const subtotal = deliveryCharge !== undefined ? total - deliveryCharge : null;
+
   return (
-    <Section style={{ backgroundColor: "#fafafa", borderRadius: "20px", border: "1.5px solid #eeeeee", padding: "0", marginBottom: "24px", overflow: "hidden" }}>
+    <Section style={wrapper}>
 
       {/* Header */}
-      <Section style={{ padding: "16px 24px", backgroundColor: "#000000" }}>
-        <Text style={{ color: "#ffffff", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.2em", margin: "0" }}>
-          Order Summary
-        </Text>
+      <Section style={header}>
+        <Row>
+          <Column>
+            <Text style={headerText}>🛍️ &nbsp;Order Summary</Text>
+          </Column>
+          <Column align="right">
+            <Text style={{ ...headerText, opacity: 0.6 }}>{items.length} item{items.length !== 1 ? "s" : ""}</Text>
+          </Column>
+        </Row>
       </Section>
 
       {/* Items */}
-      <Section style={{ padding: "8px 24px" }}>
-        {items.map((item, index) => (
+      <Section style={{ padding: "4px 24px" }}>
+        {(items || []).map((item, index) => (
           <React.Fragment key={index}>
-            <Row style={{ padding: "12px 0" }}>
-              <Column>
-                <Text style={{ fontSize: "14px", color: "#111111", margin: "0", fontWeight: "700", lineHeight: "20px" }}>
-                  {item.name}
-                </Text>
-                <Text style={{ fontSize: "12px", color: "#888888", margin: "4px 0 0", fontWeight: "500" }}>
-                  Qty {item.quantity} × {currency}{item.price.toFixed(2)}
+            <Row style={{ padding: "14px 0" }}>
+              {/* Item number badge */}
+              <Column style={{ width: "32px", paddingRight: "12px", verticalAlign: "middle" }}>
+                <Text style={itemBadge}>{index + 1}</Text>
+              </Column>
+              {/* Name + Variant */}
+              <Column style={{ verticalAlign: "middle" }}>
+                <Text style={itemName}>{item.name}</Text>
+                {item.variantName && (
+                  <Text style={itemVariant}>{item.variantName}</Text>
+                )}
+                <Text style={itemQty}>
+                  {item.quantity} × {currency}{Number(item.price).toFixed(2)}
                 </Text>
               </Column>
-              <Column align="right">
-                <Text style={{ fontSize: "15px", color: "#000000", margin: "0", fontWeight: "800" }}>
-                  {currency}{(item.price * item.quantity).toFixed(2)}
+              {/* Price */}
+              <Column align="right" style={{ verticalAlign: "middle" }}>
+                <Text style={itemTotal}>
+                  {currency}{(Number(item.price) * item.quantity).toFixed(2)}
                 </Text>
               </Column>
             </Row>
-            {index < items.length - 1 && <Hr style={{ borderColor: "#eeeeee", margin: "0" }} />}
+            {index < items.length - 1 && (
+              <Hr style={{ borderColor: "#f0f0f0", margin: "0" }} />
+            )}
           </React.Fragment>
         ))}
       </Section>
 
-      {/* Total Row */}
-      <Section style={{ backgroundColor: "#000000", padding: "16px 24px" }}>
+      {/* Totals */}
+      <Section style={totalsSection}>
+        {subtotal !== null && (
+          <Row style={{ marginBottom: "8px" }}>
+            <Column>
+              <Text style={totalLabel}>Subtotal</Text>
+            </Column>
+            <Column align="right">
+              <Text style={totalValue}>{currency}{subtotal.toFixed(2)}</Text>
+            </Column>
+          </Row>
+        )}
+        {deliveryCharge !== undefined && (
+          <Row style={{ marginBottom: "12px" }}>
+            <Column>
+              <Text style={totalLabel}>Delivery Charge</Text>
+            </Column>
+            <Column align="right">
+              <Text style={totalValue}>
+                {deliveryCharge > 0 ? `${currency}${deliveryCharge.toFixed(2)}` : "Free"}
+              </Text>
+            </Column>
+          </Row>
+        )}
+        <Hr style={{ borderColor: "rgba(255,255,255,0.15)", margin: "0 0 12px" }} />
         <Row>
           <Column>
-            <Text style={{ fontSize: "11px", color: "#aaaaaa", margin: "0", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.15em" }}>
-              Total Amount
-            </Text>
+            <Text style={grandTotalLabel}>Grand Total</Text>
           </Column>
           <Column align="right">
-            <Text style={{ fontSize: "20px", color: "#ffffff", margin: "0", fontWeight: "900" }}>
-              {currency}{Number(total).toFixed(2)}
-            </Text>
+            <Text style={grandTotalValue}>{currency}{Number(total).toFixed(2)}</Text>
           </Column>
         </Row>
       </Section>
@@ -67,3 +104,104 @@ export function OrderSummary({ items, total, currency = "৳" }: OrderSummaryPro
     </Section>
   );
 }
+
+/* ── Styles ─────────────────────────────────────────────────────────── */
+
+const wrapper: React.CSSProperties = {
+  backgroundColor: "#fafafa",
+  borderRadius: "20px",
+  border: "1.5px solid #eeeeee",
+  overflow: "hidden",
+  marginBottom: "28px",
+};
+
+const header: React.CSSProperties = {
+  padding: "16px 24px",
+  backgroundColor: "#111111",
+};
+
+const headerText: React.CSSProperties = {
+  color: "#ffffff",
+  fontSize: "11px",
+  fontWeight: "800",
+  textTransform: "uppercase" as const,
+  letterSpacing: "0.2em",
+  margin: "0",
+};
+
+const itemBadge: React.CSSProperties = {
+  width: "24px",
+  height: "24px",
+  backgroundColor: "#f0f0f0",
+  borderRadius: "8px",
+  fontSize: "10px",
+  fontWeight: "800",
+  color: "#888888",
+  textAlign: "center",
+  lineHeight: "24px",
+  margin: "0",
+};
+
+const itemName: React.CSSProperties = {
+  fontSize: "14px",
+  color: "#111111",
+  margin: "0",
+  fontWeight: "700",
+  lineHeight: "20px",
+};
+
+const itemVariant: React.CSSProperties = {
+  fontSize: "11px",
+  color: "#888888",
+  margin: "2px 0 0",
+  fontWeight: "500",
+};
+
+const itemQty: React.CSSProperties = {
+  fontSize: "12px",
+  color: "#aaaaaa",
+  margin: "3px 0 0",
+  fontWeight: "500",
+};
+
+const itemTotal: React.CSSProperties = {
+  fontSize: "14px",
+  color: "#111111",
+  margin: "0",
+  fontWeight: "800",
+};
+
+const totalsSection: React.CSSProperties = {
+  backgroundColor: "#111111",
+  padding: "20px 24px",
+};
+
+const totalLabel: React.CSSProperties = {
+  fontSize: "12px",
+  color: "#aaaaaa",
+  margin: "0",
+  fontWeight: "600",
+};
+
+const totalValue: React.CSSProperties = {
+  fontSize: "13px",
+  color: "#ffffff",
+  margin: "0",
+  fontWeight: "700",
+};
+
+const grandTotalLabel: React.CSSProperties = {
+  fontSize: "12px",
+  color: "#cccccc",
+  margin: "0",
+  fontWeight: "700",
+  textTransform: "uppercase" as const,
+  letterSpacing: "0.1em",
+};
+
+const grandTotalValue: React.CSSProperties = {
+  fontSize: "22px",
+  color: "#ffffff",
+  margin: "0",
+  fontWeight: "900",
+};

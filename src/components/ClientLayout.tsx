@@ -31,9 +31,31 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <Suspense fallback={null}>
         <PushNotificationManager />
       </Suspense>
-      <Toaster position="top-center" toastOptions={{
-        style: { background: 'black', color: 'white', border: 'none', borderRadius: '16px' }
-      }} />
+      <Toaster
+        position="bottom-right"
+        expand={false}
+        richColors
+        closeButton
+        offset={{ bottom: hideMobileNav ? 24 : 88 }}
+        toastOptions={{
+          duration: 3500,
+          style: {
+            borderRadius: "16px",
+            fontSize: "13px",
+            fontWeight: "600",
+            backdropFilter: "blur(12px)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.12)",
+            padding: "14px 18px",
+            gap: "10px",
+          },
+          classNames: {
+            toast:    "items-start",
+            title:    "font-bold text-[13px]",
+            description: "text-[11px] opacity-80 mt-0.5",
+          },
+        }}
+      />
       {!hideMobileNav && <MobileNav />}
     </>
   );

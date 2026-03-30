@@ -10,8 +10,9 @@ interface NewOrderAdminProps {
   customerName: string;
   customerEmail?: string;
   total: number;
-  items: Array<{ name: string; price: number; quantity: number }>;
+  items: Array<{ name: string; price: number; quantity: number; variantName?: string }>;
   shippingAddress?: any;
+  deliveryCharge?: number;
   logoUrl?: string;
   shopUrl?: string;
 }
@@ -23,72 +24,88 @@ export default function NewOrderAdminNotification({
   total,
   items,
   shippingAddress,
+  deliveryCharge,
   logoUrl,
   shopUrl
 }: NewOrderAdminProps) {
   const finalShopUrl = shopUrl || getShopUrl();
-  const adminUrl = `${finalShopUrl}/admin/orders/${orderId}`;
-  const shortId = orderId.slice(0, 8).toUpperCase();
+  const adminUrl     = `${finalShopUrl}/admin/orders/${orderId}`;
+  const shortId      = orderId.slice(0, 8).toUpperCase();
 
   return (
     <BaseLayout
-      previewText={`New Order #${shortId} — Action Required`}
+      previewText={`🚨 New Order #${shortId} — Action Required!`}
       accentColor="#dc2626"
-      accentLabel="Admin Alert — New Order"
+      accentLabel="Admin Alert — New Sale"
+      badgeEmoji="🚨"
       logoUrl={logoUrl}
       shopUrl={shopUrl}
     >
       {/* Hero */}
-      <Section style={{ textAlign: "center", marginBottom: "28px" }}>
-        <Text style={{ fontSize: "28px", fontWeight: "900", color: "#000000", margin: "0 0 10px", letterSpacing: "-0.02em" }}>
-          New Order Received!
-        </Text>
-        <Text style={{ fontSize: "15px", color: "#666666", lineHeight: "24px", margin: "0" }}>
-          A new purchase has been placed. Please review and begin fulfillment as soon as possible.
-        </Text>
+      <Section style={{ textAlign: "center", marginBottom: "32px" }}>
+        <Text style={heroTitle}>New Order Received! 💰</Text>
+        <Text style={heroSub}>A new purchase has been placed. Review and fulfill as soon as possible.</Text>
       </Section>
 
-      {/* Customer Info */}
-      <Section style={{ backgroundColor: "#f8f8f8", borderRadius: "16px", padding: "20px 24px", marginBottom: "20px" }}>
-        <Text style={{ fontSize: "10px", fontWeight: "800", color: "#aaaaaa", textTransform: "uppercase", letterSpacing: "0.2em", margin: "0 0 12px" }}>
-          Customer Details
-        </Text>
+      {/* Order Stats */}
+      <Section style={statsBox}>
         <Row>
-          <Column>
-            <Text style={{ fontSize: "15px", fontWeight: "800", color: "#000000", margin: "0 0 2px" }}>{customerName}</Text>
-            {customerEmail && <Text style={{ fontSize: "13px", color: "#666666", margin: "0" }}>{customerEmail}</Text>}
+          <Column style={{ width: "50%", textAlign: "center", borderRight: "1px solid #e5e5e5" }}>
+            <Text style={statsLabel}>Sale Amount</Text>
+            <Text style={statsValue}>৳{Number(total).toFixed(2)}</Text>
           </Column>
-          <Column align="right">
-            <Text style={{ fontSize: "11px", fontWeight: "700", color: "#aaaaaa", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 2px" }}>Order ID</Text>
-            <Text style={{ fontSize: "14px", fontWeight: "900", color: "#000000", fontFamily: "monospace", margin: "0" }}>#{shortId}</Text>
+          <Column style={{ width: "50%", textAlign: "center" }}>
+            <Text style={statsLabel}>Order ID</Text>
+            <Text style={statsId}>#{shortId}</Text>
           </Column>
         </Row>
       </Section>
 
+      {/* Customer Info */}
+      <Section style={detailsBox}>
+        <Text style={boxLabel}>👤 &nbsp;Customer</Text>
+        <Text style={customerNameStyle}>{customerName}</Text>
+        {customerEmail && <Text style={customerEmailStyle}>{customerEmail}</Text>}
+      </Section>
+
       {/* Shipping */}
       {shippingAddress && (
-        <Section style={{ backgroundColor: "#f8f8f8", borderRadius: "16px", padding: "20px 24px", marginBottom: "20px" }}>
-          <Text style={{ fontSize: "10px", fontWeight: "800", color: "#aaaaaa", textTransform: "uppercase", letterSpacing: "0.2em", margin: "0 0 8px" }}>
-            Ship To
-          </Text>
-          <Text style={{ fontSize: "13px", color: "#333333", margin: "0", lineHeight: "22px" }}>
+        <Section style={detailsBox}>
+          <Text style={boxLabel}>📍 &nbsp;Ship To</Text>
+          <Text style={shippingAddressStyle}>
             <strong>{shippingAddress.fullName}</strong><br />
             {shippingAddress.address}<br />
             {shippingAddress.city}{shippingAddress.postalCode ? `, ${shippingAddress.postalCode}` : ""}<br />
-            {shippingAddress.phone}
+            📞 {shippingAddress.phone}
           </Text>
         </Section>
       )}
 
       {/* Order Summary */}
-      <OrderSummary items={items} total={total} />
+      <OrderSummary items={items} total={total} deliveryCharge={deliveryCharge} />
 
       {/* CTA */}
       <Section style={{ textAlign: "center" }}>
         <PrimaryButton href={adminUrl} color="#dc2626">
-          Open in Dashboard →
+          Review in Admin Panel →
         </PrimaryButton>
       </Section>
     </BaseLayout>
   );
 }
+
+/* ── Styles ──────────────────────────────────────────────────────────── */
+const heroTitle: React.CSSProperties   = { fontSize: "32px", fontWeight: "900", color: "#111111", margin: "0 0 14px", letterSpacing: "-0.03em" };
+const heroSub: React.CSSProperties     = { fontSize: "15px", color: "#555555", lineHeight: "26px", margin: "0" };
+
+const statsBox: React.CSSProperties    = { backgroundColor: "#fef2f2", border: "1.5px solid #fecaca", borderRadius: "16px", padding: "20px 0", marginBottom: "20px" };
+const statsLabel: React.CSSProperties  = { fontSize: "10px", fontWeight: "700", color: "#991b1b", textTransform: "uppercase" as const, letterSpacing: "0.2em", margin: "0 0 4px" };
+const statsValue: React.CSSProperties  = { fontSize: "18px", fontWeight: "900", color: "#b91c1c", margin: "0" };
+const statsId: React.CSSProperties     = { fontSize: "16px", fontWeight: "900", color: "#111111", margin: "0", fontFamily: "monospace" };
+
+const detailsBox: React.CSSProperties  = { backgroundColor: "#f7f7f7", borderRadius: "16px", padding: "20px 24px", marginBottom: "16px" };
+const boxLabel: React.CSSProperties    = { fontSize: "10px", fontWeight: "800", color: "#aaaaaa", textTransform: "uppercase" as const, letterSpacing: "0.2em", margin: "0 0 12px" };
+
+const customerNameStyle: React.CSSProperties = { fontSize: "16px", fontWeight: "800", color: "#111111", margin: "0 0 4px" };
+const customerEmailStyle: React.CSSProperties = { fontSize: "13px", color: "#666666", margin: "0" };
+const shippingAddressStyle: React.CSSProperties = { fontSize: "13px", color: "#333333", margin: "0", lineHeight: "22px" };
