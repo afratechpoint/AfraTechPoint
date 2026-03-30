@@ -1,45 +1,8 @@
 import { verifyAdmin } from '@/lib/auth-server';
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, unlink, readdir, stat, mkdir } from 'fs/promises';
-import path from 'path';
 import { storage } from '@/lib/storage';
-
-const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
-const IMGBB_API_KEY = process.env.IMGBB_API_KEY;
-
-// Ensure uploads directory exists (local only)
-async function ensureDir() {
-  try {
-    await mkdir(UPLOAD_DIR, { recursive: true });
-  } catch {}
-}
-
-async function uploadToImgBB(file: File) {
-  if (!IMGBB_API_KEY) return null;
-  
-  const formData = new FormData();
-  formData.append('image', file);
-  
-  try {
-    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-      method: 'POST',
-      body: formData,
-    });
-    const data = await res.json();
-    if (data.success) {
-      return {
-        url: data.data.url,
-        name: data.data.image.filename,
-        size: data.data.size,
-        deleteUrl: data.data.delete_url,
-        id: data.data.id,
-      };
-    }
-  } catch (err) {
-    console.error('[ImgBB] Upload Error:', err);
-  }
-  return null;
-}
+import { adminStorage } from '@/lib/firebase/admin';
+import path from 'path';
 
 // GET: List all media via storage sync
 export async function GET(request: NextRequest) {
@@ -56,7 +19,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST: Upload one or more files
+// POST: Upload one or more files to Firebase Storage
 export async function POST(request: NextRequest) {
   try {
     const adminToken = await verifyAdmin(request);
@@ -71,61 +34,47 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No files provided' }, { status: 400 });
     }
 
+    if (!adminStorage) {
+      return NextResponse.json({ error: 'Firebase Storage is not initialized on the server.' }, { status: 500 });
+    }
+
+    const bucket = adminStorage.bucket();
     const uploaded: { name: string; url: string }[] = [];
 
     for (const file of files) {
-      let finalUrl = '';
-      let finalName = '';
-      let finalSize = file.size;
-      let finalDeleteUrl = '';
-      let finalImgbbId = '';
-
-      // 1. Try ImgBB if Key exists
-      const imgbb = await uploadToImgBB(file);
-      if (imgbb) {
-        finalUrl = imgbb.url;
-        finalName = imgbb.name;
-        finalSize = imgbb.size;
-        finalDeleteUrl = imgbb.deleteUrl;
-        finalImgbbId = imgbb.id;
-      } else {
-        // 2. Try Local Filesystem (Dev/VPS)
-        try {
-          await ensureDir();
-          const ext = path.extname(file.name);
-          const baseName = path.basename(file.name, ext).replace(/[^a-zA-Z0-9-_]/g, '_');
-          const uniqueName = `${Date.now()}_${baseName}${ext}`;
-          const filePath = path.join(UPLOAD_DIR, uniqueName);
-          
-          const bytes = await file.arrayBuffer();
-          await writeFile(filePath, Buffer.from(bytes));
-          
-          finalUrl = `/uploads/${uniqueName}`;
-          finalName = uniqueName;
-        } catch (fsErr) {
-          console.error('[Upload API] Local FS Write Failed:', fsErr);
-          if (!IMGBB_API_KEY) {
-             return NextResponse.json({ 
-               error: 'Upload failed. Please provide IMGBB_API_KEY for hosted environments.',
-               reason: 'Read-only filesystem detected.' 
-             }, { status: 500 });
-          }
-        }
+      const ext = path.extname(file.name);
+      const baseName = path.basename(file.name, ext).replace(/[^a-zA-Z0-9-_]/g, '_');
+      const uniqueName = `media/${Date.now()}_${baseName}${ext}`;
+      
+      const fileRef = bucket.file(uniqueName);
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      
+      await fileRef.save(buffer, {
+        metadata: { contentType: file.type }
+      });
+      
+      // Make it public so it can be viewed by anyone
+      try {
+        await fileRef.makePublic();
+      } catch (e) {
+        console.warn("[Firebase Storage] Couldn't make object explicitly public. It might be handled by bucket-level IAM policies.");
       }
-
-      if (finalUrl) {
-        const mediaData = {
-          name: finalName,
-          url: finalUrl,
-          size: finalSize,
-          deleteUrl: finalDeleteUrl,
-          imgbbId: finalImgbbId,
-          uploadedAt: new Date().toISOString()
-        };
-        // 3. Sync to Resilient Cloud Storage
-        await storage.saveMedia(mediaData);
-        uploaded.push({ name: finalName, url: finalUrl });
-      }
+      
+      // Formulate standard Firebase Storage HTTPS URL 
+      const finalUrl = `https://storage.googleapis.com/${bucket.name}/${uniqueName}`;
+      
+      const mediaData = {
+        name: uniqueName,
+        url: finalUrl,
+        size: file.size,
+        deleteUrl: uniqueName, // Store path so we can delete it easily later
+        imgbbId: '', // Blank for Firebase files
+        uploadedAt: new Date().toISOString()
+      };
+      
+      await storage.saveMedia(mediaData);
+      uploaded.push({ name: uniqueName, url: finalUrl });
     }
 
     return NextResponse.json({ success: true, files: uploaded });
@@ -135,7 +84,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DELETE: Remove from storage sync
+// DELETE: Remove from Firebase Storage & sync
 export async function DELETE(request: NextRequest) {
   try {
     const adminToken = await verifyAdmin(request);
@@ -146,39 +95,35 @@ export async function DELETE(request: NextRequest) {
     const { filename } = await request.json();
     if (!filename) return NextResponse.json({ error: 'No filename provided' }, { status: 400 });
 
-    // 0. Find the media item to get the deleteUrl and imgbbId
     const mediaList = await storage.getMedia();
     const mediaItem = mediaList.find((m: any) => m.name === filename);
 
-    // 1. Trigger ImgBB Deletion (Programmatic ID-based)
-    if (mediaItem?.imgbbId) {
-      console.log(`[ImgBB] Remote deletion for ID: ${mediaItem.imgbbId}`);
-      try {
-         // Attempt official but unofficial-ish ID-based delete API
-         await fetch(`https://api.imgbb.com/1/delete?key=${IMGBB_API_KEY}&id=${mediaItem.imgbbId}`, {
-           method: 'POST'
-         }).catch(() => {});
-      } catch (e) {}
+    if (mediaItem && adminStorage) {
+      const bucket = adminStorage.bucket();
+      
+      // Legacy Delete attempts for any old ImgBB files
+      if (mediaItem.imgbbId && process.env.IMGBB_API_KEY) {
+        try {
+          await fetch(`https://api.imgbb.com/1/delete?key=${process.env.IMGBB_API_KEY}&id=${mediaItem.imgbbId}`, { method: 'POST' }).catch(() => {});
+        } catch (e) {}
+      }
+      
+      // Delete from Firebase Storage if path (deleteUrl) exists
+      if (mediaItem.deleteUrl && mediaItem.deleteUrl.startsWith('media/')) {
+         try {
+           await bucket.file(mediaItem.deleteUrl).delete();
+         } catch (e) {
+           console.warn(`Failed to delete ${mediaItem.deleteUrl} from Firebase Storage.`, e);
+         }
+      }
     }
 
-    // 2. Secondary Deletion attempt via deleteUrl (Legacy)
-    if (mediaItem?.deleteUrl) {
-      try {
-        await fetch(mediaItem.deleteUrl, { method: 'GET' }).catch(() => {});
-      } catch (e) {}
-    }
-
-    // 3. Local Delete (Best effort)
-    try {
-      const filePath = path.join(UPLOAD_DIR, path.basename(filename));
-      await unlink(filePath);
-    } catch {}
-
-    // 4. Cloud/Sync Delete
+    // Cloud/Sync Delete
     await storage.deleteMedia(filename);
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error('Master Delete error:', error);
     return NextResponse.json({ error: 'Failed to delete file' }, { status: 500 });
   }
 }

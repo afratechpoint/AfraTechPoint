@@ -31,6 +31,7 @@ const getApp = () => {
         privateKey,
       }),
       databaseURL: process.env.FIREBASE_DATABASE_URL,
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
     });
   } catch (error: any) {
     console.error("[Firebase Admin] Initialization failed:", error.message);
@@ -46,6 +47,7 @@ export const adminDb = app ? app.firestore() : {
 } as any;
 
 export const adminAuth = app ? app.auth() : null as any;
+export const adminStorage = app ? app.storage() : null as any;
 export const adminMessaging = app ? app.messaging() : { sendEachForMulticast: () => Promise.resolve({ successCount: 0, failureCount: 0, responses: [] }) } as any;
 
 export const getAdminRtDb = () => {
