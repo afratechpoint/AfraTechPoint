@@ -10,7 +10,6 @@ import { useSettings } from "@/components/SettingsProvider";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { dispatchOrderEmails } from "@/app/actions/email";
 import PremiumLoader from "@/components/PremiumLoader";
 
 const METHOD_COLORS: Record<string, string> = {
@@ -123,6 +122,8 @@ export default function CheckoutPage() {
   // ── Submit ────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Guard: prevent double submission (double-click or StrictMode re-render)
+    if (submitted.current || isProcessing) return;
     if (!validate()) return;
     setIsProcessing(true);
 

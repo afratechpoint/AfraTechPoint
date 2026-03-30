@@ -32,14 +32,23 @@ export async function createOrderInFirestore(orderData: any) {
   });
 
   // Create admin notification (non-blocking — never crash order creation)
+  // Use the orderId as the notification document ID to make it idempotent
   try {
-    await createNotificationInFirestore({
-      type: "new_order",
-      title: "New Order Placed",
-      message: `New order #${docRef.id.slice(0, 8).toUpperCase()} - BDT ${orderData.totalAmount || orderData.total || "N/A"} received.`,
-      recipient: "admin",
-      link: `/admin/orders/${docRef.id}`,
-    });
+    const notifRef = adminDb.collection("notifications").doc(`order_${docRef.id}`);
+    const existing = await notifRef.get();
+    if (!existing.exists) {
+      await notifRef.set({
+        type: "new_order",
+        title: "New Order Placed",
+        message: `New order #${docRef.id.slice(0, 8).toUpperCase()} - BDT ${orderData.totalAmount || orderData.total || "N/A"} received.`,
+        recipient: "admin",
+        link: `/admin/orders/${docRef.id}`,
+        isRead: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      // Send push notification (non-blocking)
+      sendPushToUser("admin", "New Order Placed", `Order #${docRef.id.slice(0, 8).toUpperCase()} received.`, `/admin/orders/${docRef.id}`).catch(console.error);
+    }
   } catch (notifErr: any) {
     console.error("[Notification] Failed to create order notification:", notifErr.message);
   }
