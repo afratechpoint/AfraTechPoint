@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import PremiumLoader from "@/components/PremiumLoader";
 import PushNotificationManager from "@/components/PushNotificationManager";
+import { authenticatedFetch } from "@/lib/api-helper";
 
 export default function AdminClientLayout({
   children,
@@ -96,7 +97,7 @@ export default function AdminClientLayout({
 
     const fetchOrderCount = async () => {
       try {
-        const res = await fetch("/api/admin/order-count", { cache: "no-store" });
+        const res = await authenticatedFetch("/api/admin/order-count", { cache: "no-store" });
         const data = await res.json();
         if (data.count !== undefined) {
           if (data.count > prevCountRef.current) {

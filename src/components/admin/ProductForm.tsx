@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useSettings } from "@/components/SettingsProvider";
 import MediaPickerModal from "@/components/admin/MediaPickerModal";
 import { cn } from "@/lib/utils";
+import { authenticatedFetch } from "@/lib/api-helper";
 
 interface Variant {
   id: string;
@@ -113,7 +114,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
   }, [regularPrice, salePrice]);
 
   useEffect(() => {
-    fetch("/api/settings").then(r => r.json()).then(data => {
+    authenticatedFetch("/api/settings").then(r => r.json()).then(data => {
       if (data.categories) setAvailableCategories(data.categories);
     });
   }, []);
@@ -139,7 +140,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
     const method = initialData ? "PUT" : "POST";
     const url = initialData ? `/api/products/${initialData.id}` : "/api/products";
     try {
-      await fetch(url, {
+      await authenticatedFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -7,6 +7,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { verifyAdminAction } from "@/lib/auth-server";
+import { storage } from "@/lib/storage";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_BASE_URL ??
@@ -16,16 +18,17 @@ const API_BASE =
 
 /** Fetch every product (for the product list page). */
 export async function getProducts() {
-  const res = await fetch(`${API_BASE}/api/products`, { cache: "no-store" });
-  if (!res.ok) return [];
-  return res.json();
+  const admin = await verifyAdminAction();
+  if (!admin) return [];
+  return await storage.getProducts();
 }
 
 /** Fetch a single product by ID (for the edit form). */
 export async function getProductById(id: string) {
-  const res = await fetch(`${API_BASE}/api/products/${id}`, { cache: "no-store" });
-  if (!res.ok) return null;
-  return res.json();
+  const admin = await verifyAdminAction();
+  if (!admin) return null;
+  const products = await storage.getProducts();
+  return products.find((p: any) => p.id === id) || null;
 }
 
 // ── CREATE ───────────────────────────────────────────────────────
@@ -35,17 +38,11 @@ export async function getProductById(id: string) {
  * FormData is parsed on the server to avoid shipping data over the wire twice.
  */
 export async function createProduct(formData: FormData) {
+  const admin = await verifyAdminAction();
+  if (!admin) return { success: false, message: "Unauthorized" };
+
   const body = buildProductBody(formData);
-
-  const res = await fetch(`${API_BASE}/api/products`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    return { success: false, message: "Failed to create product." };
-  }
+  await storage.createProduct(body);
 
   revalidatePath("/admin/products");
   revalidatePath("/shop");
@@ -58,17 +55,11 @@ export async function createProduct(formData: FormData) {
  * updateProduct — called by the Edit-product form.
  */
 export async function updateProduct(id: string, formData: FormData) {
+  const admin = await verifyAdminAction();
+  if (!admin) return { success: false, message: "Unauthorized" };
+
   const body = buildProductBody(formData);
-
-  const res = await fetch(`${API_BASE}/api/products/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    return { success: false, message: "Failed to update product." };
-  }
+  await storage.updateProduct(id, body);
 
   revalidatePath("/admin/products");
   revalidatePath(`/shop/${id}`);
@@ -77,11 +68,12 @@ export async function updateProduct(id: string, formData: FormData) {
 
 /**
  * deleteProduct — called from the product table after confirmation.
- * Refactored to call storage directly for better reliability and performance.
  */
 export async function deleteProduct(id: string) {
+  const admin = await verifyAdminAction();
+  if (!admin) return { success: false, message: "Unauthorized" };
+
   try {
-    const { storage } = await import("@/lib/storage");
     await storage.deleteProduct(id);
 
     revalidatePath("/admin/products");

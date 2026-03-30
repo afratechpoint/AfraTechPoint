@@ -58,21 +58,25 @@ export default function CheckoutPage() {
       setShip(s => ({ ...s, fullName: user.displayName ?? "" }));
 
       // Step 2: Fetch extra details (Phone, Address) from PERSISTENT Firestore
-      fetch(`/api/profile?uid=${user.uid}`)
-        .then(r => r.json())
-        .then(data => {
-          if (data && (data.phone || data.address)) {
-            setShip(s => ({ 
-              ...s, 
-              phone: data.phone || "", 
-              address: data.address || "" 
-            }));
-          } else {
-            // Fallback: If no data in DB, check if maybe they need to set it
-            toast.info("Please ensure your profile has a phone and address for faster checkout.");
-          }
+      user.getIdToken().then(token => {
+        fetch(`/api/profile?uid=${user.uid}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
         })
-        .catch(err => console.error("Checkout profile fetch failed:", err));
+          .then(r => r.json())
+          .then(data => {
+            if (data && (data.phone || data.address)) {
+              setShip(s => ({ 
+                ...s, 
+                phone: data.phone || "", 
+                address: data.address || "" 
+              }));
+            } else {
+              // Fallback: If no data in DB, check if maybe they need to set it
+              toast.info("Please ensure your profile has a phone and address for faster checkout.");
+            }
+          })
+          .catch(err => console.error("Checkout profile fetch failed:", err));
+      });
     }
   }, [user]);
 
@@ -123,9 +127,13 @@ export default function CheckoutPage() {
     setIsProcessing(true);
 
     try {
+      const token = await user!.getIdToken();
       const res = await fetch("/api/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({
           userId:    user!.uid,
           userEmail: user!.email ?? "",

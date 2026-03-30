@@ -1,13 +1,16 @@
-import { NextResponse } from "next/server";
+import { verifyAdmin } from "@/lib/auth-server";
+import { NextRequest, NextResponse } from "next/server";
 import { storage } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Note: In a production app, we would ideally verify the admin session here 
-    // using cookies/session tokens. For now, since the client-side layout handles auth, 
-    // we provide the count to the dashboard.
+    const adminToken = await verifyAdmin(request);
+    if (!adminToken) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const count = await storage.getPendingOrdersCount();
     return NextResponse.json({ count });
   } catch (error) {

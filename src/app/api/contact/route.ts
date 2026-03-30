@@ -4,14 +4,54 @@ import { storage } from "@/lib/storage";
 import { sendEmail } from "@/lib/email/sendEmail";
 import { ContactAutoReply, ContactAdminNotification } from "@/emails/renderers/index";
 
+// ── Rate Limiter (in-memory, per-IP) ─────────────────────────────────
+// Max 3 contact submissions per 15 minutes per IP address
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const RATE_LIMIT_MAX       = 3;
+const rateLimitMap         = new Map<string, { count: number; firstReqAt: number }>();
+
+function checkRateLimit(ip: string): boolean {
+  const now  = Date.now();
+  const data = rateLimitMap.get(ip);
+
+  if (!data || now - data.firstReqAt > RATE_LIMIT_WINDOW_MS) {
+    // New window — reset counter
+    rateLimitMap.set(ip, { count: 1, firstReqAt: now });
+    return true; // allowed
+  }
+
+  if (data.count >= RATE_LIMIT_MAX) {
+    return false; // blocked
+  }
+
+  data.count++;
+  return true; // allowed
+}
+// ─────────────────────────────────────────────────────────────────────
+
 const contactSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters."),
-  email: z.string().email("Invalid email address."),
+  name:    z.string().min(2, "Name must be at least 2 characters."),
+  email:   z.string().email("Invalid email address."),
   message: z.string().min(10, "Message must be at least 10 characters.").max(2000, "Message is too long."),
 });
 
+
 export async function POST(req: NextRequest) {
   try {
+    // ── Rate Limit Check ─────────────────────────────────────────────
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") ||
+      "unknown";
+
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json(
+        { error: "Too many requests. Please wait 15 minutes before trying again." },
+        { status: 429 }
+      );
+    }
+    // ────────────────────────────────────────────────────────────────
+
     const body = await req.json();
     
     // 1. Validate Input

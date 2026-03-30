@@ -5,6 +5,7 @@ import { Bell, Check, CheckCheck, Package, UserPlus, Info, ExternalLink, Refresh
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { authenticatedFetch } from "@/lib/api-helper";
 
 interface Notification {
   id: string;
@@ -56,7 +57,7 @@ export default function NotificationsPage() {
   const fetchNotifs = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/notifications?recipient=admin&limit=50", { cache: "no-store" });
+      const res = await authenticatedFetch("/api/notifications?recipient=admin&limit=50", { cache: "no-store" });
       const data = await res.json();
       if (data.notifications) setNotifications(data.notifications);
     } catch (e) {
@@ -69,7 +70,7 @@ export default function NotificationsPage() {
   useEffect(() => { fetchNotifs(); }, []);
 
   const markRead = async (id: string) => {
-    await fetch("/api/notifications", {
+    await authenticatedFetch("/api/notifications", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
@@ -79,7 +80,7 @@ export default function NotificationsPage() {
 
   const markAllRead = async () => {
     setMarkingAll(true);
-    await fetch("/api/notifications", {
+    await authenticatedFetch("/api/notifications", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ all: true, recipient: "admin" }),
@@ -90,14 +91,14 @@ export default function NotificationsPage() {
 
   const deleteOne = async (id: string) => {
     setDeletingId(id);
-    await fetch(`/api/notifications?id=${id}`, { method: "DELETE" });
+    await authenticatedFetch(`/api/notifications?id=${id}`, { method: "DELETE" });
     setNotifications(prev => prev.filter(n => n.id !== id));
     setDeletingId(null);
   };
 
   const clearAll = async () => {
     setClearingAll(true);
-    await fetch("/api/notifications?all=true&recipient=admin", { method: "DELETE" });
+    await authenticatedFetch("/api/notifications?all=true&recipient=admin", { method: "DELETE" });
     setNotifications([]);
     setClearingAll(false);
     setShowClearConfirm(false);

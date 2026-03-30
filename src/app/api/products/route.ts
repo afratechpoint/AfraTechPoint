@@ -1,5 +1,5 @@
-export const dynamic = 'force-dynamic';
-import { NextResponse } from 'next/server';
+import { verifyAdmin } from '@/lib/auth-server';
+import { NextRequest, NextResponse } from 'next/server';
 import { storage } from '@/lib/storage';
 
 import { revalidatePath } from 'next/cache';
@@ -9,7 +9,12 @@ export async function GET() {
   return NextResponse.json(products);
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const adminToken = await verifyAdmin(request);
+  if (!adminToken) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const data = await request.json();
   const newProduct = await storage.createProduct(data);
   

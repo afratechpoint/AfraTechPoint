@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import PremiumSpinner from "@/components/PremiumSpinner";
+import { authenticatedFetch } from "@/lib/api-helper";
 
 interface MediaFile {
   name: string;
@@ -48,7 +49,7 @@ export default function AdminMediaPage() {
   const fetchFiles = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/upload");
+      const res = await authenticatedFetch("/api/upload");
       const data = await res.json();
       setFiles(data);
       setFiltered(data);
@@ -77,7 +78,7 @@ export default function AdminMediaPage() {
     fileArr.forEach((f) => formData.append("files", f));
 
     try {
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const res = await authenticatedFetch("/api/upload", { method: "POST", body: formData });
       const data = await res.json();
       if (data.success) {
         toast.success(`${data.files.length} file(s) uploaded successfully!`);
@@ -101,7 +102,7 @@ export default function AdminMediaPage() {
   const handleDelete = async (file: MediaFile) => {
     setDeleting(file.name);
     try {
-      const res = await fetch("/api/upload", {
+      const res = await authenticatedFetch("/api/upload", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ filename: file.name }),

@@ -1,10 +1,15 @@
-import { NextResponse } from "next/server";
+import { verifyAdmin } from "@/lib/auth-server";
+import { NextRequest, NextResponse } from "next/server";
 import { storage } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
+    const adminToken = await verifyAdmin(request);
+    if (!adminToken) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const { searchParams } = new URL(request.url);
     const recipient = searchParams.get("recipient") || "admin";
     const limit = parseInt(searchParams.get("limit") || "20");
@@ -17,8 +22,12 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const adminToken = await verifyAdmin(request);
+    if (!adminToken) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const body = await request.json();
     const { id, all, recipient } = body;
 
@@ -36,8 +45,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Failed to update notification" }, { status: 500 });
   }
 }
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
+    const adminToken = await verifyAdmin(request);
+    if (!adminToken) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
     const clearAll = searchParams.get("all");

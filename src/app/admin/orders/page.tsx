@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import PremiumLoader from "@/components/PremiumLoader";
 import { cn } from "@/lib/utils";
+import { authenticatedFetch } from "@/lib/api-helper";
 
 interface Order {
   id: string;
@@ -147,7 +148,7 @@ export default function AdminOrdersPage() {
 
   useEffect(() => {
     const fetchOrders = () => {
-      fetch("/api/orders", { cache: "no-store" })
+      authenticatedFetch("/api/orders", { cache: "no-store" })
         .then(r => r.json())
         .then((data: Order[]) => { 
           if (Array.isArray(data)) {
@@ -166,7 +167,7 @@ export default function AdminOrdersPage() {
   const patchOrder = useCallback(async (orderId: string, fields: Record<string, string>) => {
     setUpdating(orderId);
     try {
-      const res = await fetch(`/api/orders/${orderId}`, {
+      const res = await authenticatedFetch(`/api/orders/${orderId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(fields),
@@ -201,7 +202,7 @@ export default function AdminOrdersPage() {
 
     setDeleting(true);
     try {
-      const res = await fetch(`/api/orders/${orderId}`, { method: "DELETE" });
+      const res = await authenticatedFetch(`/api/orders/${orderId}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
       setOrders(prev => prev.filter(o => o.id !== orderId));
       showToast("Order deleted successfully.");

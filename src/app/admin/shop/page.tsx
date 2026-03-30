@@ -5,6 +5,7 @@ import { Save, Loader2, Image as ImageIcon, Tags, Mail, Phone, MapPin, Plus, Tra
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import MediaPickerModal from "@/components/admin/MediaPickerModal";
+import { authenticatedFetch } from "@/lib/api-helper";
 
 export default function AdminShopPage() {
   const [settings, setSettings] = useState<any>(null);
@@ -30,7 +31,7 @@ export default function AdminShopPage() {
   const [activeBannerId, setActiveBannerId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/settings")
+    authenticatedFetch("/api/settings")
       .then((res) => res.json())
       .then((data) => {
         setSettings(data);
@@ -91,7 +92,7 @@ export default function AdminShopPage() {
     const data = Object.fromEntries(formData.entries());
 
     try {
-      const res = await fetch("/api/settings", {
+      const res = await authenticatedFetch("/api/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         // Merge the contact details with the new arrays

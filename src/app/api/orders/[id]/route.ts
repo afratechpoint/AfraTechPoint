@@ -1,24 +1,41 @@
-export const dynamic = 'force-dynamic';
-import { NextResponse } from 'next/server';
+import { verifyAdmin, verifyUser } from '@/lib/auth-server';
+import { NextRequest, NextResponse } from 'next/server';
 import { storage } from '@/lib/storage';
 import { sendEmail } from "@/lib/email/sendEmail";
 import { OrderStatusUpdate, PaymentConfirmed } from "@/emails/renderers/index";
 
 
 export async function GET(
-  _req: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const adminToken = await verifyAdmin(request);
+  const userToken = !adminToken ? await verifyUser(request) : null;
+
   const { id }  = await params;
   const order = await storage.getOrderById(id);
   if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+
+  // ── Authorization ──
+  // Allow if admin or if the user is the owner (matching email or uid)
+  const isOwner = userToken && (order.userEmail === userToken.email || order.uid === userToken.uid);
+
+  if (!adminToken && !isOwner) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   return NextResponse.json(order);
 }
 
 export async function PATCH(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const adminToken = await verifyAdmin(request);
+  if (!adminToken) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { id }  = await params;
     const oldOrder = await storage.getOrderById(id);
@@ -90,9 +107,14 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const adminToken = await verifyAdmin(request);
+  if (!adminToken) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
     await storage.deleteOrder(id);

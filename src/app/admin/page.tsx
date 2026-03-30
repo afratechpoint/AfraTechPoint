@@ -5,6 +5,7 @@ import { TrendingUp, Package, Users, ShoppingCart, ArrowRight, Check } from "luc
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useSettings } from "@/components/SettingsProvider";
+import { authenticatedFetch } from "@/lib/api-helper";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ orders: 0, products: 0, customers: 0, completedOrders: 0, traffic: 0 });
@@ -13,8 +14,8 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/orders').then(r => r.json()),
-      fetch('/api/products').then(r => r.json())
+      authenticatedFetch('/api/orders').then(r => r.json()),
+      authenticatedFetch('/api/products').then(r => r.json())
     ]).then(([orders, products]) => {
       // Calculate unique customers based on order history
       const uniqueCustomers = new Set(orders.map((o: any) => o.customer?.email).filter(Boolean));

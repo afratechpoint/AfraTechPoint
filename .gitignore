@@ -48,7 +48,16 @@ next-env.d.ts
 create_zip.ps1
 README_DEPLOY.md
 
-# Ignored Secrets/Test files
+# Ignored Secrets/Test files & All Backup Env Files
 test-admin.js
-.env_backup_firebase
-.env.local.backup_original
+tracked.txt
+.env_backup*
+.env*.backup*
+.env.local.backup*
+# Private key files (Firebase service account etc.)
+*-service-account*.json
+*private-key*.json
+*.key
+# OS artifacts
+.DS_Store
+Thumbs.db

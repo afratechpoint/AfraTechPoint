@@ -9,6 +9,7 @@ import {
   OrderStatusUpdate, 
   PaymentConfirmed 
 } from "@/emails/renderers/index";
+import { verifyAdminAction } from "@/lib/auth-server";
 
 export async function dispatchWelcomeEmail(email: string, name: string) {
   try {
@@ -62,6 +63,9 @@ export async function dispatchOrderEmails(email: string, orderId: string, custom
 }
 
 export async function dispatchOrderStatusUpdate(email: string, orderId: string, status: string, trackingInfo?: string) {
+  const admin = await verifyAdminAction();
+  if (!admin) return;
+
   try {
     const settings = await storage.getSettings();
     const capitalizedStatus = status.charAt(0).toUpperCase() + status.slice(1);
@@ -81,6 +85,9 @@ export async function dispatchOrderStatusUpdate(email: string, orderId: string, 
 }
 
 export async function dispatchPaymentConfirmed(email: string, orderId: string, customerName: string) {
+  const admin = await verifyAdminAction();
+  if (!admin) return;
+
   try {
     const settings = await storage.getSettings();
     await sendEmail({

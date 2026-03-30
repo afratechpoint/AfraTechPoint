@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import MediaPickerModal from "@/components/admin/MediaPickerModal";
 import ImageCropperModal from "@/components/admin/ImageCropperModal";
 import { THEMES, ThemeId } from "@/lib/themes";
+import { authenticatedFetch } from "@/lib/api-helper";
 
 interface Settings {
   storeName: string;
@@ -434,7 +435,7 @@ export default function AdminSettings() {
   const [themeId, setThemeId] = useState<ThemeId>("midnight");
 
   useEffect(() => {
-    fetch("/api/settings")
+    authenticatedFetch("/api/settings")
       .then((res) => res.json())
       .then((data) => {
         setSettings(data);
@@ -467,7 +468,7 @@ export default function AdminSettings() {
     data.announcementActive = formData.get('announcementActive') === 'on' ? true : false;
 
     try {
-      const res = await fetch("/api/settings", {
+      const res = await authenticatedFetch("/api/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -508,7 +509,7 @@ export default function AdminSettings() {
     formData.append("files", blob, fileName);
 
     try {
-      const res = await fetch("/api/upload", {
+      const res = await authenticatedFetch("/api/upload", {
         method: "POST",
         body: formData,
       });

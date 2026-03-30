@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { verifyAdmin } from '@/lib/auth-server';
+import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, unlink, readdir, stat, mkdir } from 'fs/promises';
 import path from 'path';
 import { storage } from '@/lib/storage';
@@ -41,8 +42,13 @@ async function uploadToImgBB(file: File) {
 }
 
 // GET: List all media via storage sync
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const adminToken = await verifyAdmin(request);
+    if (!adminToken) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const media = await storage.getMedia();
     return NextResponse.json(media || []);
   } catch (error) {
@@ -51,8 +57,13 @@ export async function GET() {
 }
 
 // POST: Upload one or more files
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const adminToken = await verifyAdmin(request);
+    if (!adminToken) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
 
@@ -125,8 +136,13 @@ export async function POST(request: Request) {
 }
 
 // DELETE: Remove from storage sync
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
+    const adminToken = await verifyAdmin(request);
+    if (!adminToken) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { filename } = await request.json();
     if (!filename) return NextResponse.json({ error: 'No filename provided' }, { status: 400 });
 

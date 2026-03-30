@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useSettings } from "@/components/SettingsProvider";
 import ProductTable from "./components/ProductTable";
 import { Product } from "./types";
+import { authenticatedFetch } from "@/lib/api-helper";
 
 export default function AdminProductsPage() {
   const [products, setProducts]   = useState<Product[]>([]);
@@ -22,7 +23,7 @@ export default function AdminProductsPage() {
   const fetchProducts = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res  = await fetch("/api/products");
+      const res  = await authenticatedFetch("/api/products");
       const data = await res.json();
       setProducts(data);
       setFiltered(data);

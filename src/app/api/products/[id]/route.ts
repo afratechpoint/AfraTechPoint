@@ -1,5 +1,5 @@
-export const dynamic = 'force-dynamic';
-import { NextResponse } from 'next/server';
+import { verifyAdmin } from '@/lib/auth-server';
+import { NextRequest, NextResponse } from 'next/server';
 import { storage } from '@/lib/storage';
 
 import { revalidatePath } from 'next/cache';
@@ -20,9 +20,14 @@ export async function GET(
 }
 
 export async function PUT(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const adminToken = await verifyAdmin(request);
+  if (!adminToken) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { id } = await params;
   const data = await request.json();
   
@@ -36,9 +41,14 @@ export async function PUT(
 }
 
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const adminToken = await verifyAdmin(request);
+  if (!adminToken) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
     console.log(`[API] Deleting product: ${id}`);
