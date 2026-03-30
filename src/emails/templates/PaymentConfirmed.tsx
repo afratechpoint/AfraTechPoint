@@ -4,11 +4,18 @@ import { BaseLayout } from "../components/Layout";
 import { PrimaryButton } from "../components/Button";
 import { getShopUrl } from "../utils";
 
+import { OrderSummary } from "../components/OrderSummary";
+
 interface PaymentConfirmedProps {
   orderId: string;
   customerName: string;
   amount?: number;
   currency?: string;
+  items?: any[];
+  total?: number;
+  deliveryCharge?: number;
+  discount?: number;
+  paymentMethod?: string;
   logoUrl?: string;
   shopUrl?: string;
 }
@@ -18,6 +25,11 @@ export default function PaymentConfirmed({
   customerName,
   amount,
   currency = "৳",
+  items,
+  total,
+  deliveryCharge,
+  discount,
+  paymentMethod,
   logoUrl,
   shopUrl: propShop
 }: PaymentConfirmedProps) {
@@ -35,7 +47,7 @@ export default function PaymentConfirmed({
       shopUrl={shopUrl}
     >
       {/* Hero */}
-      <Section style={{ textAlign: "center", marginBottom: "36px" }}>
+      <Section style={{ textAlign: "center", marginBottom: "32px" }}>
         <Text style={heroEmoji}>💳</Text>
         <Text style={heroTitle}>Payment Received!</Text>
         <Text style={heroSub}>
@@ -44,25 +56,27 @@ export default function PaymentConfirmed({
         </Text>
       </Section>
 
-      {/* Amount Card */}
+      {/* Amount Card — Emphasized */}
       {amount !== undefined && (
         <Section style={amountBox}>
           <Text style={boxLabel}>Total Paid</Text>
           <Text style={amountText}>
             {currency}{Number(amount).toFixed(2)}
           </Text>
+          <Text style={orderRef}>Order Ref: #{shortId}</Text>
         </Section>
       )}
 
-      {/* Order Info */}
-      <Section style={infoBox}>
-        <Row>
-          <Column style={{ textAlign: "center" }}>
-            <Text style={boxLabel}>Order Reference</Text>
-            <Text style={shortIdText}>#{shortId}</Text>
-          </Column>
-        </Row>
-      </Section>
+      {/* Order Summary — Full details */}
+      {items && (
+        <OrderSummary 
+          items={items} 
+          total={total || amount || 0} 
+          deliveryCharge={deliveryCharge} 
+          discount={discount}
+          paymentMethod={paymentMethod}
+        />
+      )}
 
       {/* CTA */}
       <Section style={{ textAlign: "center" }}>
@@ -82,10 +96,8 @@ const heroEmoji: React.CSSProperties   = { fontSize: "48px", margin: "0 0 8px", 
 const heroTitle: React.CSSProperties   = { fontSize: "32px", fontWeight: "900", color: "#111111", margin: "0 0 14px", letterSpacing: "-0.03em" };
 const heroSub: React.CSSProperties     = { fontSize: "15px", color: "#555555", lineHeight: "26px", margin: "0" };
 
-const amountBox: React.CSSProperties   = { backgroundColor: "#f0fdf4", border: "1.5px solid #bbf7d0", borderRadius: "20px", padding: "28px", marginBottom: "24px", textAlign: "center" };
-const infoBox: React.CSSProperties     = { backgroundColor: "#f8f8f8", borderRadius: "16px", padding: "20px 24px", marginBottom: "32px" };
-
+const amountBox: React.CSSProperties   = { backgroundColor: "#f0fdf4", border: "1.5px solid #bbf7d0", borderRadius: "20px", padding: "28px", marginBottom: "32px", textAlign: "center" };
 const boxLabel: React.CSSProperties    = { fontSize: "10px", fontWeight: "800", color: "#16a34a", textTransform: "uppercase" as const, letterSpacing: "0.2em", margin: "0 0 8px" };
 const amountText: React.CSSProperties  = { fontSize: "36px", fontWeight: "900", color: "#15803d", margin: "0" };
-const shortIdText: React.CSSProperties = { fontSize: "20px", fontWeight: "900", color: "#111111", margin: "0", fontFamily: "monospace", letterSpacing: "0.1em" };
+const orderRef: React.CSSProperties    = { fontSize: "11px", fontWeight: "700", color: "#16a34a", textTransform: "uppercase" as const, letterSpacing: "0.1em", marginTop: "8px", opacity: 0.7 };
 const ctaNote: React.CSSProperties     = { fontSize: "12px", color: "#aaaaaa", margin: "16px 0 0" };

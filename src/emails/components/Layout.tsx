@@ -25,7 +25,7 @@ export function BaseLayout({
   shopUrl: propShop,
 }: LayoutProps) {
   const shopUrl  = propShop  || getShopUrl();
-  const logoUrl  = propLogo  || process.env.NEXT_PUBLIC_SHOP_LOGO_URL || `${shopUrl}/logo.png`;
+  const logoUrl = propLogo || process.env.NEXT_PUBLIC_SHOP_LOGO_URL || "https://i.ibb.co.com/TqvmBZyc/logo-wbg.png";
   const shopName = "Afra Tech Point";
   const year     = new Date().getFullYear();
 

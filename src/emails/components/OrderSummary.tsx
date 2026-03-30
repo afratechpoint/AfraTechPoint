@@ -13,10 +13,19 @@ interface OrderSummaryProps {
   total: number;
   currency?: string;
   deliveryCharge?: number;
+  discount?: number;
+  paymentMethod?: string;
 }
 
-export function OrderSummary({ items, total, currency = "৳", deliveryCharge }: OrderSummaryProps) {
-  const subtotal = deliveryCharge !== undefined ? total - deliveryCharge : null;
+export function OrderSummary({ 
+  items, 
+  total, 
+  currency = "৳", 
+  deliveryCharge = 0, 
+  discount = 0, 
+  paymentMethod 
+}: OrderSummaryProps) {
+  const subtotal = (items || []).reduce((acc, item) => acc + (Number(item.price) * item.quantity), 0);
 
   return (
     <Section style={wrapper}>
@@ -28,7 +37,7 @@ export function OrderSummary({ items, total, currency = "৳", deliveryCharge }:
             <Text style={headerText}>🛍️ &nbsp;Order Summary</Text>
           </Column>
           <Column align="right">
-            <Text style={{ ...headerText, opacity: 0.6 }}>{items.length} item{items.length !== 1 ? "s" : ""}</Text>
+            <Text style={{ ...headerText, opacity: 0.6 }}>{(items || []).length} item{(items || []).length !== 1 ? "s" : ""}</Text>
           </Column>
         </Row>
       </Section>
@@ -59,7 +68,7 @@ export function OrderSummary({ items, total, currency = "৳", deliveryCharge }:
                 </Text>
               </Column>
             </Row>
-            {index < items.length - 1 && (
+            {index < (items || []).length - 1 && (
               <Hr style={{ borderColor: "#f0f0f0", margin: "0" }} />
             )}
           </React.Fragment>
@@ -68,30 +77,44 @@ export function OrderSummary({ items, total, currency = "৳", deliveryCharge }:
 
       {/* Totals */}
       <Section style={totalsSection}>
-        {subtotal !== null && (
+        {/* Subtotal */}
+        <Row style={{ marginBottom: "8px" }}>
+          <Column>
+            <Text style={totalLabel}>Subtotal</Text>
+          </Column>
+          <Column align="right">
+            <Text style={totalValue}>{currency}{subtotal.toFixed(2)}</Text>
+          </Column>
+        </Row>
+
+        {/* Discount */}
+        {discount > 0 && (
           <Row style={{ marginBottom: "8px" }}>
             <Column>
-              <Text style={totalLabel}>Subtotal</Text>
+              <Text style={{ ...totalLabel, color: "#4ade80" }}>Discount</Text>
             </Column>
             <Column align="right">
-              <Text style={totalValue}>{currency}{subtotal.toFixed(2)}</Text>
+              <Text style={{ ...totalValue, color: "#4ade80" }}>-{currency}{discount.toFixed(2)}</Text>
             </Column>
           </Row>
         )}
-        {deliveryCharge !== undefined && (
-          <Row style={{ marginBottom: "12px" }}>
-            <Column>
-              <Text style={totalLabel}>Delivery Charge</Text>
-            </Column>
-            <Column align="right">
-              <Text style={totalValue}>
-                {deliveryCharge > 0 ? `${currency}${deliveryCharge.toFixed(2)}` : "Free"}
-              </Text>
-            </Column>
-          </Row>
-        )}
+
+        {/* Delivery Charge */}
+        <Row style={{ marginBottom: "12px" }}>
+          <Column>
+            <Text style={totalLabel}>Delivery Charge</Text>
+          </Column>
+          <Column align="right">
+            <Text style={totalValue}>
+              {deliveryCharge > 0 ? `${currency}${deliveryCharge.toFixed(2)}` : "Free"}
+            </Text>
+          </Column>
+        </Row>
+
         <Hr style={{ borderColor: "rgba(255,255,255,0.15)", margin: "0 0 12px" }} />
-        <Row>
+        
+        {/* Grand Total */}
+        <Row style={{ marginBottom: paymentMethod ? "12px" : "0px" }}>
           <Column>
             <Text style={grandTotalLabel}>Grand Total</Text>
           </Column>
@@ -99,6 +122,17 @@ export function OrderSummary({ items, total, currency = "৳", deliveryCharge }:
             <Text style={grandTotalValue}>{currency}{Number(total).toFixed(2)}</Text>
           </Column>
         </Row>
+
+        {/* Payment Method Badge */}
+        {paymentMethod && (
+          <Row>
+            <Column align="right">
+              <Text style={paymentBadge}>
+                Paid via {paymentMethod}
+              </Text>
+            </Column>
+          </Row>
+        )}
       </Section>
 
     </Section>
@@ -137,7 +171,7 @@ const itemBadge: React.CSSProperties = {
   fontSize: "10px",
   fontWeight: "800",
   color: "#888888",
-  textAlign: "center",
+  textAlign: "center" as const,
   lineHeight: "24px",
   margin: "0",
 };
@@ -204,4 +238,17 @@ const grandTotalValue: React.CSSProperties = {
   color: "#ffffff",
   margin: "0",
   fontWeight: "900",
+};
+
+const paymentBadge: React.CSSProperties = {
+  display: "inline-block",
+  fontSize: "9px",
+  fontWeight: "900",
+  textTransform: "uppercase" as const,
+  letterSpacing: "0.1em",
+  backgroundColor: "rgba(255,255,255,0.08)",
+  color: "#aaaaaa",
+  borderRadius: "6px",
+  padding: "4px 10px",
+  margin: "0",
 };

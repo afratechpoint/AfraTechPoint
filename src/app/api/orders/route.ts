@@ -158,6 +158,7 @@ export async function POST(request: NextRequest) {
       const shopUrl = settings?.shopUrl;
 
       if (customerEmail) {
+        const discountAmount = Number(body.discount) || 0;
         const results = await Promise.allSettled([
           // 1. Sent to Customer
           sendEmail({
@@ -170,6 +171,8 @@ export async function POST(request: NextRequest) {
               items: validatedItems,
               total: calculatedTotal,
               deliveryCharge: deliveryCharge,
+              discount: discountAmount,
+              paymentMethod: payment?.method || "Cash on Delivery",
               shippingAddress: shippingAddress,
               orderDate: newOrder.createdAt,
               logoUrl,
@@ -188,6 +191,8 @@ export async function POST(request: NextRequest) {
               total: calculatedTotal,
               items: validatedItems,
               deliveryCharge: deliveryCharge,
+              discount: discountAmount,
+              paymentMethod: payment?.method || "Cash on Delivery",
               shippingAddress: shippingAddress,
               logoUrl,
               shopUrl

@@ -13,6 +13,8 @@ interface NewOrderAdminProps {
   items: Array<{ name: string; price: number; quantity: number; variantName?: string }>;
   shippingAddress?: any;
   deliveryCharge?: number;
+  discount?: number;
+  paymentMethod?: string;
   logoUrl?: string;
   shopUrl?: string;
 }
@@ -25,6 +27,8 @@ export default function NewOrderAdminNotification({
   items,
   shippingAddress,
   deliveryCharge,
+  discount,
+  paymentMethod,
   logoUrl,
   shopUrl
 }: NewOrderAdminProps) {
@@ -82,7 +86,13 @@ export default function NewOrderAdminNotification({
       )}
 
       {/* Order Summary */}
-      <OrderSummary items={items} total={total} deliveryCharge={deliveryCharge} />
+      <OrderSummary 
+        items={items} 
+        total={total} 
+        deliveryCharge={deliveryCharge} 
+        discount={discount}
+        paymentMethod={paymentMethod}
+      />
 
       {/* CTA */}
       <Section style={{ textAlign: "center" }}>

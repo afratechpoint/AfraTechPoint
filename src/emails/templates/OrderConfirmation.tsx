@@ -13,6 +13,8 @@ interface OrderConfirmationProps {
   shippingAddress: any;
   orderDate: string | Date;
   deliveryCharge?: number;
+  discount?: number;
+  paymentMethod?: string;
   logoUrl?: string;
   shopUrl?: string;
 }
@@ -25,6 +27,8 @@ export default function OrderConfirmation({
   shippingAddress,
   orderDate,
   deliveryCharge,
+  discount,
+  paymentMethod,
   logoUrl,
   shopUrl: propShop,
 }: OrderConfirmationProps) {
@@ -70,7 +74,13 @@ export default function OrderConfirmation({
       </Section>
 
       {/* Order Summary */}
-      <OrderSummary items={items} total={total} deliveryCharge={deliveryCharge} />
+      <OrderSummary 
+        items={items} 
+        total={total} 
+        deliveryCharge={deliveryCharge} 
+        discount={discount}
+        paymentMethod={paymentMethod}
+      />
 
       {/* Shipping Info */}
       <Section style={shippingBox}>

@@ -28,7 +28,17 @@ export async function dispatchWelcomeEmail(email: string, name: string) {
   } catch(e) { console.error("Failed to send WelcomeEmail:", e); }
 }
 
-export async function dispatchOrderEmails(email: string, orderId: string, customerName: string, items: any[], total: number, shippingAddress: any, orderDate: string) {
+export async function dispatchOrderEmails(
+  email: string, 
+  orderId: string, 
+  customerName: string, 
+  items: any[], 
+  total: number, 
+  shippingAddress: any, 
+  orderDate: string,
+  discount: number = 0,
+  paymentMethod: string = "Cash on Delivery"
+) {
   try {
     const settings = await storage.getSettings();
     const adminEmail = settings?.adminEmail || process.env.ADMIN_EMAIL || process.env.SMTP_USER || "";
@@ -40,13 +50,23 @@ export async function dispatchOrderEmails(email: string, orderId: string, custom
         to: email,
         subject: `Your Order Confirmation #${orderId.slice(0, 8).toUpperCase()}`,
         template: OrderConfirmation,
-        props: { customerName, orderId, items, total, deliveryCharge: settings?.deliveryCharge, shippingAddress, orderDate, logoUrl, shopUrl }
+        props: { 
+          customerName, orderId, items, total, 
+          deliveryCharge: settings?.deliveryCharge, 
+          discount, paymentMethod,
+          shippingAddress, orderDate, logoUrl, shopUrl 
+        }
       }),
       sendEmail({
         to: adminEmail,
         subject: `[ACTION REQUIRED] New Order #${orderId.slice(0, 8).toUpperCase()}`,
         template: NewOrderAdminNotification,
-        props: { customerName, orderId, items, total, deliveryCharge: settings?.deliveryCharge, shippingAddress, logoUrl, shopUrl }
+        props: { 
+          customerName, orderId, items, total, 
+          deliveryCharge: settings?.deliveryCharge, 
+          discount, paymentMethod,
+          shippingAddress, logoUrl, shopUrl 
+        }
       })
     ]);
 
@@ -90,6 +110,8 @@ export async function dispatchPaymentConfirmed(email: string, orderId: string, c
 
   try {
     const settings = await storage.getSettings();
+    const order = await storage.getOrderById(orderId);
+    
     await sendEmail({
       to: email,
       subject: `Payment Confirmed for Order #${orderId.slice(0, 8).toUpperCase()}`,
@@ -97,6 +119,12 @@ export async function dispatchPaymentConfirmed(email: string, orderId: string, c
       props: { 
         orderId, 
         customerName,
+        amount: order?.totalAmount || order?.total,
+        items: order?.items,
+        total: order?.totalAmount || order?.total,
+        deliveryCharge: order?.deliveryCharge,
+        discount: order?.discount || 0,
+        paymentMethod: order?.payment?.method || "Online Payment",
         logoUrl: settings?.logoUrl,
         shopUrl: settings?.shopUrl
       }

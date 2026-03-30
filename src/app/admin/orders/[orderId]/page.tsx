@@ -13,6 +13,20 @@ import {
 import { useSettings } from "@/components/SettingsProvider";
 import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
 import { cn } from "@/lib/utils";
+import { getAuth } from "firebase/auth";
+
+// Gets a fresh Firebase ID token for authenticated API requests
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  try {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) return {};
+    const token = await user.getIdToken();
+    return { Authorization: `Bearer ${token}` };
+  } catch {
+    return {};
+  }
+}
 
 interface Order {
   id: string;
@@ -69,10 +83,13 @@ export default function AdminOrderDetailPage() {
 
   useEffect(() => {
     if (!orderId) return;
-    fetch(`/api/orders/${orderId}`)
-      .then(async r => { if (!r.ok) return null; return r.json(); })
-      .then(data => { setOrder(data); setFetching(false); })
-      .catch(() => { setOrder(null); setFetching(false); });
+    (async () => {
+      const headers = await getAuthHeaders();
+      fetch(`/api/orders/${orderId}`, { headers })
+        .then(async r => { if (!r.ok) return null; return r.json(); })
+        .then(data => { setOrder(data); setFetching(false); })
+        .catch(() => { setOrder(null); setFetching(false); });
+    })();
   }, [orderId]);
 
   const showToast = (msg: string, ok = true) => {
@@ -84,9 +101,10 @@ export default function AdminOrderDetailPage() {
     if (!order) return;
     setUpdating(true);
     try {
+      const headers = await getAuthHeaders();
       const res = await fetch(`/api/orders/${order.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...headers },
         body: JSON.stringify(fields),
       });
       if (!res.ok) throw new Error();
@@ -129,7 +147,8 @@ export default function AdminOrderDetailPage() {
     if (!order) return;
     setIsDeleting(true);
     try {
-      const res = await fetch(`/api/orders/${order.id}`, { method: "DELETE" });
+      const headers = await getAuthHeaders();
+      const res = await fetch(`/api/orders/${order.id}`, { method: "DELETE", headers });
       if (!res.ok) throw new Error();
       showToast("Order deleted successfully.");
       setIsDeleteModalOpen(false);
