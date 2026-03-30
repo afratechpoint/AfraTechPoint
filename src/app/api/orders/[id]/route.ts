@@ -17,8 +17,14 @@ export async function GET(
   if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
 
   // ── Authorization ──
-  // Allow if admin or if the user is the owner (matching email or uid)
-  const isOwner = userToken && (order.userEmail === userToken.email || order.uid === userToken.uid);
+  // Allow if admin or if the user is the owner.
+  // Orders are stored with a `userId` field (Firebase UID). We also check
+  // `order.uid` and `order.userEmail` for backwards-compatibility.
+  const isOwner = userToken && (
+    order.userId   === userToken.uid   ||
+    order.uid      === userToken.uid   ||
+    order.userEmail === userToken.email
+  );
 
   if (!adminToken && !isOwner) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
