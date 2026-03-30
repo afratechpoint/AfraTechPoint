@@ -103,6 +103,7 @@ export default function ProductGrid() {
                  src={`${product.image}?tr=w-400,f-auto,q-80`}
                  alt={product.name}
                  fill
+                 unoptimized={true}
                  priority={i < 4}
                  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                  className="object-contain p-3 md:p-6 group-hover:scale-105 transition-transform duration-700 ease-out"

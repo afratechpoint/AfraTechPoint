@@ -79,6 +79,7 @@ export default function HeroSlider({ banners }: HeroSliderProps) {
                     src={`${slide.image}?tr=w-800,f-auto,q-80`}
                     alt={`${slide.title} - Hero Image`}
                     fill
+                    unoptimized={true}
                     priority={currentSlide === 0}
                     sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-contain drop-shadow-[0_45px_45px_rgba(0,0,0,0.15)] md:hover:scale-105 transition-transform duration-1000 cursor-pointer"
@@ -90,6 +91,7 @@ export default function HeroSlider({ banners }: HeroSliderProps) {
                     src={`${slide.image}?tr=w-800,f-auto,q-80`}
                     alt={`${slide.title} - Hero Image`}
                     fill
+                    unoptimized={true}
                     priority={currentSlide === 0}
                     sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-contain drop-shadow-[0_45px_45px_rgba(0,0,0,0.15)] md:hover:scale-105 transition-transform duration-1000"
