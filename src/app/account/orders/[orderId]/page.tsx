@@ -69,12 +69,16 @@ export default function UserOrderDetailPage() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (!orderId) return;
-    fetch(`/api/orders/${orderId}`)
+    if (!orderId || !user) return;
+    user.getIdToken().then(token => 
+      fetch(`/api/orders/${orderId}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      })
+    )
       .then(async r => { if (!r.ok) return null; return r.json(); })
       .then(data  => { setOrder(data); setFetching(false); })
       .catch(()   => { setOrder(null); setFetching(false); });
-  }, [orderId]);
+  }, [orderId, user]);
 
   if (loading || fetching) return <PremiumLoader />;
 

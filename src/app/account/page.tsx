@@ -129,7 +129,11 @@ function AccountContent() {
   useEffect(() => {
     if (tab === "orders" && user) {
       setOrdersLoading(true);
-      fetch(`/api/orders?userId=${user.uid}`)
+      // Get auth token first, then fetch orders with it
+      user.getIdToken()
+        .then(token => fetch(`/api/orders?userId=${user.uid}`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        }))
         .then(async r => {
           if (!r.ok) {
             const err = await r.json().catch(() => ({}));
