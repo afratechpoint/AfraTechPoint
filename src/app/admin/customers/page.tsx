@@ -116,15 +116,7 @@ export default function CustomersPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
-            <Users size={24} /> User Management
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">Manage all registered users and assign access roles.</p>
-        </div>
-      </div>
+
 
       {/* Filters */}
       <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex flex-col sm:flex-row items-center gap-4">
