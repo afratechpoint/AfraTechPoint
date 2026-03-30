@@ -13,8 +13,6 @@ import { AuthProvider } from "@/contexts/AuthContext";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
@@ -141,7 +139,9 @@ export default async function RootLayout({
               </div>
             )}
             <ClientLayout>
-              {children}
+              <main id="main-content">
+                {children}
+              </main>
             </ClientLayout>
           </SettingsProvider>
         </AuthProvider>
