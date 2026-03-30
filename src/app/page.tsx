@@ -83,7 +83,7 @@ export default function Home() {
                       <Link href={slides[currentSlide].linkUrl} className="pointer-events-auto block relative w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] md:w-[380px] md:h-[380px]">
                         <Image 
                           src={slides[currentSlide].image} 
-                          alt="Hero Product" 
+                          alt={`${slides[currentSlide].title} - Hero Image`} 
                           fill
                           priority
                           sizes="(max-width: 768px) 220px, 380px"
@@ -94,7 +94,7 @@ export default function Home() {
                       <div className="relative w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] md:w-[380px] md:h-[380px]">
                         <Image 
                           src={slides[currentSlide].image} 
-                          alt="Hero Product" 
+                          alt={`${slides[currentSlide].title} - Hero Image`} 
                           fill
                           priority
                           sizes="(max-width: 768px) 220px, 380px"
@@ -122,7 +122,7 @@ export default function Home() {
                       className="flex flex-col md:flex-row items-center md:items-start gap-4"
                     >
                        <div className="max-w-[480px]">
-                          <p className="text-[10px] md:text-sm text-gray-400 leading-relaxed font-bold line-clamp-2 md:line-clamp-none">
+                          <p className="text-[10px] md:text-sm text-gray-500 leading-relaxed font-bold line-clamp-2 md:line-clamp-none">
                             {slides[currentSlide].description}
                           </p>
                        </div>
@@ -134,31 +134,35 @@ export default function Home() {
               <div className="absolute bottom-4 right-4 md:bottom-12 md:right-12 z-20 flex gap-2 md:gap-4">
                   <button 
                     onClick={prevSlide}
+                    aria-label="Previous Slide"
                     className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-white/80 backdrop-blur-md border border-gray-100 flex items-center justify-center hover:bg-black hover:text-white transition-all shadow-lg shadow-black/5"
                   >
-                    <ArrowLeft size={18} className="md:hidden" />
-                    <ArrowUpRight size={20} className="-rotate-[135deg] hidden md:block" />
+                    <ArrowLeft size={18} className="md:hidden" aria-hidden="true" />
+                    <ArrowUpRight size={20} className="-rotate-[135deg] hidden md:block" aria-hidden="true" />
                   </button>
                   <button 
                     onClick={nextSlide}
+                    aria-label="Next Slide"
                     className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-white/80 backdrop-blur-md border border-gray-100 flex items-center justify-center hover:bg-black hover:text-white transition-all shadow-lg shadow-black/5"
                   >
-                    <ArrowRight size={18} className="md:hidden" />
-                    <ArrowUpRight size={20} className="rotate-45 hidden md:block" />
+                    <ArrowRight size={18} className="md:hidden" aria-hidden="true" />
+                    <ArrowUpRight size={20} className="rotate-45 hidden md:block" aria-hidden="true" />
                   </button>
               </div>
 
               <div className="absolute bottom-8 left-8 md:bottom-12 md:left-12 z-20 flex gap-2 md:gap-3">
-                 {slides.map((_, i) => (
-                   <button
-                     key={i}
-                     onClick={() => setCurrentSlide(i)}
-                     className={cn(
-                       "h-1 md:h-1.5 transition-all duration-500 rounded-full",
-                       currentSlide === i ? "w-8 md:w-12 bg-black" : "w-4 md:w-6 bg-black/20"
-                     )}
-                   />
-                 ))}
+                  {slides.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentSlide(i)}
+                      aria-label={`Go to slide ${i + 1}`}
+                      aria-current={currentSlide === i ? "true" : "false"}
+                      className={cn(
+                        "h-1 md:h-1.5 transition-all duration-500 rounded-full",
+                        currentSlide === i ? "w-8 md:w-12 bg-black" : "w-4 md:w-6 bg-black/20"
+                      )}
+                    />
+                  ))}
               </div>
             </div>
           </div>

@@ -46,11 +46,11 @@ export default function Footer() {
           {TRUST_BADGES.map(({ icon: Icon, label, sub }) => (
             <div key={label} className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center shrink-0">
-                <Icon size={18} className="text-white" />
+                <Icon size={18} className="text-white" aria-hidden="true" />
               </div>
               <div>
                 <p className="text-sm font-bold text-gray-900">{label}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{sub}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{sub}</p>
               </div>
             </div>
           ))}
@@ -61,10 +61,10 @@ export default function Footer() {
 
           {/* Brand */}
           <div className="md:col-span-5 space-y-5">
-            <Link href="/" className="relative block h-14 w-40">
+            <Link href="/" className="relative block h-14 w-40" aria-label={`${settings.storeName} Home`}>
               <Image
                 src={settings.logoUrl || "/logo.png"}
-                alt={settings.storeName}
+                alt={`${settings.storeName} Logo`}
                 fill
                 sizes="160px"
                 className="object-contain"
@@ -80,10 +80,10 @@ export default function Footer() {
                   key={social.id}
                   href={social.url}
                   target="_blank"
-                  title={social.platform}
+                  aria-label={`Follow us on ${social.platform}`}
                   className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-black hover:text-white hover:border-black transition-all"
                 >
-                  {getIcon(social.platform)}
+                  <span aria-hidden="true">{getIcon(social.platform)}</span>
                 </Link>
               ))}
             </div>
@@ -120,12 +120,12 @@ export default function Footer() {
 
         {/* ── Bottom bar ──────────────────────────────────────────── */}
         <div className="py-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-gray-400 text-xs">
+          <p className="text-gray-500 text-xs">
             © {new Date().getFullYear()} {settings.storeName}. All rights reserved.
           </p>
           <div className="flex gap-6">
             {["Privacy Policy", "Terms of Service", "Cookies"].map((item) => (
-              <Link key={item} href="#" className="text-gray-400 hover:text-black text-xs transition-colors">
+              <Link key={item} href="#" className="text-gray-500 hover:text-black text-xs transition-colors">
                 {item}
               </Link>
             ))}

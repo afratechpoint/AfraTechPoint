@@ -47,20 +47,21 @@ export default function ProductGrid() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-16 gap-6">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-[2px] bg-black"></div>
-            <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] text-gray-400 italic">Curated Tech</p>
+            <div className="w-8 h-[2px] bg-black" aria-hidden="true"></div>
+            <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] text-gray-500 italic">Curated Tech</p>
           </div>
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight uppercase mb-3">THE <br className="md:hidden"/>COLLECTION.</h2>
-          <p className="text-gray-400 mt-2 text-xs md:text-sm max-w-md leading-relaxed font-medium">
+          <p className="text-gray-500 mt-2 text-xs md:text-sm max-w-md leading-relaxed font-medium">
             Explore our curated selection of high-end technology, combining futuristic aesthetics with unparalleled performance.
           </p>
         </div>
         <div className="w-full md:w-auto flex items-center gap-2 bg-white p-2 rounded-3xl shadow-sm border border-gray-100 overflow-x-auto no-scrollbar scroll-smooth">
            <button 
              onClick={() => setFilter('All')}
+             aria-pressed={filter === 'All'}
              className={cn(
                 "px-6 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap shrink-0",
-               filter === 'All' ? "bg-[var(--primary)] text-white" : "text-gray-400 hover:text-black"
+               filter === 'All' ? "bg-[var(--primary)] text-white" : "text-gray-500 hover:text-black"
              )}
            >
              All
@@ -69,9 +70,10 @@ export default function ProductGrid() {
              <button 
                key={cat.id}
                onClick={() => setFilter(cat.label)}
+               aria-pressed={filter === cat.label}
                className={cn(
                   "px-6 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap shrink-0",
-                 filter === cat.label ? "bg-[var(--primary)] text-white" : "text-gray-400 hover:text-black"
+                 filter === cat.label ? "bg-[var(--primary)] text-white" : "text-gray-500 hover:text-black"
                )}
              >
                {cat.label}
@@ -159,10 +161,11 @@ export default function ProductGrid() {
                       });
                       toast.success(`${product.name} added to cart!`);
                     }}
+                    aria-label={`Add ${product.name} to cart`}
                     style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-text)' }}
                     className="hidden md:flex flex-1 py-2 rounded-xl text-[9px] font-black text-center transition-all uppercase tracking-widest items-center justify-center gap-1 shadow-sm hover:opacity-90"
                   >
-                    <Plus size={11} strokeWidth={3} /> Add
+                    <Plus size={11} strokeWidth={3} aria-hidden="true" /> Add
                   </button>
                   {/* Mobile Add Button */}
                   <button 
@@ -177,9 +180,10 @@ export default function ProductGrid() {
                       });
                       toast.success(`${product.name} added!`);
                     }}
+                    aria-label={`Add ${product.name} to cart`}
                     className="md:hidden ml-auto w-7 h-7 bg-black text-white rounded-full flex items-center justify-center shadow-md active:scale-90 transition-transform"
                  >
-                   <Plus size={13} strokeWidth={3} />
+                   <Plus size={13} strokeWidth={3} aria-hidden="true" />
                  </button>
                </div>
             </div>

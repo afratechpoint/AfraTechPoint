@@ -62,10 +62,10 @@ export default function Navbar({
     <nav className="w-full border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-[100] transition-all pt-safe">
       {/* ── Mobile top bar ── */}
       <div className="flex md:hidden items-center justify-between h-14 px-4">
-        <Link href="/" className="shrink-0 relative h-10 w-24">
+        <Link href="/" className="shrink-0 relative h-10 w-24" aria-label={`${settings.storeName} Home`}>
           <Image 
             src={settings.logoUrl || "/logo.png"} 
-            alt={settings.storeName} 
+            alt={`${settings.storeName} Logo`} 
             fill
             priority
             sizes="96px"
@@ -77,9 +77,10 @@ export default function Navbar({
             <ShopNotificationBell />
             <Link
               href="/cart"
+              aria-label={`View shopping cart with ${items.length} items`}
               className="p-2.5 rounded-2xl bg-gray-50 text-gray-900 border border-gray-100 shadow-sm relative active:scale-95 transition-all"
             >
-              <ShoppingBag size={18} strokeWidth={2.5} />
+              <ShoppingBag size={18} strokeWidth={2.5} aria-hidden="true" />
               {items.length > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-black text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white">
                   {items.length}
@@ -94,13 +95,14 @@ export default function Navbar({
       {searchEnabled && (
         <div className="md:hidden px-4 pb-3">
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" aria-hidden="true" />
             <input
               type="text"
               placeholder="Search products…"
+              aria-label="Search products"
               value={searchQuery}
               onChange={(e) => setSearchQuery?.(e.target.value)}
-              className="w-full h-9 pl-9 pr-4 rounded-xl bg-gray-50 border border-gray-100 outline-none text-sm text-gray-900 placeholder:text-gray-400 font-medium focus:ring-2 focus:ring-black transition-all"
+              className="w-full h-9 pl-9 pr-4 rounded-xl bg-gray-50 border border-gray-100 outline-none text-sm text-gray-900 placeholder:text-gray-500 font-medium focus:ring-2 focus:ring-black transition-all"
             />
           </div>
         </div>
@@ -111,10 +113,10 @@ export default function Navbar({
 
         {/* ── Left: Logo + Nav links ─────────────────────────────── */}
         <div className="flex items-center gap-6 md:gap-10 shrink-0">
-          <Link href="/" className="shrink-0 relative h-9 w-32">
+          <Link href="/" className="shrink-0 relative h-9 w-32" aria-label={`${settings.storeName} Home`}>
             <Image 
               src={settings.logoUrl || "/logo.png"} 
-              alt={settings.storeName} 
+              alt={`${settings.storeName} Logo`} 
               fill
               priority
               sizes="128px"
@@ -131,7 +133,7 @@ export default function Navbar({
                   href={link.href}
                   className={cn(
                     "text-[11px] font-black uppercase tracking-[0.15em] transition-all relative group",
-                    isActive ? "text-black" : "text-gray-400 hover:text-black"
+                    isActive ? "text-black" : "text-gray-500 hover:text-black"
                   )}
                 >
                   {link.label}
@@ -149,15 +151,16 @@ export default function Navbar({
         <div className="flex-1 max-w-sm px-6 hidden md:block">
           {searchEnabled && (
             <div className="relative group w-full">
-              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors pointer-events-none">
-                <Search size={16} strokeWidth={2.5} />
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors pointer-events-none">
+                <Search size={16} strokeWidth={2.5} aria-hidden="true" />
               </div>
               <input
                 type="text"
                 placeholder="Search premium electronics..."
+                aria-label="Search products"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery?.(e.target.value)}
-                className="w-full h-9 pl-10 pr-4 rounded-[10px] ring-1 ring-gray-100 focus:ring-2 focus:ring-black transition-all bg-gray-50/50 outline-none text-[11px] font-bold tracking-tight placeholder:text-gray-300 placeholder:font-medium"
+                className="w-full h-9 pl-10 pr-4 rounded-[10px] ring-1 ring-gray-100 focus:ring-2 focus:ring-black transition-all bg-gray-50/50 outline-none text-[11px] font-bold tracking-tight placeholder:text-gray-400 placeholder:font-medium"
               />
             </div>
           )}
@@ -171,9 +174,10 @@ export default function Navbar({
             <ShopNotificationBell />
             <Link
               href="/cart"
+              aria-label={`View shopping cart with ${cartCount} items`}
               className="p-2.5 rounded-full bg-white shadow-sm border border-gray-100 hover:bg-gray-50 transition-all relative group block"
             >
-              <ShoppingBag size={20} className="text-gray-700 group-hover:text-black" />
+              <ShoppingBag size={20} className="text-gray-700 group-hover:text-black" aria-hidden="true" />
               {cartCount > 0 && (
                 <span
                   style={{ backgroundColor: "var(--primary)", color: "var(--primary-text)" }}
@@ -201,6 +205,9 @@ export default function Navbar({
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen((o) => !o)}
+                  aria-haspopup="true"
+                  aria-expanded={dropdownOpen}
+                  aria-label="User Account Menu"
                   className="flex items-center gap-2.5 px-3 py-1.5 rounded-2xl hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all group"
                 >
                   {/* Avatar */}
@@ -208,7 +215,7 @@ export default function Navbar({
                     <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white shadow-sm shrink-0">
                       <Image 
                         src={photoURL} 
-                        alt={finalDisplayName} 
+                        alt="" 
                         width={32} 
                         height={32} 
                         className="object-cover" 
@@ -218,7 +225,7 @@ export default function Navbar({
                     </div>
                   ) : (
                     <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center shrink-0">
-                      <span className="text-white text-xs font-black">{initials}</span>
+                      <span className="text-white text-xs font-black" aria-hidden="true">{initials}</span>
                     </div>
                   )}
 
@@ -227,12 +234,13 @@ export default function Navbar({
                     <p className="text-[11px] font-black text-gray-900 tracking-tight leading-none truncate max-w-[100px]">
                       {finalDisplayName}
                     </p>
-                    <p className="text-[9px] text-gray-400 font-medium mt-0.5 leading-none">My Account</p>
+                    <p className="text-[9px] text-gray-500 font-medium mt-0.5 leading-none">My Account</p>
                   </div>
 
                   <ChevronDown
                     size={14}
-                    className={`text-gray-400 transition-transform hidden xl:block ${dropdownOpen ? "rotate-180" : ""}`}
+                    aria-hidden="true"
+                    className={`text-gray-500 transition-transform hidden xl:block ${dropdownOpen ? "rotate-180" : ""}`}
                   />
                 </button>
 
@@ -282,7 +290,7 @@ export default function Navbar({
               <div className="flex items-center gap-5">
                 <Link
                   href="/login"
-                  className="text-[10px] font-black text-gray-400 hover:text-black uppercase tracking-[0.2em] transition-colors"
+                  className="text-[10px] font-black text-gray-500 hover:text-black uppercase tracking-[0.2em] transition-colors"
                 >
                   Sign In
                 </Link>
