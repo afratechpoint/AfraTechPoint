@@ -36,7 +36,7 @@ let nextConfig = {
           "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com",
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
           "font-src 'self' https://fonts.gstatic.com",
-          "img-src 'self' data: blob: https://i.ibb.co https://images.unsplash.com https://firebasestorage.googleapis.com https://*.googleusercontent.com",
+          "img-src 'self' data: blob: https://i.ibb.co https://images.unsplash.com https://firebasestorage.googleapis.com https://*.googleusercontent.com https://ik.imagekit.io",
           "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com",
           "frame-src https://accounts.google.com https://*.firebaseapp.com",
           "object-src 'none'",
@@ -91,6 +91,7 @@ let nextConfig = {
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "firebasestorage.googleapis.com" },
       { protocol: "https", hostname: "*.googleusercontent.com" },
+      { protocol: "https", hostname: "ik.imagekit.io" },
     ],
     formats: ["image/avif", "image/webp"],   // Serve AVIF first (40% smaller than WebP)
     minimumCacheTTL: 2592000,                // 30 day image cache (was 7 days)
