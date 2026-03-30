@@ -7,7 +7,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Edit2, Trash2, Package } from "lucide-react";
+import { Edit2, Trash2, Package, Copy, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { deleteProduct } from "../actions";
@@ -39,6 +39,13 @@ export default function ProductTable({
     } else {
       toast.error(result?.message ?? "Failed to delete.");
     }
+  };
+
+  const handleCopyUrl = (id: string, name: string) => {
+    // Construct the public product URL
+    const url = `${window.location.origin}/shop/${id}`;
+    navigator.clipboard.writeText(url);
+    toast.success(`Link for "${name}" copied to clipboard!`);
   };
 
   if (products.length === 0) {
@@ -135,6 +142,13 @@ export default function ProductTable({
                   {/* Actions */}
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => handleCopyUrl(product.id, product.name)}
+                        className="p-2 hover:bg-white hover:shadow-sm rounded-lg text-gray-400 hover:text-blue-600 transition-all border border-transparent hover:border-gray-100 flex items-center justify-center"
+                        title="Copy product link"
+                      >
+                        <Copy size={16} />
+                      </button>
                       <Link
                         href={`/admin/products/${product.id}/edit`}
                         className="p-2 hover:bg-white hover:shadow-sm rounded-lg text-gray-400 hover:text-black transition-all border border-transparent hover:border-gray-100 flex items-center justify-center"
@@ -225,7 +239,14 @@ export default function ProductTable({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3 pt-3 border-t border-gray-50">
+              <div className="flex gap-2 pt-3 border-t border-gray-50">
+                <button
+                  onClick={() => handleCopyUrl(product.id, product.name)}
+                  className="w-10 h-10 bg-gray-50 text-gray-400 rounded-xl flex items-center justify-center hover:bg-gray-100 hover:text-blue-600 transition-all"
+                  title="Copy product link"
+                >
+                  <Copy size={16} />
+                </button>
                 <Link
                   href={`/admin/products/${product.id}/edit`}
                   className="flex-1 h-10 bg-gray-50 text-gray-900 rounded-xl font-bold text-[11px] flex items-center justify-center gap-2 hover:bg-gray-100 transition-colors"
@@ -235,7 +256,7 @@ export default function ProductTable({
                 <button
                   onClick={() => handleDelete(product.id, product.name)}
                   disabled={isDeleting}
-                  className="w-12 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all disabled:opacity-40"
+                  className="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all disabled:opacity-40"
                 >
                   <Trash2 size={16} />
                 </button>
