@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Check, Loader2, ImageIcon, Upload, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { authenticatedFetch } from "@/lib/api-helper";
 
 interface MediaFile {
   name: string;
@@ -44,9 +45,10 @@ export default function MediaPickerModal({
   const fetchFiles = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/upload");
+      const res = await authenticatedFetch("/api/upload");
+      if (!res.ok) throw new Error("Failed");
       const data = await res.json();
-      setFiles(data);
+      setFiles(Array.isArray(data) ? data : []);
     } catch {
       toast.error("Failed to load media files.");
     } finally {
@@ -77,7 +79,7 @@ export default function MediaPickerModal({
     const formData = new FormData();
     Array.from(fileList).forEach((f) => formData.append("files", f));
     try {
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const res = await authenticatedFetch("/api/upload", { method: "POST", body: formData });
       const data = await res.json();
       if (data.success) {
         toast.success("Uploaded!");
