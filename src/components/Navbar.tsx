@@ -64,11 +64,14 @@ export default function Navbar({
       <div className="flex md:hidden items-center justify-between h-14 px-4">
         <Link href="/" className="shrink-0 relative h-10 w-24" aria-label={`${settings.storeName} Home`}>
           <Image 
-            src={settings.logoUrl || "/logo.png"} 
+            src={settings.logoUrl ? `${settings.logoUrl}${settings.logoUrl.includes('?') ? '&' : '?'}tr=w-300,f-auto,q-80` : "/logo.png"} 
             alt={`${settings.storeName} Logo`} 
             fill
             priority
-            sizes="96px"
+            unoptimized={true}
+            // @ts-ignore
+            fetchpriority="high"
+            sizes="120px"
             className="object-contain" 
           />
         </Link>
@@ -115,11 +118,14 @@ export default function Navbar({
         <div className="flex items-center gap-6 md:gap-10 shrink-0">
           <Link href="/" className="shrink-0 relative h-9 w-32" aria-label={`${settings.storeName} Home`}>
             <Image 
-              src={settings.logoUrl || "/logo.png"} 
+              src={settings.logoUrl ? `${settings.logoUrl}${settings.logoUrl.includes('?') ? '&' : '?'}tr=w-300,f-auto,q-80` : "/logo.png"} 
               alt={`${settings.storeName} Logo`} 
               fill
               priority
-              sizes="128px"
+              unoptimized={true}
+              // @ts-ignore
+              fetchpriority="high"
+              sizes="160px"
               className="object-contain" 
             />
           </Link>

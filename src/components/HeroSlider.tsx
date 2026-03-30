@@ -76,11 +76,13 @@ export default function HeroSlider({ banners }: HeroSliderProps) {
                   className="pointer-events-auto block relative w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] md:w-[380px] md:h-[380px]"
                 >
                   <Image
-                    src={`${slide.image}?tr=w-800,f-auto,q-80`}
+                    src={`${slide.image}${slide.image.includes('?') ? '&' : '?'}tr=w-800,f-auto,q-80`}
                     alt={`${slide.title} - Hero Image`}
                     fill
                     unoptimized={true}
                     priority={currentSlide === 0}
+                    // @ts-ignore
+                    fetchpriority={currentSlide === 0 ? "high" : "low"}
                     sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-contain drop-shadow-[0_45px_45px_rgba(0,0,0,0.15)] md:hover:scale-105 transition-transform duration-1000 cursor-pointer"
                   />
@@ -88,11 +90,13 @@ export default function HeroSlider({ banners }: HeroSliderProps) {
               ) : (
                 <div className="relative w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] md:w-[380px] md:h-[380px]">
                   <Image
-                    src={`${slide.image}?tr=w-800,f-auto,q-80`}
+                    src={`${slide.image}${slide.image.includes('?') ? '&' : '?'}tr=w-800,f-auto,q-80`}
                     alt={`${slide.title} - Hero Image`}
                     fill
                     unoptimized={true}
                     priority={currentSlide === 0}
+                    // @ts-ignore
+                    fetchpriority={currentSlide === 0 ? "high" : "low"}
                     sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-contain drop-shadow-[0_45px_45px_rgba(0,0,0,0.15)] md:hover:scale-105 transition-transform duration-1000"
                   />

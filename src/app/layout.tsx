@@ -110,13 +110,24 @@ export default async function RootLayout({
         <meta name="format-detection" content="telephone=no" />
         <link rel="preconnect" href="https://ik.imagekit.io" />
         <link rel="dns-prefetch" href="https://ik.imagekit.io" />
+        
+        {/* Preload the logo — very high priority */}
+        {settings.logoUrl && (
+          <link
+            rel="preload"
+            as="image"
+            href={`${settings.logoUrl}${settings.logoUrl.includes('?') ? '&' : '?'}tr=w-300,f-auto,q-80`}
+            // @ts-ignore
+            fetchpriority="high"
+          />
+        )}
         {/* Preload the first hero banner image — eliminates LCP discovery delay */}
         {settings.banners?.[0]?.imageUrl && (
           <link
             rel="preload"
             as="image"
-            href={`${settings.banners[0].imageUrl}?tr=w-800,f-auto,q-80`}
-            // @ts-ignore – fetchpriority is valid HTML but not yet in React types
+            href={`${settings.banners[0].imageUrl}${settings.banners[0].imageUrl.includes('?') ? '&' : '?'}tr=w-800,f-auto,q-80`}
+            // @ts-ignore
             fetchpriority="high"
           />
         )}

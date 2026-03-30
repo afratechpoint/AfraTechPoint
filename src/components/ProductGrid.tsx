@@ -98,16 +98,18 @@ export default function ProductGrid() {
             className="group relative bg-white rounded-2xl border border-gray-100/80 hover:border-gray-200 hover:shadow-lg hover:shadow-gray-100/80 transition-all duration-300 flex flex-col overflow-hidden active:scale-[0.98]"
           >
             {/* Image */}
-            <Link href={`/shop/${product.id}`} className="relative aspect-square bg-gray-50 overflow-hidden">
-               <Image
-                 src={`${product.image}?tr=w-400,f-auto,q-80`}
-                 alt={product.name}
-                 fill
-                 unoptimized={true}
-                 priority={i < 4}
-                 sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                 className="object-contain p-3 md:p-6 group-hover:scale-105 transition-transform duration-700 ease-out"
-               />
+             <Link href={`/shop/${product.id}`} className="relative aspect-square bg-gray-50 overflow-hidden">
+                <Image
+                  src={`${product.image}?tr=w-300,f-auto,q-80`}
+                  alt={product.name}
+                  fill
+                  unoptimized={true}
+                  priority={i < 4}
+                  // @ts-ignore
+                  fetchpriority={i < 4 ? "high" : "low"}
+                  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  className="object-contain p-3 md:p-6 group-hover:scale-105 transition-transform duration-700 ease-out"
+                />
                {product.salePrice && (
                  <div className="absolute top-2 left-2 bg-red-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider z-10">
                    SALE
