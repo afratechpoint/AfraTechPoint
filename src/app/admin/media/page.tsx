@@ -44,6 +44,7 @@ export default function AdminMediaPage() {
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [selected, setSelected] = useState<MediaFile | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [usage, setUsage] = useState<{ usedBytes: number; totalBytes: number; availableBytes: number; percentUsed: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchFiles = useCallback(async () => {
@@ -60,9 +61,22 @@ export default function AdminMediaPage() {
     }
   }, []);
 
+  const fetchUsage = useCallback(async () => {
+    try {
+      const res = await authenticatedFetch("/api/admin/storage-usage");
+      if (res.ok) {
+        const data = await res.json();
+        setUsage(data);
+      }
+    } catch (e) {
+      console.warn("Could not fetch storage usage", e);
+    }
+  }, []);
+
   useEffect(() => {
     fetchFiles();
-  }, [fetchFiles]);
+    fetchUsage();
+  }, [fetchFiles, fetchUsage]);
 
   useEffect(() => {
     const q = search.toLowerCase();
@@ -83,6 +97,7 @@ export default function AdminMediaPage() {
       if (data.success) {
         toast.success(`${data.files.length} file(s) uploaded successfully!`);
         fetchFiles();
+        fetchUsage();
       } else {
         toast.error("Upload failed.");
       }
@@ -111,6 +126,7 @@ export default function AdminMediaPage() {
         toast.success(`"${file.name}" deleted.`);
         if (selected?.name === file.name) setSelected(null);
         fetchFiles();
+        fetchUsage();
       } else {
         toast.error("Failed to delete file.");
       }
@@ -139,16 +155,29 @@ export default function AdminMediaPage() {
         {[
           { label: "Total Files", value: files.length, icon: ImageIcon, color: "bg-blue-50 text-blue-600" },
           { label: "Total Storage", value: formatBytes(totalSize), icon: HardDrive, color: "bg-purple-50 text-purple-600" },
-          { label: "Last Upload", value: files[0] ? new Date(files[0].uploadedAt).toLocaleDateString() : "—", icon: Upload, color: "bg-green-50 text-green-600" },
+          { 
+            label: "Storage Available", 
+            value: usage ? formatBytes(usage.availableBytes) : "20 GB", 
+            icon: HardDrive, 
+            color: "bg-green-50 text-green-600",
+            extra: usage ? (
+              <div className="mt-2 h-1 w-full bg-green-100 rounded-full overflow-hidden">
+                <div role="progressbar" style={{ width: `${usage.percentUsed}%` }} className="h-full bg-green-500 rounded-full" />
+              </div>
+            ) : null
+          },
         ].map((stat) => (
-          <div key={stat.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-4">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${stat.color}`}>
-              <stat.icon size={18} />
+          <div key={stat.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-1">
+            <div className="flex items-center gap-4">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${stat.color}`}>
+                <stat.icon size={18} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate">{stat.label}</p>
+                <p className="text-lg font-black text-gray-900 tracking-tight">{stat.value}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{stat.label}</p>
-              <p className="text-lg font-black text-gray-900 tracking-tight">{stat.value}</p>
-            </div>
+            {(stat as any).extra}
           </div>
         ))}
       </div>
