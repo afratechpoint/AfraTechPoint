@@ -110,6 +110,8 @@ export default async function RootLayout({
     <html lang="en" className="bg-[#f9fafb] overscroll-y-none" suppressHydrationWarning>
       <head>
         <meta name="format-detection" content="telephone=no" />
+        <link rel="preconnect" href="https://ik.imagekit.io" />
+        <link rel="dns-prefetch" href="https://ik.imagekit.io" />
         <style
           suppressHydrationWarning
           dangerouslySetInnerHTML={{

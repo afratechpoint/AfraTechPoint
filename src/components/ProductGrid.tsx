@@ -100,7 +100,7 @@ export default function ProductGrid() {
             {/* Image */}
             <Link href={`/shop/${product.id}`} className="relative aspect-square bg-gray-50 overflow-hidden">
                <Image
-                 src={product.image}
+                 src={`${product.image}?tr=w-400,f-auto,q-80`}
                  alt={product.name}
                  fill
                  priority={i < 4}

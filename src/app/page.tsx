@@ -82,22 +82,22 @@ export default function Home() {
                     {slides[currentSlide].linkUrl ? (
                       <Link href={slides[currentSlide].linkUrl} className="pointer-events-auto block relative w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] md:w-[380px] md:h-[380px]">
                         <Image 
-                          src={slides[currentSlide].image} 
+                          src={`${slides[currentSlide].image}?tr=w-800,f-auto,q-80`} 
                           alt={`${slides[currentSlide].title} - Hero Image`} 
                           fill
                           priority
-                          sizes="(max-width: 768px) 220px, 380px"
+                          sizes="(max-width: 768px) 100vw, 50vw"
                           className="object-contain drop-shadow-[0_45px_45px_rgba(0,0,0,0.15)] md:hover:scale-105 transition-transform duration-1000 cursor-pointer"
                         />
                       </Link>
                     ) : (
                       <div className="relative w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] md:w-[380px] md:h-[380px]">
                         <Image 
-                          src={slides[currentSlide].image} 
+                          src={`${slides[currentSlide].image}?tr=w-800,f-auto,q-80`} 
                           alt={`${slides[currentSlide].title} - Hero Image`} 
                           fill
                           priority
-                          sizes="(max-width: 768px) 220px, 380px"
+                          sizes="(max-width: 768px) 100vw, 50vw"
                           className="object-contain drop-shadow-[0_45px_45px_rgba(0,0,0,0.15)] md:hover:scale-105 transition-transform duration-1000"
                         />
                       </div>
