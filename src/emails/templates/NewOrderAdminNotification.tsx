@@ -5,6 +5,91 @@ import { OrderSummary } from "../components/OrderSummary";
 import { PrimaryButton } from "../components/Button";
 import { getShopUrl } from "../utils";
 
+/* ── Styles (সব কম্পোনেন্টের আগে) ───────────────────────────────────── */
+const heroTitle: React.CSSProperties = {
+  fontSize: "32px",
+  fontWeight: "900",
+  color: "#111111",
+  margin: "0 0 14px",
+  letterSpacing: "-0.03em",
+};
+
+const heroSub: React.CSSProperties = {
+  fontSize: "15px",
+  color: "#555555",
+  lineHeight: "26px",
+  margin: "0",
+};
+
+const statsBox: React.CSSProperties = {
+  backgroundColor: "#fef2f2",
+  border: "1.5px solid #fecaca",
+  borderRadius: "16px",
+  padding: "20px 0",
+  marginBottom: "20px",
+};
+
+const statsLabel: React.CSSProperties = {
+  fontSize: "10px",
+  fontWeight: "700",
+  color: "#991b1b",
+  textTransform: "uppercase" as const,
+  letterSpacing: "0.2em",
+  margin: "0 0 4px",
+};
+
+const statsValue: React.CSSProperties = {
+  fontSize: "18px",
+  fontWeight: "900",
+  color: "#b91c1c",
+  margin: "0",
+};
+
+const statsId: React.CSSProperties = {
+  fontSize: "16px",
+  fontWeight: "900",
+  color: "#111111",
+  margin: "0",
+  fontFamily: "monospace",
+};
+
+const detailsBox: React.CSSProperties = {
+  backgroundColor: "#f7f7f7",
+  borderRadius: "16px",
+  padding: "20px 24px",
+  marginBottom: "16px",
+};
+
+const boxLabel: React.CSSProperties = {
+  fontSize: "10px",
+  fontWeight: "800",
+  color: "#aaaaaa",
+  textTransform: "uppercase" as const,
+  letterSpacing: "0.2em",
+  margin: "0 0 12px",
+};
+
+const customerNameStyle: React.CSSProperties = {
+  fontSize: "16px",
+  fontWeight: "800",
+  color: "#111111",
+  margin: "0 0 4px",
+};
+
+const customerEmailStyle: React.CSSProperties = {
+  fontSize: "13px",
+  color: "#666666",
+  margin: "0",
+};
+
+const shippingAddressStyle: React.CSSProperties = {
+  fontSize: "13px",
+  color: "#333333",
+  margin: "0",
+  lineHeight: "22px",
+};
+
+/* ── Component ──────────────────────────────────────────────────────── */
 interface NewOrderAdminProps {
   orderId: string;
   customerName: string;
@@ -30,11 +115,12 @@ export default function NewOrderAdminNotification({
   discount,
   paymentMethod,
   logoUrl,
-  shopUrl
+  shopUrl,
 }: NewOrderAdminProps) {
   const finalShopUrl = shopUrl || getShopUrl();
-  const adminUrl     = `${finalShopUrl}/admin/orders/${orderId}`;
-  const shortId      = orderId.slice(0, 8).toUpperCase();
+  const adminUrl = `${finalShopUrl}/admin/orders/${orderId}`;
+  const shortId = orderId.slice(0, 8).toUpperCase();
+  const finalLogoUrl = logoUrl || "https://i.ibb.co.com/TqvmBZyc/logo-wbg.png";
 
   return (
     <BaseLayout
@@ -42,19 +128,23 @@ export default function NewOrderAdminNotification({
       accentColor="#dc2626"
       accentLabel="Admin Alert — New Sale"
       badgeEmoji="🚨"
-      logoUrl={logoUrl}
+      logoUrl={finalLogoUrl}
       shopUrl={shopUrl}
     >
       {/* Hero */}
       <Section style={{ textAlign: "center", marginBottom: "32px" }}>
         <Text style={heroTitle}>New Order Received! 💰</Text>
-        <Text style={heroSub}>A new purchase has been placed. Review and fulfill as soon as possible.</Text>
+        <Text style={heroSub}>
+          A new purchase has been placed. Review and fulfill as soon as possible.
+        </Text>
       </Section>
 
       {/* Order Stats */}
       <Section style={statsBox}>
         <Row>
-          <Column style={{ width: "50%", textAlign: "center", borderRight: "1px solid #e5e5e5" }}>
+          <Column
+            style={{ width: "50%", textAlign: "center", borderRight: "1px solid #e5e5e5" }}
+          >
             <Text style={statsLabel}>Sale Amount</Text>
             <Text style={statsValue}>৳{Number(total).toFixed(2)}</Text>
           </Column>
@@ -77,19 +167,23 @@ export default function NewOrderAdminNotification({
         <Section style={detailsBox}>
           <Text style={boxLabel}>📍 &nbsp;Ship To</Text>
           <Text style={shippingAddressStyle}>
-            <strong>{shippingAddress.fullName}</strong><br />
-            {shippingAddress.address}<br />
-            {shippingAddress.city}{shippingAddress.postalCode ? `, ${shippingAddress.postalCode}` : ""}<br />
+            <strong>{shippingAddress.fullName}</strong>
+            <br />
+            {shippingAddress.address}
+            <br />
+            {shippingAddress.city}
+            {shippingAddress.postalCode ? `, ${shippingAddress.postalCode}` : ""}
+            <br />
             📞 {shippingAddress.phone}
           </Text>
         </Section>
       )}
 
       {/* Order Summary */}
-      <OrderSummary 
-        items={items} 
-        total={total} 
-        deliveryCharge={deliveryCharge} 
+      <OrderSummary
+        items={items}
+        total={total}
+        deliveryCharge={deliveryCharge}
         discount={discount}
         paymentMethod={paymentMethod}
       />
@@ -103,19 +197,3 @@ export default function NewOrderAdminNotification({
     </BaseLayout>
   );
 }
-
-/* ── Styles ──────────────────────────────────────────────────────────── */
-const heroTitle: React.CSSProperties   = { fontSize: "32px", fontWeight: "900", color: "#111111", margin: "0 0 14px", letterSpacing: "-0.03em" };
-const heroSub: React.CSSProperties     = { fontSize: "15px", color: "#555555", lineHeight: "26px", margin: "0" };
-
-const statsBox: React.CSSProperties    = { backgroundColor: "#fef2f2", border: "1.5px solid #fecaca", borderRadius: "16px", padding: "20px 0", marginBottom: "20px" };
-const statsLabel: React.CSSProperties  = { fontSize: "10px", fontWeight: "700", color: "#991b1b", textTransform: "uppercase" as const, letterSpacing: "0.2em", margin: "0 0 4px" };
-const statsValue: React.CSSProperties  = { fontSize: "18px", fontWeight: "900", color: "#b91c1c", margin: "0" };
-const statsId: React.CSSProperties     = { fontSize: "16px", fontWeight: "900", color: "#111111", margin: "0", fontFamily: "monospace" };
-
-const detailsBox: React.CSSProperties  = { backgroundColor: "#f7f7f7", borderRadius: "16px", padding: "20px 24px", marginBottom: "16px" };
-const boxLabel: React.CSSProperties    = { fontSize: "10px", fontWeight: "800", color: "#aaaaaa", textTransform: "uppercase" as const, letterSpacing: "0.2em", margin: "0 0 12px" };
-
-const customerNameStyle: React.CSSProperties = { fontSize: "16px", fontWeight: "800", color: "#111111", margin: "0 0 4px" };
-const customerEmailStyle: React.CSSProperties = { fontSize: "13px", color: "#666666", margin: "0" };
-const shippingAddressStyle: React.CSSProperties = { fontSize: "13px", color: "#333333", margin: "0", lineHeight: "22px" };

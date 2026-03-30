@@ -5,6 +5,88 @@ import { OrderSummary } from "../components/OrderSummary";
 import { PrimaryButton } from "../components/Button";
 import { getShopUrl } from "../utils";
 
+/* ── Styles (সব কম্পোনেন্টের আগে) ───────────────────────────────────── */
+const heroEmoji: React.CSSProperties = {
+  fontSize: "48px",
+  margin: "0 0 8px",
+  textAlign: "center",
+};
+
+const heroTitle: React.CSSProperties = {
+  fontSize: "32px",
+  fontWeight: "900",
+  color: "#111111",
+  margin: "0 0 14px",
+  letterSpacing: "-0.03em",
+};
+
+const heroSub: React.CSSProperties = {
+  fontSize: "15px",
+  color: "#555555",
+  lineHeight: "26px",
+  margin: "0",
+};
+
+const infoStrip: React.CSSProperties = {
+  backgroundColor: "#f7f7f7",
+  borderRadius: "16px",
+  padding: "20px 0",
+  marginBottom: "28px",
+};
+
+const infoLabel: React.CSSProperties = {
+  fontSize: "10px",
+  fontWeight: "700",
+  color: "#aaaaaa",
+  textTransform: "uppercase" as const,
+  letterSpacing: "0.2em",
+  margin: "0 0 4px",
+};
+
+const infoValue: React.CSSProperties = {
+  fontSize: "13px",
+  fontWeight: "800",
+  color: "#111111",
+  margin: "0",
+};
+
+const shippingBox: React.CSSProperties = {
+  backgroundColor: "#f7f7f7",
+  borderRadius: "16px",
+  padding: "20px 24px",
+  marginBottom: "28px",
+};
+
+const boxLabel: React.CSSProperties = {
+  fontSize: "10px",
+  fontWeight: "800",
+  color: "#aaaaaa",
+  textTransform: "uppercase" as const,
+  letterSpacing: "0.2em",
+  margin: "0 0 12px",
+};
+
+const shippingName: React.CSSProperties = {
+  fontSize: "15px",
+  fontWeight: "800",
+  color: "#111111",
+  margin: "0 0 6px",
+};
+
+const shippingAddr: React.CSSProperties = {
+  fontSize: "13px",
+  color: "#555555",
+  margin: "0",
+  lineHeight: "22px",
+};
+
+const ctaNote: React.CSSProperties = {
+  fontSize: "12px",
+  color: "#aaaaaa",
+  margin: "16px 0 0",
+};
+
+/* ── Component ──────────────────────────────────────────────────────── */
 interface OrderConfirmationProps {
   customerName: string;
   orderId: string;
@@ -32,12 +114,16 @@ export default function OrderConfirmation({
   logoUrl,
   shopUrl: propShop,
 }: OrderConfirmationProps) {
-  const shopUrl  = propShop || getShopUrl();
+  const shopUrl = propShop || getShopUrl();
   const orderUrl = `${shopUrl}/account?tab=orders`;
-  const shortId  = orderId.slice(0, 8).toUpperCase();
+  const shortId = orderId.slice(0, 8).toUpperCase();
+  const finalLogoUrl = logoUrl || "https://i.ibb.co.com/TqvmBZyc/logo-wbg.png";
 
   const formattedDate = new Date(orderDate).toLocaleDateString("en-US", {
-    weekday: "long", month: "long", day: "numeric", year: "numeric",
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
   });
 
   return (
@@ -46,7 +132,7 @@ export default function OrderConfirmation({
       accentColor="#16a34a"
       accentLabel={`Order #${shortId} Confirmed`}
       badgeEmoji="✅"
-      logoUrl={logoUrl}
+      logoUrl={finalLogoUrl}
       shopUrl={shopUrl}
     >
       {/* Hero */}
@@ -54,8 +140,9 @@ export default function OrderConfirmation({
         <Text style={heroEmoji}>🎉</Text>
         <Text style={heroTitle}>Order Confirmed!</Text>
         <Text style={heroSub}>
-          Hi <strong style={{ color: "#111111" }}>{customerName}</strong>, your order has been received and
-          we're already preparing it. You'll receive a shipping notification soon.
+          Hi <strong style={{ color: "#111111" }}>{customerName}</strong>, your
+          order has been received and we're already preparing it. You'll receive
+          a shipping notification soon.
         </Text>
       </Section>
 
@@ -74,10 +161,10 @@ export default function OrderConfirmation({
       </Section>
 
       {/* Order Summary */}
-      <OrderSummary 
-        items={items} 
-        total={total} 
-        deliveryCharge={deliveryCharge} 
+      <OrderSummary
+        items={items}
+        total={total}
+        deliveryCharge={deliveryCharge}
         discount={discount}
         paymentMethod={paymentMethod}
       />
@@ -87,8 +174,11 @@ export default function OrderConfirmation({
         <Text style={boxLabel}>📍 &nbsp;Shipping To</Text>
         <Text style={shippingName}>{shippingAddress?.fullName}</Text>
         <Text style={shippingAddr}>
-          {shippingAddress?.address}<br />
-          {shippingAddress?.city}{shippingAddress?.postalCode ? `, ${shippingAddress.postalCode}` : ""}<br />
+          {shippingAddress?.address}
+          <br />
+          {shippingAddress?.city}
+          {shippingAddress?.postalCode ? `, ${shippingAddress.postalCode}` : ""}
+          <br />
           📞 {shippingAddress?.phone}
         </Text>
       </Section>
@@ -105,18 +195,3 @@ export default function OrderConfirmation({
     </BaseLayout>
   );
 }
-
-/* ── Styles ──────────────────────────────────────────────────────────── */
-const heroEmoji: React.CSSProperties   = { fontSize: "48px", margin: "0 0 8px", textAlign: "center" };
-const heroTitle: React.CSSProperties   = { fontSize: "32px", fontWeight: "900", color: "#111111", margin: "0 0 14px", letterSpacing: "-0.03em" };
-const heroSub: React.CSSProperties     = { fontSize: "15px", color: "#555555", lineHeight: "26px", margin: "0" };
-
-const infoStrip: React.CSSProperties   = { backgroundColor: "#f7f7f7", borderRadius: "16px", padding: "20px 0", marginBottom: "28px" };
-const infoLabel: React.CSSProperties   = { fontSize: "10px", fontWeight: "700", color: "#aaaaaa", textTransform: "uppercase" as const, letterSpacing: "0.2em", margin: "0 0 4px" };
-const infoValue: React.CSSProperties   = { fontSize: "13px", fontWeight: "800", color: "#111111", margin: "0" };
-
-const shippingBox: React.CSSProperties = { backgroundColor: "#f7f7f7", borderRadius: "16px", padding: "20px 24px", marginBottom: "28px" };
-const boxLabel: React.CSSProperties    = { fontSize: "10px", fontWeight: "800", color: "#aaaaaa", textTransform: "uppercase" as const, letterSpacing: "0.2em", margin: "0 0 12px" };
-const shippingName: React.CSSProperties = { fontSize: "15px", fontWeight: "800", color: "#111111", margin: "0 0 6px" };
-const shippingAddr: React.CSSProperties = { fontSize: "13px", color: "#555555", margin: "0", lineHeight: "22px" };
-const ctaNote: React.CSSProperties     = { fontSize: "12px", color: "#aaaaaa", margin: "16px 0 0" };
