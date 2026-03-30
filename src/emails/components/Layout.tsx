@@ -25,7 +25,9 @@ export function BaseLayout({
   shopUrl: propShop,
 }: LayoutProps) {
   const shopUrl  = propShop  || getShopUrl();
-  const logoUrl = propLogo || process.env.NEXT_PUBLIC_SHOP_LOGO_URL || "https://i.ibb.co.com/TqvmBZyc/logo-wbg.png";
+  // Prefer prop > env > self-hosted fallback (deployed to /email-logo.png)
+  const HOSTED_LOGO = `${shopUrl}/email-logo.png`;
+  const logoUrl = propLogo || process.env.NEXT_PUBLIC_SHOP_LOGO_URL || HOSTED_LOGO;
   const shopName = "Afra Tech Point";
   const year     = new Date().getFullYear();
 
@@ -77,10 +79,10 @@ export function BaseLayout({
               }} />
               <Img
                 src={logoUrl}
-                width="140"
-                height="48"
+                width="160"
+                height="56"
                 alt={shopName}
-                style={{ display: "block", margin: "0 auto", objectFit: "contain" }}
+                style={{ display: "block", margin: "0 auto", objectFit: "contain", objectPosition: "center" }}
               />
             </Section>
 

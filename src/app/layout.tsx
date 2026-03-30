@@ -21,7 +21,7 @@ const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 const defaultSettings = {
   storeName: "Afra Tech Point",
-  logoUrl: "https://i.ibb.co.com/TqvmBZyc/logo-wbg.png",
+  logoUrl: "https://afratechpoint.shop/email-logo.png",
   contactEmail: "info@afratechpoint.shop",
   contactPhone: "+880 1XXXXXXXXX",
   contactAddress: "Dhaka, Bangladesh",
