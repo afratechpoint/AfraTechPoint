@@ -13,23 +13,30 @@ export default function AdminDashboard() {
   const settings = useSettings();
 
   useEffect(() => {
-    Promise.all([
-      authenticatedFetch('/api/orders').then(r => r.json()),
-      authenticatedFetch('/api/products').then(r => r.json())
-    ]).then(([orders, products]) => {
-      // Calculate unique customers based on order history
-      const uniqueCustomers = new Set(orders.map((o: any) => o.customer?.email).filter(Boolean));
-      const completed = orders.filter((o: any) => o.status === "delivered" || o.orderStatus === "delivered").length;
-      
-      setStats({ 
-        orders: orders.length, 
-        products: products.length,
-        customers: uniqueCustomers.size,
-        completedOrders: completed,
-        traffic: 0
-      });
-      setRecentOrders(orders.slice(0, 5));
-    });
+    const loadStats = async () => {
+      try {
+        const [orders, products, customerData] = await Promise.all([
+          authenticatedFetch('/api/orders').then(r => r.json()),
+          authenticatedFetch('/api/products').then(r => r.json()),
+          authenticatedFetch('/api/admin/customer-count').then(r => r.json()).catch(() => ({ count: 0 }))
+        ]);
+
+        const completed = orders.filter((o: any) => o.status === "delivered" || o.orderStatus === "delivered").length;
+        
+        setStats({ 
+          orders: orders.length, 
+          products: products.length,
+          customers: customerData.count || 0,
+          completedOrders: completed,
+          traffic: 0
+        });
+        setRecentOrders(orders.slice(0, 5));
+      } catch (err) {
+        console.error("Dashboard Stats Error:", err);
+      }
+    };
+    
+    loadStats();
   }, []);
 
   const metrics = [

@@ -340,6 +340,12 @@ export async function getUserProfileFromFirestore(uid: string) {
   return null;
 }
 
+export async function getCustomersCountInFirestore() {
+  const q = adminDb.collection("users");
+  const snap = await q.count().get();
+  return snap.data().count;
+}
+
 export async function updateUserProfileInFirestore(uid: string, data: any) {
   const docRef = adminDb.collection("users").doc(uid);
   await docRef.set({

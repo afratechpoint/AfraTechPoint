@@ -348,6 +348,19 @@ export const storage = {
     return (profiles as any)[uid] || null;
   },
 
+  async getCustomersCount() {
+    if (USE_FIREBASE) {
+      try {
+        const { getCustomersCountInFirestore } = await getAdapter();
+        return await getCustomersCountInFirestore();
+      } catch (err) {
+        console.warn("Firestore getCustomersCount failed. Using local fallback.", err);
+      }
+    }
+    const profiles = await readData(profilesFile, {});
+    return Object.keys(profiles).length;
+  },
+
   async updateUserProfile(uid: string, data: any) {
     // 1. ALWAYS write to Local JSON (Backup truth for local servers)
     // Wrap in try-catch to be Vercel (Read-only disk) compatible
