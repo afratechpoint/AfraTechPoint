@@ -290,7 +290,7 @@ export default function AdminMediaPage() {
                     <img
                       src={file.url}
                       alt={file.name}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 text-[10px] text-gray-400 font-medium break-all text-center flex items-center justify-center p-2"
                     />
                     {/* Quick action overlay */}
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">

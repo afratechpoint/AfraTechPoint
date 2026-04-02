@@ -98,7 +98,7 @@ export default function ProductImages({
           initial={{ opacity: 0.8 }}
           animate={{ opacity: 1 }}
           className={cn(
-            "absolute inset-0 w-full h-full object-contain transition-opacity duration-200",
+            "absolute inset-0 w-full h-full object-contain transition-opacity duration-200 text-[10px] text-gray-400 font-medium break-all text-center flex items-center justify-center p-2",
             isZoomed ? "opacity-0" : "opacity-100"
           )}
         />
@@ -148,7 +148,7 @@ export default function ProductImages({
                     : "border-gray-100 opacity-60 hover:opacity-100"
                 )}
               >
-                <img src={imgUrl} className="w-full h-full object-contain" alt={`Thumbnail ${i + 1}`} />
+                <img src={imgUrl} className="w-full h-full object-contain text-[8px] text-gray-400 font-medium break-all text-center flex items-center justify-center p-1" alt={`Thumbnail ${i + 1}`} />
               </div>
             ))}
           </div>

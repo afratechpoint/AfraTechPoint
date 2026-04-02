@@ -92,7 +92,7 @@ export default function ProductTable({
                           <img
                             src={product.image}
                             alt={product.name}
-                            className="w-9 h-9 object-contain"
+                            className="w-9 h-9 object-contain text-[8px] text-gray-400 font-medium break-words text-center flex items-center justify-center p-1"
                           />
                         ) : (
                           <Package size={20} className="text-gray-300" />
@@ -194,7 +194,7 @@ export default function ProductTable({
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="w-16 h-16 object-contain"
+                      className="w-16 h-16 object-contain text-[10px] text-gray-400 font-medium break-words text-center flex items-center justify-center p-1"
                     />
                   ) : (
                     <Package size={24} className="text-gray-300" />
