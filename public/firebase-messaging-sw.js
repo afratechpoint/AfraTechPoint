@@ -3,7 +3,7 @@ console.log('[SW] Firebase Messaging Service Worker Loading v5.1...');
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
 
-const CACHE_NAME = 'afra-tech-point-v5.1';
+const CACHE_NAME = 'afra-tech-point-v6';
 const ASSETS_TO_CACHE = [
   '/',
   '/logo.png',
@@ -114,23 +114,40 @@ self.addEventListener('fetch', (event) => {
   
   const url = new URL(event.request.url);
 
-  // Skip: API calls, Next.js internals, Firebase CDN scripts — never cache these
-  if (
+  // Skip ALL of these — let the browser handle them directly:
+  // 1. API calls
+  // 2. Next.js internals (JS chunks, images proxy)
+  // 3. Firebase / Google CDN scripts
+  // 4. External image services (ImageKit, imgbb, CDN, etc.)
+  // 5. Any cross-origin request that isn't same-origin
+  const isExternal = url.origin !== self.location.origin;
+  const isApiOrNext = (
     url.pathname.startsWith('/api/') || 
-    url.pathname.startsWith('/_next/') || 
+    url.pathname.startsWith('/_next/')
+  );
+  const isExternalScript = (
     url.hostname.includes('gstatic.com') ||
     url.hostname.includes('firebasejs')
-  ) {
-    return; // Let the browser handle it normally
+  );
+  const isExternalImage = (
+    url.hostname.includes('ik.imagekit.io') ||
+    url.hostname.includes('imagekit.io') ||
+    url.hostname.includes('imgbb.com') ||
+    url.hostname.includes('i.ibb.co') ||
+    url.hostname.includes('firebasestorage.googleapis.com') ||
+    url.hostname.includes('storage.googleapis.com')
+  );
+
+  // Never intercept external images, external scripts, API or Next.js internals
+  if (isApiOrNext || isExternalScript || isExternalImage) {
+    return; // Let the browser handle these directly — no service worker interference
   }
 
   // NAVIGATION (HTML pages) → Network-First strategy
-  // This ensures every regular page refresh shows the LATEST content.
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // Update cache with the fresh response
           if (response && response.status === 200) {
             const responseToCache = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
@@ -138,28 +155,34 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // Offline fallback: serve cached page or offline.html
           return caches.match(event.request).then((cached) => cached || caches.match('/offline.html'));
         })
     );
     return;
   }
 
-  // STATIC ASSETS (images, icons, fonts) → Cache-First strategy
-  // Fast load from cache, fall back to network.
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) return cachedResponse;
-      
-      return fetch(event.request).then((response) => {
-        if (response && response.status === 200 && response.type === 'basic') {
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
-        }
-        return response;
-      }).catch(() => null);
-    })
-  );
+  // SAME-ORIGIN STATIC ASSETS ONLY → Cache-First strategy
+  // Never cache cross-origin (isExternal) requests to avoid stale external content
+  if (!isExternal) {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) return cachedResponse;
+        
+        return fetch(event.request).then((response) => {
+          if (response && response.status === 200 && response.type === 'basic') {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+          }
+          return response;
+        }).catch((err) => {
+          console.warn('[SW] Fetch failed for:', url.pathname, err);
+          // Return a proper 503 response instead of null to avoid silent failures
+          return new Response('Service Unavailable', { status: 503, statusText: 'Service Unavailable' });
+        });
+      })
+    );
+  }
+  // For other external requests: just let them through without SW interference
 });
 
 // --- Notification Handling ---

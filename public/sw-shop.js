@@ -1,4 +1,4 @@
-const CACHE_NAME = 'afra-shop-v1';
+const CACHE_NAME = 'afra-shop-v2';
 const ASSETS = [
   '/',
   '/api/manifest/shop'
@@ -23,7 +23,11 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Minimal fetch handler to satisfy PWA requirements
+  if (event.request.method !== 'GET') return;
+  const url = new URL(event.request.url);
+  // Never intercept external images — let browser handle them directly
+  if (url.origin !== self.location.origin) return;
+  // Minimal fetch handler: network first, cache fallback
   event.respondWith(
     fetch(event.request).catch(() => caches.match(event.request))
   );
