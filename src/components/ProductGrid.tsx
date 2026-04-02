@@ -108,7 +108,7 @@ export default function ProductGrid() {
                   // @ts-ignore
                   fetchpriority={i < 4 ? "high" : "low"}
                   sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  className="object-contain p-3 md:p-6 group-hover:scale-105 transition-transform duration-700 ease-out text-[10px] text-gray-400 font-medium break-all text-center flex items-center justify-center"
+                  className="object-contain p-3 md:p-6 group-hover:scale-105 transition-transform duration-700 ease-out"
                 />
                {product.salePrice && (
                  <div className="absolute top-2 left-2 bg-red-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider z-10">

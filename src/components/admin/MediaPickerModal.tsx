@@ -245,7 +245,8 @@ export default function MediaPickerModal({
                         <img
                           src={file.url}
                           alt={file.name}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110 text-[10px] text-gray-400 font-medium break-all text-center flex items-center justify-center p-2"
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                         />
                         {isSelected && (
                           <div className="absolute inset-0 bg-black/20 flex items-start justify-end p-1.5">
