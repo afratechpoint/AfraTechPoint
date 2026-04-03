@@ -74,6 +74,11 @@ export async function generateMetadata(): Promise<Metadata> {
     };
   }
 
+  const shopUrl = process.env.NEXT_PUBLIC_SHOP_URL || "https://afratechpoint.shop";
+  const logoImage = settings.logoUrl || `${shopUrl}/logo.png`;
+  // Use a clean, cacheable version of the logo for OG (no ImageKit transforms that might be blocked)
+  const ogImage = logoImage.startsWith("http") ? logoImage : `${shopUrl}${logoImage}`;
+
   return {
     title: settings.storeName,
     description: settings.shortDescription,
@@ -81,6 +86,27 @@ export async function generateMetadata(): Promise<Metadata> {
     icons: {
       icon: settings.logoUrl || "/logo.png",
       apple: settings.logoUrl || "/logo.png",
+    },
+    openGraph: {
+      type: "website",
+      siteName: settings.storeName,
+      title: settings.storeName,
+      description: settings.shortDescription || `Shop the latest electronics at ${settings.storeName}`,
+      url: shopUrl,
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: settings.storeName,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: settings.storeName,
+      description: settings.shortDescription || `Shop the latest electronics at ${settings.storeName}`,
+      images: [ogImage],
     },
   };
 }
