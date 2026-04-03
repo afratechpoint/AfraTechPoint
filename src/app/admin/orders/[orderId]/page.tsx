@@ -43,6 +43,10 @@ interface Order {
   paymentDetails?: { method?: string; senderNumber?: string; transactionId?: string; accountUsed?: string };
   shippingAddress?: { fullName?: string; phone?: string; address?: string; city?: string; postalCode?: string };
   customer?: { name?: string; phone?: string; address?: string; city?: string; email?: string };
+  courier?: string;
+  courierTrackingCode?: string;
+  courierConsignmentId?: string | number;
+  courierStatus?: string;
   items: { name: string; price: number; quantity: number; image?: string; variantName?: string }[];
 }
 
@@ -136,6 +140,30 @@ export default function AdminOrderDetailPage() {
     const ok = await patch({ orderStatus: s, status: s.charAt(0).toUpperCase() + s.slice(1) });
     if (ok) {
       showToast(`Order status updated to ${s}.`);
+    }
+  };
+
+  const shipWithSteadfast = async () => {
+    if (!order) return;
+    setUpdating(true);
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch(`/api/admin/courier/steadfast/ship`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...headers },
+        body: JSON.stringify({ orderId: order.id, deliveryType: 0 }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to create parcel");
+      
+      showToast("Order shipped with Steadfast!");
+      // Refresh local state
+      const updatedOrder = await (await fetch(`/api/orders/${order.id}`, { headers })).json();
+      setOrder(updatedOrder);
+    } catch (err: any) {
+      showToast(err.message || "Shipping failed", false);
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -317,6 +345,66 @@ export default function AdminOrderDetailPage() {
             ))}
           </div>
         </div>
+
+        {/* Courier & Shipping */}
+        <div className="bg-white rounded-3xl border border-gray-100 p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center">
+                <Truck size={13} className="text-blue-600" />
+              </div>
+              <h3 className="font-black text-gray-900 text-sm">Shipping & Delivery</h3>
+            </div>
+            {order.courier && (
+              <span className="px-3 py-1 rounded-full text-[10px] font-black bg-blue-50 text-blue-700 uppercase tracking-wider">
+                {order.courier}
+              </span>
+            )}
+          </div>
+
+          {!order.courierTrackingCode ? (
+            <div className="space-y-4">
+              <p className="text-xs text-gray-400 leading-relaxed">
+                This order is ready to be shipped. You can send it to Steadfast Courier with one click.
+              </p>
+              <button
+                onClick={shipWithSteadfast}
+                disabled={updating || ordStatus === 'cancelled'}
+                className="w-full flex items-center justify-center gap-2 h-11 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black transition-all disabled:opacity-50"
+              >
+                <Send size={14} /> Send to Steadfast Courier
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3 divide-y divide-gray-50">
+              {[
+                { icon: <Hash size={12} />,  label: "Tracking Code", val: order.courierTrackingCode, copy: true },
+                { icon: <Hash size={12} />,  label: "Consignment ID", val: order.courierConsignmentId?.toString() ?? "—" },
+                { icon: <Clock size={12} />, label: "Courier Status", val: order.courierStatus?.replace(/_/g, ' ') ?? "pending" },
+              ].map(({ icon, label, val, copy }) => (
+                <div key={label} className="flex items-start justify-between pt-3 first:pt-0">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0 mt-0.5">
+                    {icon} {label}
+                  </div>
+                  <div className="flex flex-col items-end gap-1 overflow-hidden">
+                    <p className={cn("text-sm font-bold text-gray-900 font-mono text-right truncate max-w-full", label === 'Tracking Code' && 'text-blue-600')}>
+                      {val}
+                    </p>
+                    {copy && (
+                      <button 
+                        onClick={() => { navigator.clipboard.writeText(val || ""); showToast("Tracking code copied!"); }}
+                        className="text-[9px] font-black text-blue-500 hover:text-blue-700 uppercase tracking-widest"
+                      >
+                        Copy Tracking
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
       </div>
 
       {/* ── Order Items ──────────────────────────────── */}
