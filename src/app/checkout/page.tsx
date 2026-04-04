@@ -34,7 +34,12 @@ export default function CheckoutPage() {
   const submitted                       = useRef(false);
 
   // Shipping
-  const [ship, setShip] = useState({ fullName: "", phone: "", address: "", city: "", postalCode: "" });
+  const [ship, setShip] = useState({ fullName: "", phone: "", address: "", city: "", postalCode: "", division: "", district: "", upazila: "" });
+
+  // BD Geo data
+  const [geoDivisions, setGeoDivisions] = useState<any[]>([]);
+  const [geoDistricts, setGeoDistricts] = useState<any[]>([]);
+  const [geoUpazilas, setGeoUpazilas]   = useState<any[]>([]);
 
   // Payment tab: "digital" or "cod"
   const [paymentTab, setPaymentTab]     = useState<PaymentTab>("digital");
@@ -53,24 +58,23 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (user) {
-      // Step 1: Pre-fill with name from Auth
       setShip(s => ({ ...s, fullName: user.displayName ?? "" }));
-
-      // Step 2: Fetch extra details (Phone, Address) from PERSISTENT Firestore
       user.getIdToken().then(token => {
-        fetch(`/api/profile?uid=${user.uid}`, {
+        fetch("/api/profile", {
           headers: { 'Authorization': `Bearer ${token}` }
         })
           .then(r => r.json())
           .then(data => {
-            if (data && (data.phone || data.address)) {
+            if (data && (data.phone || data.address || data.division)) {
               setShip(s => ({ 
                 ...s, 
                 phone: data.phone || "", 
-                address: data.address || "" 
+                address: data.address || "",
+                division: data.division || "",
+                district: data.district || "",
+                upazila: data.upazila || "",
               }));
             } else {
-              // Fallback: If no data in DB, check if maybe they need to set it
               toast.info("Please ensure your profile has a phone and address for faster checkout.");
             }
           })
@@ -78,6 +82,29 @@ export default function CheckoutPage() {
       });
     }
   }, [user]);
+
+  // BD Geo Effects
+  useEffect(() => {
+    fetch("/api/geo/divisions")
+      .then(r => r.json())
+      .then(d => { if (d?.data) setGeoDivisions(d.data); })
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    if (!ship.division) { setGeoDistricts([]); setGeoUpazilas([]); return; }
+    fetch(`/api/geo/division/${ship.division.toLowerCase()}`)
+      .then(r => r.json())
+      .then(d => { if (d?.data) setGeoDistricts(d.data); })
+      .catch(console.error);
+  }, [ship.division]);
+
+  useEffect(() => {
+    if (!ship.district || !geoDistricts.length) { setGeoUpazilas([]); return; }
+    const distObj = geoDistricts.find((d: any) => d.district?.toLowerCase() === ship.district.toLowerCase());
+    if (distObj?.upazilla) setGeoUpazilas(distObj.upazilla);
+    else setGeoUpazilas([]);
+  }, [ship.district, geoDistricts]);
 
   const paymentMethods: { id: string; name: string; accountNumber: string; enabled: boolean }[] =
     (settings?.paymentMethods ?? []).filter((m: any) => m.enabled);
@@ -99,10 +126,11 @@ export default function CheckoutPage() {
   // ── Validation ────────────────────────────────────────────────────
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!ship.fullName.trim())      e.fullName = "Full name is required.";
-    if (!BD_PHONE.test(ship.phone)) e.phone    = "Enter a valid BD number (e.g. 01XXXXXXXXX).";
-    if (!ship.address.trim())       e.address  = "Address is required.";
-    if (!ship.city.trim())          e.city     = "City is required.";
+    if (!ship.fullName.trim())      e.fullName  = "Full name is required.";
+    if (!BD_PHONE.test(ship.phone)) e.phone     = "Enter a valid BD number (e.g. 01XXXXXXXXX).";
+    if (!ship.division)             e.division  = "Select a division.";
+    if (!ship.district)             e.district  = "Select a district.";
+    if (!ship.upazila)              e.upazila   = "Select an upazila.";
 
     // Only validate digital payment fields when not COD
     if (!isCOD) {
@@ -149,14 +177,17 @@ export default function CheckoutPage() {
           shippingAddress: {
             fullName:   ship.fullName,
             phone:      ship.phone,
-            address:    ship.address,
-            city:       ship.city,
+            address:    [ship.address, ship.upazila, ship.district, ship.division].filter(Boolean).join(", "),
+            city:       ship.district || ship.division,
             postalCode: ship.postalCode || undefined,
+            division:   ship.division,
+            district:   ship.district,
+            upazila:    ship.upazila,
           },
           payment: isCOD
             ? { method: "Cash on Delivery", senderNumber: "", transactionId: "", accountUsed: "" }
             : { method, senderNumber, transactionId, accountUsed: paymentMethods.find(m => m.name === method)?.accountNumber ?? "" },
-          customer: { name: ship.fullName, email: user!.email ?? "", phone: ship.phone, address: ship.address, city: ship.city },
+          customer: { name: ship.fullName, email: user!.email ?? "", phone: ship.phone, address: [ship.address, ship.upazila, ship.district, ship.division].filter(Boolean).join(", "), city: ship.district || ship.division },
           total:         grandTotal,
           totalAmount:   grandTotal,
           subtotal,
@@ -216,20 +247,47 @@ export default function CheckoutPage() {
                   <input required type="tel" value={ship.phone} onChange={e => setShip(s => ({ ...s, phone: e.target.value }))}
                     placeholder="01XXXXXXXXX" className={inp(!!errors.phone)} />
                 </Field>
+                <Field label="Division" error={errors.division}>
+                  <div className="relative">
+                    <select value={ship.division} onChange={e => setShip(s => ({ ...s, division: e.target.value, district: "", upazila: "" }))}
+                      className={`${inp(!!errors.division)} appearance-none cursor-pointer pr-8`}>
+                      <option value="">Select Division</option>
+                      {geoDivisions.map((d: any) => <option key={d._id || d.division} value={d.division}>{d.division}</option>)}
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-xs">▼</div>
+                  </div>
+                </Field>
+                <Field label="District" error={errors.district}>
+                  <div className="relative">
+                    <select value={ship.district} onChange={e => setShip(s => ({ ...s, district: e.target.value, upazila: "" }))}
+                      disabled={!ship.division}
+                      className={`${inp(!!errors.district)} appearance-none cursor-pointer pr-8 disabled:opacity-50`}>
+                      <option value="">Select District</option>
+                      {geoDistricts.map((d: any) => <option key={d._id || d.district} value={d.district}>{d.district}</option>)}
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-xs">▼</div>
+                  </div>
+                </Field>
+                <Field label="Upazila" error={errors.upazila}>
+                  <div className="relative">
+                    <select value={ship.upazila} onChange={e => setShip(s => ({ ...s, upazila: e.target.value }))}
+                      disabled={!ship.district}
+                      className={`${inp(!!errors.upazila)} appearance-none cursor-pointer pr-8 disabled:opacity-50`}>
+                      <option value="">Select Upazila</option>
+                      {geoUpazilas.map((u: string) => <option key={u} value={u}>{u}</option>)}
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-xs">▼</div>
+                  </div>
+                </Field>
                 <div className="sm:col-span-2">
-                  <Field label="Street Address" error={errors.address}>
-                    <input required value={ship.address} onChange={e => setShip(s => ({ ...s, address: e.target.value }))}
-                      placeholder="House 12, Road 5, Mirpur" className={inp(!!errors.address)} />
+                  <Field label="গ্রাম / বাসার নম্বর">
+                    <div className="relative">
+                      <input value={ship.address} onChange={e => setShip(s => ({ ...s, address: e.target.value.slice(0, 15) }))}
+                        placeholder="গ্রাম, বাসার নম্বর" maxLength={15} className={`${inp(false)} pr-14`} />
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-400">{ship.address.length}/15</div>
+                    </div>
                   </Field>
                 </div>
-                <Field label="City" error={errors.city}>
-                  <input required value={ship.city} onChange={e => setShip(s => ({ ...s, city: e.target.value }))}
-                    placeholder="Dhaka" className={inp(!!errors.city)} />
-                </Field>
-                <Field label="Postal Code (optional)">
-                  <input value={ship.postalCode} onChange={e => setShip(s => ({ ...s, postalCode: e.target.value }))}
-                    placeholder="1200" className={inp(false)} />
-                </Field>
               </div>
             </section>
 

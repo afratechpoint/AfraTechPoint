@@ -41,7 +41,7 @@ interface Order {
   userEmail?: string;
   payment?: { method?: string; senderNumber?: string; transactionId?: string; accountUsed?: string };
   paymentDetails?: { method?: string; senderNumber?: string; transactionId?: string; accountUsed?: string };
-  shippingAddress?: { fullName?: string; phone?: string; address?: string; city?: string; postalCode?: string };
+  shippingAddress?: { fullName?: string; phone?: string; address?: string; city?: string; postalCode?: string; division?: string; district?: string; upazila?: string };
   customer?: { name?: string; phone?: string; address?: string; city?: string; email?: string };
   courier?: string;
   courierTrackingCode?: string;
@@ -421,7 +421,7 @@ export default function AdminOrderDetailPage() {
               { icon: <User size={12} />,   label: "Name",    val: addr?.fullName ?? cust?.name  ?? "—" },
               { icon: <Phone size={12} />,  label: "Phone",   val: addr?.phone    ?? cust?.phone ?? "—" },
               { icon: <Mail size={12} />,   label: "Email",   val: order.userEmail ?? cust?.email ?? "—" },
-              { icon: <MapPin size={12} />, label: "Address", val: [addr?.address ?? cust?.address, addr?.city ?? cust?.city, addr?.postalCode].filter(Boolean).join(", ") || "—" },
+              { icon: <MapPin size={12} />, label: "Address", val: [addr?.address ?? cust?.address, addr?.upazila, addr?.district, addr?.division, (!addr?.division ? (addr?.city ?? cust?.city) : null), addr?.postalCode].filter(Boolean).join(", ") || "—" },
             ].map(({ icon, label, val }) => (
               <div key={label} className="flex items-start justify-between pt-3 first:pt-0">
                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0 mt-0.5">
