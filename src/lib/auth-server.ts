@@ -59,20 +59,47 @@ export async function verifyUser(request: NextRequest) {
 export async function verifyAdminAction() {
   try {
     const h = await headers();
+    
+    // 1. Try Authorization header first (works if client sends it)
     const authHeader = h.get("authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
-
-    const idToken = authHeader.split("Bearer ")[1];
-    const decodedToken = await adminAuth.verifyIdToken(idToken);
-
-    const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "")
-      .toLowerCase().split(",").map(e => e.trim());
-
-    if (decodedToken.email && adminEmails.includes(decodedToken.email.toLowerCase())) {
-      return decodedToken;
+    if (authHeader?.startsWith("Bearer ")) {
+      const idToken = authHeader.split("Bearer ")[1];
+      const decodedToken = await adminAuth.verifyIdToken(idToken);
+      const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "")
+        .toLowerCase().split(",").map(e => e.trim());
+      if (decodedToken.email && adminEmails.includes(decodedToken.email.toLowerCase())) {
+        return decodedToken;
+      }
     }
+
+    // 2. Fallback: Try cookie-based session
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get("__session")?.value || cookieStore.get("session")?.value;
+    if (sessionCookie) {
+      const decodedToken = await adminAuth.verifyIdToken(sessionCookie);
+      const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "")
+        .toLowerCase().split(",").map(e => e.trim());
+      if (decodedToken.email && adminEmails.includes(decodedToken.email.toLowerCase())) {
+        return decodedToken;
+      }
+    }
+
+    // 3. Fallback: Check cookie header manually for Firebase token
+    const cookieHeader = h.get("cookie") || "";
+    const firebaseTokenMatch = cookieHeader.match(/firebaseIdToken=([^;]+)/);
+    if (firebaseTokenMatch) {
+      const decodedToken = await adminAuth.verifyIdToken(firebaseTokenMatch[1]);
+      const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "")
+        .toLowerCase().split(",").map(e => e.trim());
+      if (decodedToken.email && adminEmails.includes(decodedToken.email.toLowerCase())) {
+        return decodedToken;
+      }
+    }
+
     return null;
-  } catch {
+  } catch (err) {
+    console.error("[verifyAdminAction] Auth failed:", err);
     return null;
   }
 }

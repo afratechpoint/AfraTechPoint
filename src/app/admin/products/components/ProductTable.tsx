@@ -10,7 +10,7 @@ import Link from "next/link";
 import { Edit2, Trash2, Package, Copy, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { deleteProduct } from "../actions";
+import { authenticatedFetch } from "@/lib/api-helper";
 import { Product } from "../types";
 
 interface ProductTableProps {
@@ -30,15 +30,19 @@ export default function ProductTable({
     if (!confirm(`Delete "${name}"? This action cannot be undone.`)) return;
 
     setDeletingId(id);
-    const result = await deleteProduct(id);
-    setDeletingId(null);
-
-    if (result?.success) {
-      toast.success(`"${name}" deleted.`);
-      onDeleted();
-    } else {
-      toast.error(result?.message ?? "Failed to delete.");
+    try {
+      const res = await authenticatedFetch(`/api/products/${id}`, { method: "DELETE" });
+      const result = await res.json();
+      if (res.ok && result?.success) {
+        toast.success(`"${name}" deleted.`);
+        onDeleted();
+      } else {
+        toast.error(result?.error ?? "Failed to delete.");
+      }
+    } catch (err) {
+      toast.error("Network error. Please try again.");
     }
+    setDeletingId(null);
   };
 
   const handleCopyUrl = (id: string, name: string) => {
