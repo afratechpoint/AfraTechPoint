@@ -1,78 +1,96 @@
 "use client";
 
 import React from "react";
-import { AlertTriangle, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { AlertTriangle, X } from "lucide-react";
 
 interface DeleteConfirmModalProps {
   isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
   title?: string;
   message?: string;
   isDeleting: boolean;
+  onConfirm: () => void;
+  onCancel?: () => void;
+  onClose?: () => void;
 }
 
 export default function DeleteConfirmModal({
   isOpen,
-  onClose,
+  title = "Confirm Delete",
+  message = "Are you sure? This action cannot be undone.",
+  isDeleting,
   onConfirm,
-  title = "Delete Order?",
-  message = "Are you sure you want to delete this order? This action cannot be undone and will remove it from the system entirely.",
-  isDeleting
+  onCancel,
+  onClose,
 }: DeleteConfirmModalProps) {
-  if (!isOpen) return null;
-
+  const handleClose = onCancel || onClose || (() => {});
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      {isOpen && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          className="bg-white rounded-[2rem] w-full max-w-sm shadow-2xl overflow-hidden relative border border-gray-100"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+          onClick={(e) => { if (e.target === e.currentTarget && !isDeleting) handleClose(); }}
         >
-          {/* Close button */}
-          <button 
-            onClick={onClose}
-            className="absolute top-5 right-5 p-2 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <X size={18} className="text-gray-400" />
-          </button>
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
 
-          <div className="p-8 pt-10 text-center flex flex-col items-center">
-            <div className="w-16 h-16 bg-red-50 rounded-3xl flex items-center justify-center mb-6">
-              <AlertTriangle className="text-red-500" size={32} />
+          {/* Modal */}
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
+          >
+            {/* Close Button */}
+            {!isDeleting && (
+              <button
+                onClick={handleClose}
+                className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600"
+              >
+                <X size={16} />
+              </button>
+            )}
+
+            {/* Content */}
+            <div className="p-6 pt-8 text-center">
+              <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <AlertTriangle className="text-red-500" size={24} />
+              </div>
+              <h3 className="text-lg font-black text-gray-900 mb-1">{title}</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">{message}</p>
             </div>
 
-            <h3 className="text-xl font-black text-gray-900 mb-3">{title}</h3>
-            <p className="text-sm text-gray-500 font-medium leading-relaxed mb-8">
-              {message}
-            </p>
-
-            <div className="grid grid-cols-2 gap-3 w-full">
+            {/* Actions */}
+            <div className="flex gap-3 p-5 pt-2">
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 disabled={isDeleting}
-                className="h-12 rounded-2xl bg-gray-50 text-gray-500 font-bold text-sm hover:bg-gray-100 transition-all disabled:opacity-50"
+                className="flex-1 h-12 bg-gray-100 text-gray-700 rounded-2xl font-bold text-sm hover:bg-gray-200 transition-all disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={onConfirm}
                 disabled={isDeleting}
-                className="h-12 rounded-2xl bg-red-500 text-white font-bold text-sm hover:bg-red-600 hover:shadow-lg hover:shadow-red-500/30 transition-all disabled:opacity-50 flex items-center justify-center"
+                className="flex-1 h-12 bg-red-500 text-white rounded-2xl font-bold text-sm hover:bg-red-600 transition-all disabled:opacity-70 flex items-center justify-center gap-2"
               >
                 {isDeleting ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Deleting...
+                  </>
                 ) : (
-                  "Delete Now"
+                  "Delete"
                 )}
               </button>
             </div>
-          </div>
+          </motion.div>
         </motion.div>
-      </div>
+      )}
     </AnimatePresence>
   );
 }

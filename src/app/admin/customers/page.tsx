@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Search, Trash2, Users, Crown } from "lucide-react";
+import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { getUsers, updateUserRole, deleteUserAccount, getSuperAdminEmail } from "./actions";
 import PremiumLoader from "@/components/PremiumLoader";
@@ -84,22 +85,24 @@ export default function CustomersPage() {
     }
   };
 
-  const handleDelete = async (targetUid: string) => {
-    if (!confirm("Are you sure you want to permanently delete this user? This cannot be undone.")) return;
-    
+  const [deleteTarget, setDeleteTarget] = useState<{ uid: string; name: string } | null>(null);
+
+  const confirmDelete = useCallback(async () => {
+    if (!deleteTarget) return;
     try {
-      setDeletingId(targetUid);
+      setDeletingId(deleteTarget.uid);
       const token = await user!.getIdToken();
-      await deleteUserAccount(targetUid, token);
+      await deleteUserAccount(deleteTarget.uid, token);
       
-      setUsers(prev => prev.filter(u => u.uid !== targetUid));
+      setUsers(prev => prev.filter(u => u.uid !== deleteTarget.uid));
       toast.success("User deleted permanently.");
+      setDeleteTarget(null);
     } catch (err: any) {
       toast.error(err.message || "Failed to delete user");
     } finally {
       setDeletingId(null);
     }
-  };
+  }, [deleteTarget, user]);
 
   const filteredUsers = users.filter(u => {
     if (roleFilter !== "all" && u.role !== roleFilter) return false;
@@ -116,6 +119,15 @@ export default function CustomersPage() {
 
   return (
     <div className="space-y-6">
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={!!deleteTarget}
+        title="Delete User?"
+        message={`Are you sure you want to permanently delete "${deleteTarget?.name}"? This action cannot be undone.`}
+        isDeleting={!!deletingId}
+        onConfirm={confirmDelete}
+        onCancel={() => { if (!deletingId) setDeleteTarget(null); }}
+      />
 
 
       {/* Filters */}
@@ -211,7 +223,7 @@ export default function CustomersPage() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button
-                          onClick={() => handleDelete(u.uid)}
+                          onClick={() => setDeleteTarget({ uid: u.uid, name: u.displayName || u.email })}
                           disabled={deletingId === u.uid || u.uid === user?.uid}
                           className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-block"
                           title={u.uid === user?.uid ? "You cannot delete yourself" : "Delete user"}
@@ -254,7 +266,7 @@ export default function CustomersPage() {
                     <p className="text-[10px] text-gray-500 truncate">{u.email}</p>
                   </div>
                   <button
-                    onClick={() => handleDelete(u.uid)}
+                    onClick={() => setDeleteTarget({ uid: u.uid, name: u.displayName || u.email })}
                     disabled={deletingId === u.uid || u.uid === user?.uid || u.email === superAdminEmail}
                     className="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center disabled:opacity-30 transition-colors"
                   >

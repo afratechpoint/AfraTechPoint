@@ -5,7 +5,8 @@
 // Accepts products as a prop so the parent page controls data fetching.
 // Emits onDelete callbacks so the parent can refresh the list after deletion.
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
+import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
 import Link from "next/link";
 import { Edit2, Trash2, Package, Copy, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
@@ -25,9 +26,11 @@ export default function ProductTable({
   onDeleted,
 }: ProductTableProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+  const confirmDelete = useCallback(async () => {
+    if (!deleteTarget) return;
+    const { id, name } = deleteTarget;
 
     setDeletingId(id);
     try {
@@ -35,6 +38,7 @@ export default function ProductTable({
       const result = await res.json();
       if (res.ok && result?.success) {
         toast.success(`"${name}" deleted.`);
+        setDeleteTarget(null);
         onDeleted();
       } else {
         toast.error(result?.error ?? "Failed to delete.");
@@ -43,7 +47,7 @@ export default function ProductTable({
       toast.error("Network error. Please try again.");
     }
     setDeletingId(null);
-  };
+  }, [deleteTarget, onDeleted]);
 
   const handleCopyUrl = (id: string, name: string) => {
     // Construct the public product URL
@@ -64,6 +68,16 @@ export default function ProductTable({
 
   return (
     <div className="space-y-4">
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={!!deleteTarget}
+        title="Delete Product?"
+        message={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
+        isDeleting={!!deletingId}
+        onConfirm={confirmDelete}
+        onCancel={() => { if (!deletingId) setDeleteTarget(null); }}
+      />
+
       {/* Desktop Table View */}
       <div className="hidden md:block bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
         <table className="w-full text-left">
@@ -162,7 +176,7 @@ export default function ProductTable({
                         <Edit2 size={16} />
                       </Link>
                       <button
-                        onClick={() => handleDelete(product.id, product.name)}
+                        onClick={() => setDeleteTarget({ id: product.id, name: product.name })}
                         disabled={isDeleting}
                         className="p-2 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-600 transition-all border border-transparent hover:border-red-100 disabled:opacity-40"
                         title="Delete product"
@@ -260,7 +274,7 @@ export default function ProductTable({
                   <Edit2 size={14} /> Edit Product
                 </Link>
                 <button
-                  onClick={() => handleDelete(product.id, product.name)}
+                  onClick={() => setDeleteTarget({ id: product.id, name: product.name })}
                   disabled={isDeleting}
                   className="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all disabled:opacity-40"
                 >
