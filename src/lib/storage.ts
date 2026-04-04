@@ -430,6 +430,53 @@ export const storage = {
     return await readData(path.join(process.cwd(), 'data', 'media.json'), []);
   },
 
+  async syncMediaWithImageKit(credentials: { publicKey: string; privateKey: string; endpoint: string }) {
+    if (!USE_FIREBASE) return;
+    try {
+      const authHeader = 'Basic ' + Buffer.from(credentials.privateKey + ':').toString('base64');
+      const response = await fetch('https://api.imagekit.io/v1/files?path=/products&limit=1000', {
+        headers: { 'Authorization': authHeader }
+      });
+      
+      if (!response.ok) throw new Error("ImageKit sync failed");
+      const ikFiles = await response.json();
+      
+      const currentMedia = await this.getMedia();
+      const existingUrls = new Set(currentMedia.map((m: any) => m.url));
+      
+      const adapter = await getAdapter();
+      const batchSize = 100;
+      let count = 0;
+
+      for (let i = 0; i < ikFiles.length; i += batchSize) {
+        const chunk = ikFiles.slice(i, i + batchSize);
+        const batch = adapter.adminDb.batch();
+        let batchAdded = false;
+
+        for (const file of chunk) {
+          if (!existingUrls.has(file.url)) {
+            const docRef = adapter.adminDb.collection("media").doc();
+            batch.set(docRef, {
+              name: file.name,
+              url: file.url,
+              size: file.size,
+              deleteUrl: file.fileId,
+              imgbbId: '',
+              uploadedAt: file.createdAt || new Date().toISOString()
+            });
+            batchAdded = true;
+            count++;
+          }
+        }
+        if (batchAdded) await batch.commit();
+      }
+      return count;
+    } catch (error) {
+      console.error("[Media Sync] Error:", error);
+      throw error;
+    }
+  },
+
   async saveMedia(mediaData: any) {
     // A. Local Backup
     try {

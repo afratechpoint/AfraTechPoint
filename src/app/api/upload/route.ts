@@ -13,12 +13,22 @@ const getImageKitAuthHeader = () => {
   return 'Basic ' + Buffer.from(IMAGEKIT_PRIVATE_KEY + ':').toString('base64');
 };
 
-// GET: List all media via storage sync
 export async function GET(request: NextRequest) {
   try {
     const adminToken = await verifyAdmin(request);
     if (!adminToken) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const searchParams = request.nextUrl.searchParams;
+    const sync = searchParams.get('sync') === 'true';
+
+    if (sync) {
+      await storage.syncMediaWithImageKit({
+        publicKey: IMAGEKIT_PUBLIC_KEY,
+        privateKey: IMAGEKIT_PRIVATE_KEY,
+        endpoint: IMAGEKIT_ENDPOINT
+      });
     }
 
     const media = await storage.getMedia();

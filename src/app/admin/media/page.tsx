@@ -47,13 +47,18 @@ export default function AdminMediaPage() {
   const [usage, setUsage] = useState<{ usedBytes: number; totalBytes: number; availableBytes: number; percentUsed: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const fetchFiles = useCallback(async () => {
+  const fetchFiles = useCallback(async (isSync = false) => {
     setIsLoading(true);
     try {
-      const res = await authenticatedFetch("/api/upload");
+      const url = isSync ? "/api/upload?sync=true" : "/api/upload";
+      if (isSync) toast.info("Syncing with ImageKit... This may take a moment.");
+      
+      const res = await authenticatedFetch(url);
       const data = await res.json();
       setFiles(data);
       setFiltered(data);
+      
+      if (isSync) toast.success("Media Library synced with ImageKit!");
     } catch {
       toast.error("Failed to load media files.");
     } finally {
@@ -243,10 +248,12 @@ export default function AdminMediaPage() {
           )}
         </div>
         <button
-          onClick={fetchFiles}
-          className="w-11 h-11 rounded-xl bg-white border border-gray-100 shadow-sm flex items-center justify-center text-gray-400 hover:text-black hover:border-gray-200 transition-all"
+          onClick={() => fetchFiles(true)}
+          disabled={isLoading}
+          title="Deep Sync with ImageKit"
+          className="w-11 h-11 rounded-xl bg-white border border-gray-100 shadow-sm flex items-center justify-center text-gray-400 hover:text-black hover:border-gray-200 transition-all disabled:opacity-50"
         >
-          <RefreshCw size={16} />
+          <RefreshCw size={16} className={cn(isLoading && "animate-spin")} />
         </button>
       </div>
 
