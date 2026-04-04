@@ -46,7 +46,7 @@ export default function TermsPage() {
       id: "contact",
       icon: <HelpCircle size={20} className="text-teal-500" />,
       title: "Support & Contact",
-      content: "If you have any questions regarding these terms, please contact our legal team at legal@afratech.com or through our Contact Us page."
+      content: "If you have any questions regarding these terms, please contact our legal team at afratechpoint@gmail.com or through our Contact Us page."
     }
   ];
 

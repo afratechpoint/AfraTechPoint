@@ -46,8 +46,8 @@ const OrderInvoice: React.FC<OrderInvoiceProps> = ({
   storeName = "Afra Tech Point",
   storeAddress = "House-12, Sector-07, Uttara, Dhaka-1230",
   storePhone = "+880 1XXXXXXXXX",
-  storeEmail = "support@afratechpoint.com",
-  storeWebsite = "www.afratechpoint.com",
+  storeEmail = "afratechpoint@gmail.com",
+  storeWebsite = "www.afratechpoint.shop",
   logoUrl,
   signatureUrl
 }) => {
@@ -333,8 +333,7 @@ const OrderInvoice: React.FC<OrderInvoiceProps> = ({
           <div className="inv-bottom" style={{paddingTop: 0, paddingBottom: 24, display: 'block'}}>
              <div className="bot-title">Terms and Conditions:</div>
              <div className="bot-info" style={{color: '#475569'}}>
-               Thank you for choosing {storeName}. Items can be returned within 7 days of delivery 
-               if all original tags and packaging are intact. This is a computer-generated invoice.
+               Items can be returned within 7 days of delivery with original packaging. For any queries, contact us at afratechpoint@gmail.com. This is a computer-generated invoice.
              </div>
           </div>
 
