@@ -43,8 +43,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [photoURL, setPhotoURL] = useState<string | null>(null);
 
-  const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "").split(",");
-  const isAdminByEmail = user?.email ? adminEmails.includes(user.email) : false;
+  const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "").toLowerCase().split(",");
+  const isAdminByEmail = user?.email ? adminEmails.includes(user.email.toLowerCase()) : false;
 
   const isAdmin = role === "admin" || isAdminByEmail;
   const isShopManager = role === "shop_manager";
@@ -56,27 +56,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(firebaseUser);
       if (firebaseUser) {
         try {
-          // ── Always fetch from Firestore (updates immediately on role change) ──
-          const { getDoc, doc } = await import("firebase/firestore");
-          const { db } = await import("@/lib/firebase/firestore");
-          const docSnap = await getDoc(doc(db, "users", firebaseUser.uid));
-          const data = docSnap.data();
-          const firestoreRole = data?.role || "customer";
+          // ── Sync and Fetch from Server (bypasses permission rules) ──
+          const result = await syncUserToFirestore(
+            firebaseUser.uid,
+            firebaseUser.email || "",
+            firebaseUser.displayName || "",
+            firebaseUser.photoURL || ""
+          );
 
-          // Update display name and photo from Firestore if available
-          setDisplayName(data?.displayName || firebaseUser.displayName || null);
-          setPhotoURL(data?.photoURL || firebaseUser.photoURL || null);
-          setRole(firestoreRole);
+          if (result.success && result.userData) {
+            setDisplayName(result.userData.displayName || firebaseUser.displayName || null);
+            setPhotoURL(result.userData.photoURL || firebaseUser.photoURL || null);
+            setRole(result.userData.role || "customer");
+          } else {
+            console.warn("Sync returned failure, falling back to auth only", result.error);
+            setDisplayName(firebaseUser.displayName);
+            setPhotoURL(firebaseUser.photoURL);
+            setRole("customer");
+          }
 
-          // ── Force-refresh token if Firestore role differs from claim ──
-          // This ensures server-side checks (custom claims) also see the new role  
+          // ── Force-refresh token if needed ──
           const tokenResult = await firebaseUser.getIdTokenResult();
           const claimRole = tokenResult.claims.role as string | undefined;
-          if (claimRole !== firestoreRole) {
-            // Silently refresh — async, no need to await blocking the UI
+          if (claimRole !== (result.userData?.role || "customer")) {
             firebaseUser.getIdToken(true).catch(() => {});
           }
         } catch (e) {
+          console.error("AuthContext fetch error:", e);
           setRole("customer");
           setDisplayName(firebaseUser.displayName);
           setPhotoURL(firebaseUser.photoURL);

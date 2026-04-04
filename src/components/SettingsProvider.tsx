@@ -45,6 +45,8 @@ export interface Settings {
   announcementText: string;
   announcementActive: boolean;
   businessHours: string;
+  signatureUrl?: string;
+  signatureName?: string;
   navLinks: LinkItem[];
   socialLinks: SocialLink[];
   footerProducts: LinkItem[];

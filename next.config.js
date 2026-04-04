@@ -14,17 +14,17 @@ let nextConfig = {
     // Security headers applied to every page/route
     const securityHeaders = [
       // Prevent browsers from MIME-sniffing (stops content injection attacks)
-      { key: "X-Content-Type-Options",    value: "nosniff" },
+      { key: "X-Content-Type-Options", value: "nosniff" },
       // Block site from being embedded in iframes (Clickjacking protection)
-      { key: "X-Frame-Options",           value: "SAMEORIGIN" },
+      { key: "X-Frame-Options", value: "SAMEORIGIN" },
       // Stop leaking referrer info to third-party sites
-      { key: "Referrer-Policy",           value: "strict-origin-when-cross-origin" },
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
       // Disable old dangerous browser features
-      { key: "X-XSS-Protection",          value: "1; mode=block" },
+      { key: "X-XSS-Protection", value: "1; mode=block" },
       // Force HTTPS for 2 years (HSTS) — only active in production
       { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
       // Disable dangerous browser APIs (camera, mic, geolocation, etc.)
-      { key: "Permissions-Policy",        value: "camera=(), microphone=(), geolocation=(), interest-cohort=()" },
+      { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), interest-cohort=()" },
       // Allow popup interactions (fixes Firebase Google Sign-In on strict platforms)
       { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
       // Content Security Policy — prevents XSS attacks

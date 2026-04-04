@@ -104,9 +104,8 @@ export default function ProductGrid() {
                   alt={product.name || "Product image"}
                   fill
                   unoptimized={true}
-                  priority={i < 4}
-                  // @ts-ignore
-                  fetchpriority={i < 4 ? "high" : "low"}
+                  loading={i < 4 ? "eager" : "lazy"}
+                  fetchPriority={i < 4 ? "high" : "low"}
                   sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                   className="object-contain p-3 md:p-6 group-hover:scale-105 transition-transform duration-700 ease-out"
                 />

@@ -67,10 +67,9 @@ export default function Navbar({
             src={settings.logoUrl ? `${settings.logoUrl}${settings.logoUrl.includes('?') ? '&' : '?'}tr=w-300,f-auto,q-80` : "/logo.png"} 
             alt={`${settings.storeName} Logo`} 
             fill
-            priority
+            loading="eager"
+            fetchPriority="high"
             unoptimized={true}
-            // @ts-ignore
-            fetchpriority="high"
             sizes="120px"
             className="object-contain" 
           />
@@ -121,10 +120,9 @@ export default function Navbar({
               src={settings.logoUrl ? `${settings.logoUrl}${settings.logoUrl.includes('?') ? '&' : '?'}tr=w-300,f-auto,q-80` : "/logo.png"} 
               alt={`${settings.storeName} Logo`} 
               fill
-              priority
+              loading="eager"
+              fetchPriority="high"
               unoptimized={true}
-              // @ts-ignore
-              fetchpriority="high"
               sizes="160px"
               className="object-contain" 
             />

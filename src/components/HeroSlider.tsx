@@ -80,9 +80,8 @@ export default function HeroSlider({ banners }: HeroSliderProps) {
                     alt={`${slide.title} - Hero Image`}
                     fill
                     unoptimized={true}
-                    priority={currentSlide === 0}
-                    // @ts-ignore
-                    fetchpriority={currentSlide === 0 ? "high" : "low"}
+                    loading={currentSlide === 0 ? "eager" : "lazy"}
+                    fetchPriority={currentSlide === 0 ? "high" : "low"}
                     sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-contain drop-shadow-[0_45px_45px_rgba(0,0,0,0.15)] md:hover:scale-105 transition-transform duration-1000 cursor-pointer"
                   />
@@ -94,9 +93,8 @@ export default function HeroSlider({ banners }: HeroSliderProps) {
                     alt={`${slide.title} - Hero Image`}
                     fill
                     unoptimized={true}
-                    priority={currentSlide === 0}
-                    // @ts-ignore
-                    fetchpriority={currentSlide === 0 ? "high" : "low"}
+                    loading={currentSlide === 0 ? "eager" : "lazy"}
+                    fetchPriority={currentSlide === 0 ? "high" : "low"}
                     sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-contain drop-shadow-[0_45px_45px_rgba(0,0,0,0.15)] md:hover:scale-105 transition-transform duration-1000"
                   />

@@ -3,7 +3,7 @@ console.log('[SW] Firebase Messaging Service Worker Loading v5.1...');
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
 
-const CACHE_NAME = 'afra-tech-point-v6';
+const CACHE_NAME = 'afra-tech-point-v7';
 const ASSETS_TO_CACHE = [
   '/',
   '/logo.png',

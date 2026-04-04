@@ -1,4 +1,4 @@
-const CACHE_NAME = 'afra-shop-v2';
+const CACHE_NAME = 'afra-shop-v3';
 const ASSETS = [
   '/',
   '/api/manifest/shop'

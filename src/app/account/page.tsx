@@ -5,9 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User, Mail, ShieldCheck, ShieldAlert, LogOut,
-  Package, ChevronRight, Clock, Pencil, Check, X,
+  Package, ChevronRight, Pencil, Check, X,
   Phone, MapPin, Info, ShoppingBag, TrendingUp,
-  Calendar, Home, Star, ArrowRight, Truck, CreditCard
+  Calendar, Home, ArrowRight, Truck, CreditCard
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -50,23 +50,9 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; dot: string }> 
   cancelled:  { label: "Cancelled",   bg: "bg-red-50 text-red-500 border-red-100",      dot: "bg-red-500"    },
 };
 
-function StatCard({ icon: Icon, label, value, sub, color }: { icon: any; label: string; value: string; sub?: string; color: string }) {
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex items-center gap-4">
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${color}`}>
-        <Icon size={18} />
-      </div>
-      <div>
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{label}</p>
-        <p className="text-lg font-black text-gray-900 leading-none mt-0.5">{value}</p>
-        {sub && <p className="text-[10px] text-gray-400 mt-0.5">{sub}</p>}
-      </div>
-    </div>
-  );
-}
 
 function AccountContent() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, displayName: contextName, photoURL: contextPhoto } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const settings = useSettings();
@@ -77,8 +63,15 @@ function AccountContent() {
   const [displayName, setDisplayName] = useState("");
   const [phone, setPhone]     = useState("");
   const [address, setAddress] = useState("");
+  const [division, setDivision] = useState("");
+  const [district, setDistrict] = useState("");
+  const [upazila, setUpazila]   = useState("");
   const [bio, setBio]         = useState("");
   const [imgError, setImgError] = useState(false);
+
+  const [geoDivisions, setGeoDivisions] = useState<any[]>([]);
+  const [geoDistricts, setGeoDistricts] = useState<any[]>([]);
+  const [geoUpazilas, setGeoUpazilas]   = useState<any[]>([]);
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
@@ -97,6 +90,9 @@ function AccountContent() {
           if (parsed.displayName) setDisplayName(parsed.displayName);
           setPhone(parsed.phone ?? "");
           setAddress(parsed.address ?? "");
+          setDivision(parsed.division ?? "");
+          setDistrict(parsed.district ?? "");
+          setUpazila(parsed.upazila ?? "");
           setBio(parsed.bio ?? "");
         } catch (e) {}
       }
@@ -114,6 +110,9 @@ function AccountContent() {
             if (data.displayName) setDisplayName(data.displayName);
             setPhone(data.phone ?? "");
             setAddress(data.address ?? "");
+            setDivision(data.division ?? "");
+            setDistrict(data.district ?? "");
+            setUpazila(data.upazila ?? "");
             setBio(data.bio ?? "");
             localStorage.setItem(`afra_profile_${user.uid}`, JSON.stringify(data));
           }
@@ -125,6 +124,40 @@ function AccountContent() {
 
     fetchProfile();
   }, [user, isEditing]);
+
+  // BD Geo Effects
+  useEffect(() => {
+    if (!isEditing) return;
+    fetch("/api/geo/divisions")
+      .then(r => r.json())
+      .then(d => { if (d?.data) setGeoDivisions(d.data); })
+      .catch(console.error);
+  }, [isEditing]);
+  
+  useEffect(() => {
+     if (!isEditing || !division) {
+        setGeoDistricts([]);
+        setGeoUpazilas([]);
+        return;
+     }
+     fetch(`/api/geo/division/${division.toLowerCase()}`)
+      .then(r => r.json())
+      .then(d => { if (d?.data) setGeoDistricts(d.data); })
+      .catch(console.error);
+  }, [isEditing, division]);
+
+  useEffect(() => {
+     if (!isEditing || !district || !geoDistricts.length) {
+        setGeoUpazilas([]);
+        return;
+     }
+     const distObj = geoDistricts.find(d => d.district.toLowerCase() === district.toLowerCase());
+     if (distObj?.upazilla) {
+         setGeoUpazilas(distObj.upazilla);
+     } else {
+         setGeoUpazilas([]);
+     }
+  }, [isEditing, district, geoDistricts]);
 
   useEffect(() => {
     if (tab === "orders" && user) {
@@ -167,7 +200,7 @@ function AccountContent() {
     setIsSaving(true);
     
     // Prepare data
-    const profileData = { phone, address, bio, displayName };
+    const profileData = { phone, address, division, district, upazila, bio, displayName };
 
     try {
       // 1. Update Firebase Auth Profile
@@ -206,18 +239,30 @@ function AccountContent() {
     }
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     setIsEditing(false);
-    fetch(`/api/profile?uid=${user.uid}`)
-      .then(r => r.json())
-      .then(data => {
-        setDisplayName(user.displayName ?? "");
-        if (data) { setPhone(data.phone ?? ""); setAddress(data.address ?? ""); setBio(data.bio ?? ""); }
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch("/api/profile", {
+        headers: { "Authorization": `Bearer ${idToken}` }
       });
+      const data = await res.json();
+      setDisplayName(user.displayName ?? "");
+      if (data) {
+        setPhone(data.phone ?? "");
+        setAddress(data.address ?? "");
+        setDivision(data.division ?? "");
+        setDistrict(data.district ?? "");
+        setUpazila(data.upazila ?? "");
+        setBio(data.bio ?? "");
+      }
+    } catch (err) {
+      console.warn("[Account] Cancel reload failed.");
+    }
   };
 
   const currency  = settings?.currencySymbol ?? "৳";
-  const initials  = ((user.displayName ?? user.email ?? "U")[0]).toUpperCase();
+  const initials  = ((contextName ?? user.email ?? "U")[0]).toUpperCase();
   const joined    = user.metadata.creationTime
     ? new Date(user.metadata.creationTime).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
     : "—";
@@ -255,9 +300,9 @@ function AccountContent() {
               {/* Profile card */}
               <div className="bg-white rounded-[2rem] border border-gray-100 p-6 flex flex-col items-center text-center shadow-sm">
                 <div className="relative mb-4">
-                  {user.photoURL && !imgError ? (
+                  {contextPhoto && !imgError ? (
                     <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-xl ring-2 ring-gray-100">
-                      <Image src={user.photoURL} alt="Profile" width={80} height={80} className="object-cover" unoptimized onError={() => setImgError(true)} />
+                      <Image src={contextPhoto} alt="Profile" width={80} height={80} className="object-cover" unoptimized onError={() => setImgError(true)} />
                     </div>
                   ) : (
                     <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-800 to-black flex items-center justify-center shadow-xl">
@@ -276,7 +321,7 @@ function AccountContent() {
                     </div>
                   )}
                 </div>
-                <h2 className="font-black text-gray-900 text-base tracking-tight">{user.displayName ?? "My Account"}</h2>
+                <h2 className="font-black text-gray-900 text-base tracking-tight">{contextName ?? "My Account"}</h2>
                 <p className="text-xs text-gray-400 font-medium truncate max-w-full mt-1">{user.email}</p>
                 {user.emailVerified ? (
                   <div className="flex items-center gap-1.5 mt-2 bg-green-50 text-green-600 text-[10px] font-bold px-3 py-1 rounded-full border border-green-100">
@@ -386,7 +431,7 @@ function AccountContent() {
                         {fieldRow(User, "Full Name",
                           isEditing
                             ? <input value={displayName} onChange={e => setDisplayName(e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:ring-2 focus:ring-black" />
-                            : <p className="text-sm font-bold text-gray-900 truncate">{user.displayName ?? "—"}</p>
+                            : <p className="text-sm font-bold text-gray-900 truncate">{contextName ?? "—"}</p>
                         )}
                         {fieldRow(Mail, "Email Address",
                           <p className="text-sm font-bold text-gray-900 truncate">{user.email ?? "—"}</p>
@@ -404,8 +449,59 @@ function AccountContent() {
                       <div className="mt-3 space-y-3">
                         {fieldRow(MapPin, "Delivery Address",
                           isEditing
-                            ? <textarea value={address} onChange={e => setAddress(e.target.value)} placeholder="House 12, Road 5, Dhaka 1200" rows={2} className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:ring-2 focus:ring-black resize-none" />
-                            : <p className="text-sm font-bold text-gray-900">{address || <span className="text-gray-400 font-medium">Not set</span>}</p>
+                            ? <div className="space-y-3">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                  {/* Division Dropdown */}
+                                  <div className="relative">
+                                    <select value={division} onChange={e => { setDivision(e.target.value); setDistrict(""); setUpazila(""); }} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm font-medium text-gray-900 outline-none focus:ring-2 focus:ring-black appearance-none cursor-pointer">
+                                      <option value="">Select Division</option>
+                                      {geoDivisions.map(d => <option key={d._id || d.division} value={d.division}>{d.division}</option>)}
+                                    </select>
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
+                                  </div>
+                                  
+                                  {/* District Dropdown */}
+                                  <div className="relative">
+                                    <select value={district} onChange={e => { setDistrict(e.target.value); setUpazila(""); }} disabled={!division} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm font-medium text-gray-900 outline-none focus:ring-2 focus:ring-black appearance-none disabled:opacity-50 cursor-pointer">
+                                      <option value="">Select District</option>
+                                      {geoDistricts.map(d => <option key={d._id || d.district} value={d.district}>{d.district}</option>)}
+                                    </select>
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
+                                  </div>
+
+                                  {/* Upazila Dropdown */}
+                                  <div className="relative">
+                                    <select value={upazila} onChange={e => setUpazila(e.target.value)} disabled={!district} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm font-medium text-gray-900 outline-none focus:ring-2 focus:ring-black appearance-none disabled:opacity-50 cursor-pointer">
+                                      <option value="">Select Upazila / Area</option>
+                                      {geoUpazilas.map(u => <option key={u} value={u}>{u}</option>)}
+                                    </select>
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
+                                  </div>
+                                </div>
+                                <div className="relative">
+                                  <textarea 
+                                    value={address} 
+                                    onChange={e => setAddress(e.target.value.slice(0, 15))} 
+                                    placeholder="গ্রাম, বাসার নম্বর" 
+                                    maxLength={15} 
+                                    rows={1} 
+                                    className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:ring-2 focus:ring-black resize-none pr-12" 
+                                  />
+                                  <div className="absolute right-3 bottom-2 text-[10px] font-bold text-gray-400">
+                                    {address.length}/15
+                                  </div>
+                                </div>
+                              </div>
+                            : <p className="text-sm border-l-2 border-gray-200 pl-3 leading-relaxed">
+                                {address || division || district || upazila ? (
+                                   <>
+                                      {address && <span className="font-bold text-gray-900 block">{address}</span>}
+                                      <span className="text-gray-500 font-medium text-xs mt-0.5 block">
+                                        {[upazila, district, division].filter(Boolean).join(", ")}
+                                      </span>
+                                   </>
+                                ) : <span className="text-gray-400 font-medium">No address set</span>}
+                              </p>
                         )}
                         {fieldRow(Info, "About Me",
                           isEditing

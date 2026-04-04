@@ -143,8 +143,6 @@ export default async function RootLayout({
             rel="preload"
             as="image"
             href={`${settings.logoUrl}${settings.logoUrl.includes('?') ? '&' : '?'}tr=w-300,f-auto,q-80`}
-            // @ts-ignore
-            fetchpriority="high"
           />
         )}
         {/* Preload the first hero banner image — eliminates LCP discovery delay */}
@@ -153,8 +151,6 @@ export default async function RootLayout({
             rel="preload"
             as="image"
             href={`${settings.banners[0].imageUrl}${settings.banners[0].imageUrl.includes('?') ? '&' : '?'}tr=w-800,f-auto,q-80`}
-            // @ts-ignore
-            fetchpriority="high"
           />
         )}
         <style

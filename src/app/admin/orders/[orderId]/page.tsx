@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, CheckCircle2, XCircle, Clock,
   Package, MapPin, Receipt, User, AlertTriangle,
-  Phone, Mail, Hash, Hash as TransactionIcon, Send, CreditCard, Truck, Trash2
+  Phone, Mail, Hash, Send, CreditCard, Truck, Trash2, RefreshCw, ChevronDown
 } from "lucide-react";
 import { useSettings } from "@/components/SettingsProvider";
 import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
@@ -84,6 +84,10 @@ export default function AdminOrderDetailPage() {
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting]               = useState(false);
+  const [isManualOpen, setIsManualOpen]           = useState(false);
+
+  const [fraudData, setFraudData]         = useState<any>(null);
+  const [checkingFraud, setCheckingFraud] = useState(false);
 
   useEffect(() => {
     if (!orderId) return;
@@ -126,7 +130,6 @@ export default function AdminOrderDetailPage() {
 
   const updatePaymentStatus = async (s: string) => {
     const updateObj: any = { paymentStatus: s };
-    // If setting to confirmed and was pending, also push the order to processing
     if (s === "confirmed" && order?.paymentStatus === "pending") {
       updateObj.orderStatus = "processing";
       updateObj.status = "Processing";
@@ -136,6 +139,7 @@ export default function AdminOrderDetailPage() {
       showToast(`Payment status updated to ${s}.`);
     }
   };
+
   const updateOrderStatus = async (s: string) => {
     const ok = await patch({ orderStatus: s, status: s.charAt(0).toUpperCase() + s.slice(1) });
     if (ok) {
@@ -157,13 +161,63 @@ export default function AdminOrderDetailPage() {
       if (!res.ok) throw new Error(data.error || "Failed to create parcel");
       
       showToast("Order shipped with Steadfast!");
-      // Refresh local state
       const updatedOrder = await (await fetch(`/api/orders/${order.id}`, { headers })).json();
       setOrder(updatedOrder);
     } catch (err: any) {
       showToast(err.message || "Shipping failed", false);
     } finally {
       setUpdating(false);
+    }
+  };
+  
+  const refreshCourierStatus = async () => {
+    if (!order || !order.courierConsignmentId) return;
+    setUpdating(true);
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch(`/api/admin/courier/steadfast/status/${order.id}`, {
+        method: "GET",
+        headers
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to fetch status");
+      
+      showToast(`Courier status updated: ${data.status}`);
+      const updatedOrder = await (await fetch(`/api/orders/${order.id}`, { headers })).json();
+      setOrder(updatedOrder);
+    } catch (err: any) {
+      showToast(err.message || "Status refresh failed", false);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const checkCustomerFraud = async () => {
+    let rawPhone = order?.shippingAddress?.phone ?? order?.customer?.phone;
+    if (!rawPhone) {
+      showToast("No phone number found for this customer", false);
+      return;
+    }
+
+    const phone = rawPhone.replace(/\D/g, '').slice(-11);
+    if (phone.length < 11) {
+      showToast("Valid 11-digit phone number is required", false);
+      return;
+    }
+
+    setCheckingFraud(true);
+    setFraudData(null);
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch(`/api/admin/courier/steadfast/fraud-check/${phone}`, { headers });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to check fraud");
+      setFraudData(data.data);
+      showToast("Fraud check completed");
+    } catch (err: any) {
+      showToast(err.message || "Fraud check failed", false);
+    } finally {
+      setCheckingFraud(false);
     }
   };
 
@@ -212,7 +266,6 @@ export default function AdminOrderDetailPage() {
   const pmt       = order.payment       ?? order.paymentDetails        ?? {};
   const addr      = order.shippingAddress;
   const cust      = order.customer;
-  const pmtInfo   = PMT_STATUS[payStatus] ?? PMT_STATUS.pending;
   const ordInfo   = ORD_STATUS[ordStatus] ?? ORD_STATUS.pending;
 
   return (
@@ -247,18 +300,58 @@ export default function AdminOrderDetailPage() {
         </div>
       </div>
 
+      {/* ── Order Items CARD (TOP) ───────────────────── */}
+      <div className="bg-white rounded-3xl border border-gray-100 p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
+            <Package size={13} className="text-gray-500" />
+          </div>
+          <h3 className="font-black text-gray-900 text-sm">Order Items</h3>
+        </div>
+
+        <div className="space-y-2">
+          {order.items?.map((item, i) => (
+            <div key={i} className="flex items-start md:items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 transition-colors">
+              {item.image ? (
+                <div className="w-12 h-12 bg-gray-100 rounded-xl shrink-0 overflow-hidden border border-gray-100">
+                  <img src={item.image} alt={item.name} className="w-full h-full object-contain p-1.5" />
+                </div>
+              ) : (
+                <div className="w-12 h-12 bg-gray-100 rounded-xl shrink-0 flex items-center justify-center">
+                  <Package size={18} className="text-gray-400" />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-gray-900 truncate">{item.name}</p>
+                {item.variantName && <p className="text-xs text-gray-400">{item.variantName}</p>}
+                <p className="text-xs text-gray-400 mt-0.5">Qty: {item.quantity} × {currency}{item.price.toFixed(2)}</p>
+              </div>
+              <p className="text-sm font-black text-gray-900 shrink-0">{currency}{(item.price * item.quantity).toFixed(2)}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-col mt-4 pt-4 border-t border-gray-100 space-y-2">
+          <div className="flex items-center justify-between text-sm text-gray-500">
+            <span>Subtotal</span>
+            <span className="font-bold">{currency}{Number(order.subtotal ?? total).toFixed(2)}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm text-gray-500">
+            <span>Delivery Charge</span>
+            <span className={cn("font-bold", order.deliveryCharge === 0 ? "text-green-600" : "")}>
+              {order.deliveryCharge === 0 ? "Free" : `${currency}${Number(order.deliveryCharge ?? 0).toFixed(2)}`}
+            </span>
+          </div>
+          <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+            <span className="text-sm font-bold text-gray-900">Order Total {pmt.method === "Cash on Delivery" && <span className="text-[10px] text-blue-600">(COD)</span>}</span>
+            <span className="text-xl font-black text-gray-900">{currency}{Number(total).toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+
       {/* ── Status strip ─────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3">
         {[
-          {
-            icon: <CreditCard size={14} />, label: "Payment",
-            node: (
-              <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold", pmtInfo.bg, pmtInfo.text)}>
-                <span className={cn("w-1.5 h-1.5 rounded-full", pmtInfo.dot)} />
-                {pmtInfo.label}
-              </span>
-            ),
-          },
           {
             icon: <Truck size={14} />, label: "Order Status",
             node: (
@@ -272,10 +365,6 @@ export default function AdminOrderDetailPage() {
             icon: <Package size={14} />, label: "Items",
             node: <span className="text-base font-black text-gray-900">{order.items?.reduce((s, i) => s + i.quantity, 0) ?? 0}</span>,
           },
-          {
-            icon: <Hash size={14} />, label: "Total",
-            node: <span className="text-base font-black text-gray-900">{currency}{Number(total).toFixed(2)}</span>,
-          },
         ].map(({ icon, label, node }) => (
           <div key={label} className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-col gap-2">
             <div className="flex items-center gap-1.5 text-gray-400 text-[10px] font-bold uppercase tracking-widest">
@@ -286,10 +375,8 @@ export default function AdminOrderDetailPage() {
         ))}
       </div>
 
-
       {/* ── Info grid ────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
         {/* Payment */}
         <div className="bg-white rounded-3xl border border-gray-100 p-5 space-y-4">
           <div className="flex items-center justify-between">
@@ -345,164 +432,200 @@ export default function AdminOrderDetailPage() {
             ))}
           </div>
         </div>
+      </div>
 
-        {/* Courier & Shipping */}
-        <div className="bg-white rounded-3xl border border-gray-100 p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center">
-                <Truck size={13} className="text-blue-600" />
-              </div>
-              <h3 className="font-black text-gray-900 text-sm">Shipping & Delivery</h3>
+      {/* ── Courier & Shipping ────────────────────────── */}
+      <div className="bg-white rounded-3xl border border-gray-100 p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center">
+              <Truck size={13} className="text-blue-600" />
             </div>
-            {order.courier && (
-              <span className="px-3 py-1 rounded-full text-[10px] font-black bg-blue-50 text-blue-700 uppercase tracking-wider">
-                {order.courier}
-              </span>
-            )}
+            <h3 className="font-black text-gray-900 text-sm">Shipping & Delivery</h3>
           </div>
-
-          {!order.courierTrackingCode ? (
-            <div className="space-y-4">
-              <p className="text-xs text-gray-400 leading-relaxed">
-                This order is ready to be shipped. You can send it to Steadfast Courier with one click.
-              </p>
-              <button
-                onClick={shipWithSteadfast}
-                disabled={updating || ordStatus === 'cancelled'}
-                className="w-full flex items-center justify-center gap-2 h-11 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black transition-all disabled:opacity-50"
-              >
-                <Send size={14} /> Send to Steadfast Courier
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-3 divide-y divide-gray-50">
-              {[
-                { icon: <Hash size={12} />,  label: "Tracking Code", val: order.courierTrackingCode, copy: true },
-                { icon: <Hash size={12} />,  label: "Consignment ID", val: order.courierConsignmentId?.toString() ?? "—" },
-                { icon: <Clock size={12} />, label: "Courier Status", val: order.courierStatus?.replace(/_/g, ' ') ?? "pending" },
-              ].map(({ icon, label, val, copy }) => (
-                <div key={label} className="flex items-start justify-between pt-3 first:pt-0">
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0 mt-0.5">
-                    {icon} {label}
-                  </div>
-                  <div className="flex flex-col items-end gap-1 overflow-hidden">
-                    <p className={cn("text-sm font-bold text-gray-900 font-mono text-right truncate max-w-full", label === 'Tracking Code' && 'text-blue-600')}>
-                      {val}
-                    </p>
-                    {copy && (
-                      <button 
-                        onClick={() => { navigator.clipboard.writeText(val || ""); showToast("Tracking code copied!"); }}
-                        className="text-[9px] font-black text-blue-500 hover:text-blue-700 uppercase tracking-widest"
-                      >
-                        Copy Tracking
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+          {order.courier && (
+            <span className="px-3 py-1 rounded-full text-[10px] font-black bg-blue-50 text-blue-700 uppercase tracking-wider">
+              {order.courier}
+            </span>
           )}
         </div>
 
-      </div>
+        {!order.courierTrackingCode ? (
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={shipWithSteadfast}
+                disabled={updating || ordStatus === 'cancelled'}
+                className="flex-[2] flex items-center justify-center gap-2 h-11 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black transition-all disabled:opacity-50"
+              >
+                <Send size={14} /> Send to Steadfast Courier
+              </button>
+              <button
+                onClick={checkCustomerFraud}
+                disabled={checkingFraud || updating}
+                className="flex-1 flex items-center justify-center gap-2 h-11 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl text-xs font-black border border-amber-200 transition-all disabled:opacity-50"
+              >
+                {checkingFraud ? <RefreshCw size={14} className="animate-spin" /> : <AlertTriangle size={14} />}
+                Check Fraud
+              </button>
+            </div>
 
-      {/* ── Order Items ──────────────────────────────── */}
-      <div className="bg-white rounded-3xl border border-gray-100 p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
-            <Package size={13} className="text-gray-500" />
+            {fraudData && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className={cn(
+                  "p-4 rounded-2xl border flex flex-col gap-3",
+                  fraudData.fraudReports > 0 ? "bg-red-50 border-red-100" : "bg-gray-50 border-gray-100"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[10px] font-black uppercase tracking-wider text-gray-400">Customer Delivery History</h4>
+                  {fraudData.fraudReports > 0 && (
+                    <span className="flex items-center gap-1 text-[10px] font-black text-red-600 uppercase bg-red-100 px-2 py-0.5 rounded-full">
+                      <AlertTriangle size={10} /> {fraudData.fraudReports} Fraud Reports
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="bg-white/50 backdrop-blur-sm p-2 rounded-xl border border-white/50">
+                    <p className="text-[9px] text-gray-400 font-bold uppercase">Total Parcels</p>
+                    <p className="text-sm font-black text-gray-900">{fraudData.totalParcels}</p>
+                  </div>
+                  <div className="bg-white/50 backdrop-blur-sm p-2 rounded-xl border border-white/50">
+                    <p className="text-[9px] text-gray-400 font-bold uppercase">Success Rate</p>
+                    <p className={cn("text-sm font-black", fraudData.successRate > 80 ? "text-green-600" : "text-amber-600")}>
+                      {fraudData.successRate}%
+                    </p>
+                  </div>
+                  <div className="bg-white/50 backdrop-blur-sm p-2 rounded-xl border border-white/50">
+                    <p className="text-[9px] text-gray-400 font-bold uppercase">Cancelled</p>
+                    <p className="text-sm font-black text-red-600">{fraudData.cancelled}</p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            <p className="text-xs text-gray-400 leading-relaxed text-center">
+              This order is ready to be shipped. You can send it to Steadfast Courier with one click.
+            </p>
           </div>
-          <h3 className="font-black text-gray-900 text-sm">Order Items</h3>
-        </div>
-
-        <div className="space-y-2">
-          {order.items?.map((item, i) => (
-            <div key={i} className="flex items-start md:items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 transition-colors">
-              {item.image ? (
-                <div className="w-12 h-12 bg-gray-100 rounded-xl shrink-0 overflow-hidden border border-gray-100">
-                  <img src={item.image} alt={item.name} className="w-full h-full object-contain p-1.5" />
+        ) : (
+          <div className="space-y-3 divide-y divide-gray-50">
+            {[
+              { icon: <Hash size={12} />,  label: "Tracking Code", val: order.courierTrackingCode, copy: true },
+              { icon: <Hash size={12} />,  label: "Consignment ID", val: order.courierConsignmentId?.toString() ?? "—" },
+              { icon: <Clock size={12} />, label: "Courier Status", val: order.courierStatus?.replace(/_/g, ' ') ?? "pending" },
+            ].map(({ icon, label, val, copy }) => (
+              <div key={label} className="flex items-start justify-between pt-3 first:pt-0">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0 mt-0.5">
+                  {icon} {label}
                 </div>
-              ) : (
-                <div className="w-12 h-12 bg-gray-100 rounded-xl shrink-0 flex items-center justify-center">
-                  <Package size={18} className="text-gray-400" />
+                <div className="flex flex-col items-end gap-1 overflow-hidden">
+                  <div className="flex items-center gap-2">
+                    <p className={cn("text-sm font-bold text-gray-900 font-mono text-right truncate max-w-full", label === 'Tracking Code' && 'text-blue-600')}>
+                      {val}
+                    </p>
+                    {label === "Courier Status" && (
+                      <button
+                        onClick={refreshCourierStatus}
+                        disabled={updating}
+                        className="p-1 rounded-md bg-gray-50 hover:bg-gray-100 text-gray-400 hover:text-black transition-all disabled:opacity-50"
+                        title="Refresh Status"
+                      >
+                        <RefreshCw size={10} className={cn(updating && "animate-spin")} />
+                      </button>
+                    )}
+                  </div>
+                  {copy && (
+                    <button 
+                      onClick={() => { navigator.clipboard.writeText(val || ""); showToast("Tracking code copied!"); }}
+                      className="text-[9px] font-black text-blue-500 hover:text-blue-700 uppercase tracking-widest"
+                    >
+                      Copy Tracking
+                    </button>
+                  )}
                 </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-gray-900 truncate">{item.name}</p>
-                {item.variantName && <p className="text-xs text-gray-400">{item.variantName}</p>}
-                <p className="text-xs text-gray-400 mt-0.5">Qty: {item.quantity} × {currency}{item.price.toFixed(2)}</p>
               </div>
-              <p className="text-sm font-black text-gray-900 shrink-0">{currency}{(item.price * item.quantity).toFixed(2)}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="flex flex-col mt-4 pt-4 border-t border-gray-100 space-y-2">
-          <div className="flex items-center justify-between text-sm text-gray-500">
-            <span>Subtotal</span>
-            <span className="font-bold">{currency}{Number(order.subtotal ?? total).toFixed(2)}</span>
+            ))}
           </div>
-          <div className="flex items-center justify-between text-sm text-gray-500">
-            <span>Delivery Charge</span>
-            <span className={cn("font-bold", order.deliveryCharge === 0 ? "text-green-600" : "")}>
-              {order.deliveryCharge === 0 ? "Free" : `${currency}${Number(order.deliveryCharge ?? 0).toFixed(2)}`}
-            </span>
-          </div>
-          <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
-            <span className="text-sm font-bold text-gray-500">Order Total {pmt.method === "Cash on Delivery" && <span className="text-[10px] text-blue-600">(COD)</span>}</span>
-            <span className="text-xl font-black text-gray-900">{currency}{Number(total).toFixed(2)}</span>
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* ── Update Statuses ──────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Payment Status Dropdown alternative */}
-        <div className="bg-white rounded-3xl border border-gray-100 p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
-              <CreditCard size={13} className="text-gray-500" />
-            </div>
-            <h3 className="font-black text-gray-900 text-sm">Update Payment Status</h3>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {["pending", "confirmed", "failed", "refunded", "cancelled"].map(s => (
-              <button key={s} onClick={() => updatePaymentStatus(s)} disabled={updating || payStatus === s}
-                className={cn(
-                  "px-4 h-9 rounded-xl text-xs font-bold border transition-all disabled:cursor-not-allowed",
-                  payStatus === s
-                    ? "bg-gray-900 text-white border-gray-900"
-                    : "bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-900 hover:bg-gray-100 disabled:opacity-40"
-                )}>
-                {s.charAt(0).toUpperCase() + s.slice(1)}
-              </button>
-            ))}
-          </div>
+      {/* ── Manual Overrides (Collapsible Footer) ─────── */}
+      <div className="mt-8 border-t border-gray-100 pt-8 pb-10">
+        <div className="flex justify-center">
+          <button 
+            onClick={() => setIsManualOpen(!isManualOpen)}
+            className="flex items-center gap-2 px-6 py-2 rounded-full border border-gray-100 bg-white text-gray-400 hover:text-gray-900 hover:border-gray-200 transition-all text-[10px] font-black uppercase tracking-widest shadow-sm"
+          >
+            {isManualOpen ? "Hide Manual Controls" : "Show Manual Controls"}
+            <ChevronDown size={12} className={cn("transition-transform duration-300", isManualOpen && "rotate-180")} />
+          </button>
         </div>
 
-        {/* Order Status */}
-        <div className="bg-white rounded-3xl border border-gray-100 p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
-              <Truck size={13} className="text-gray-500" />
-            </div>
-            <h3 className="font-black text-gray-900 text-sm">Update Order Status</h3>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {["pending", "processing", "shipped", "delivered", "cancelled"].map(s => (
-              <button key={s} onClick={() => updateOrderStatus(s)} disabled={updating || ordStatus === s}
-                className={cn(
-                  "px-4 h-9 rounded-xl text-xs font-bold border transition-all disabled:cursor-not-allowed",
-                  ordStatus === s
-                    ? "bg-gray-900 text-white border-gray-900"
-                    : "bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-900 hover:bg-gray-100 disabled:opacity-40"
-                )}>
-                {s.charAt(0).toUpperCase() + s.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
+        <AnimatePresence>
+          {isManualOpen && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4"
+            >
+              {/* Manual Payment */}
+              <div className="bg-white rounded-3xl border border-dashed border-gray-200 p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-7 h-7 bg-gray-50 rounded-lg flex items-center justify-center">
+                    <CreditCard size={13} className="text-gray-400" />
+                  </div>
+                  <h3 className="font-black text-gray-400 text-sm italic tracking-tight">Manual Payment Status</h3>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {["pending", "confirmed", "failed", "refunded", "cancelled"].map(s => (
+                    <button key={s} onClick={() => updatePaymentStatus(s)} disabled={updating || payStatus === s}
+                      className={cn(
+                        "px-4 h-9 rounded-xl text-xs font-bold border transition-all disabled:cursor-not-allowed",
+                        payStatus === s
+                          ? "bg-gray-100 text-gray-400 border-gray-200"
+                          : "bg-gray-50 text-gray-400 border-gray-100 hover:border-gray-400 hover:text-gray-600 disabled:opacity-40"
+                      )}>
+                      {s.charAt(0).toUpperCase() + s.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Manual Order Status */}
+              <div className="bg-white rounded-3xl border border-dashed border-gray-200 p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-7 h-7 bg-gray-50 rounded-lg flex items-center justify-center">
+                    <Truck size={13} className="text-gray-400" />
+                  </div>
+                  <h3 className="font-black text-gray-400 text-sm italic tracking-tight">Manual Order Status</h3>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {["pending", "processing", "shipped", "delivered", "cancelled"].map(s => (
+                    <button key={s} onClick={() => updateOrderStatus(s)} disabled={updating || ordStatus === s}
+                      className={cn(
+                        "px-4 h-9 rounded-xl text-xs font-bold border transition-all disabled:cursor-not-allowed",
+                        ordStatus === s
+                          ? "bg-gray-100 text-gray-400 border-gray-200"
+                          : "bg-gray-50 text-gray-400 border-gray-100 hover:border-gray-400 hover:text-gray-600 disabled:opacity-40"
+                      )}>
+                      {s.charAt(0).toUpperCase() + s.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="md:col-span-2 text-center p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                <p className="text-[10px] text-amber-600 font-bold leading-relaxed px-4">
+                  Note: Using these manual controls will bypass the automatic Steadfast Courier notifications for this particular action. Only use if absolutely necessary.
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Delete Confirmation Modal */}

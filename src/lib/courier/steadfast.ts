@@ -63,5 +63,30 @@ export const steadfast = {
       console.error('[Steadfast] getStatus error:', error);
       throw error;
     }
+  },
+  
+  async checkFraud(phone: string): Promise<any> {
+    try {
+      const cleanPhone = phone.replace(/\D/g, '').slice(-11);
+      const url = `${BASE_URL}/fraud_check/${cleanPhone}`;
+      console.log(`[Steadfast Debug] Sending Fraud Check to: ${url}`);
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      const text = await response.text();
+      console.log(`[Steadfast Debug] Raw Response:`, text);
+
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        return { status: 500, message: "Response is not valid JSON", raw: text };
+      }
+    } catch (error: any) {
+      console.error('[Steadfast] checkFraud error:', error);
+      throw error;
+    }
   }
 };

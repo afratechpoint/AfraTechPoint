@@ -8,12 +8,16 @@ import { useSettings } from "@/components/SettingsProvider";
 import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
 import {
   Search, Filter, ChevronRight, Clock, CheckCircle2,
-  XCircle, Package, ChevronDown, RefreshCcw, Truck,
-  Ban, CreditCard, Trash2, Banknote
+  XCircle, Package, ChevronDown, Truck,
+  Ban, CreditCard, Trash2, Banknote, Download, Printer
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion"; // Required for smooth modal animations
 import PremiumLoader from "@/components/PremiumLoader";
 import { cn } from "@/lib/utils";
 import { authenticatedFetch } from "@/lib/api-helper";
+import OrderInvoice from "@/components/admin/OrderInvoice";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 
 interface Order {
   id: string;
@@ -33,20 +37,20 @@ interface Order {
 
 // ── Status config ──────────────────────────────────────────────────────────
 const PMT_OPTIONS = [
-  { value: "pending",   label: "Pending",   color: "text-amber-600",  bg: "bg-amber-50",  dot: "bg-amber-400" },
-  { value: "pending_cod", label: "Cash on Delivery", color: "text-blue-700", bg: "bg-blue-50", dot: "bg-blue-500" },
-  { value: "confirmed", label: "Confirmed", color: "text-green-700",  bg: "bg-green-50",  dot: "bg-green-500" },
-  { value: "failed",    label: "Failed",    color: "text-red-600",    bg: "bg-red-50",    dot: "bg-red-500" },
-  { value: "refunded",  label: "Refunded",  color: "text-blue-600",   bg: "bg-blue-50",   dot: "bg-blue-400" },
-  { value: "cancelled", label: "Cancelled", color: "text-gray-500",   bg: "bg-gray-100",  dot: "bg-gray-400" },
+  { value: "pending", label: "Pending", color: "#d97706", bg: "#fffbeb", dot: "#fbbf24" },
+  { value: "pending_cod", label: "Cash on Delivery", color: "#1d4ed8", bg: "#eff6ff", dot: "#3b82f6" },
+  { value: "confirmed", label: "Confirmed", color: "#15803d", bg: "#f0fdf4", dot: "#22c55e" },
+  { value: "failed", label: "Failed", color: "#dc2626", bg: "#fef2f2", dot: "#ef4444" },
+  { value: "refunded", label: "Refunded", color: "#2563eb", bg: "#eff6ff", dot: "#60a5fa" },
+  { value: "cancelled", label: "Cancelled", color: "#6b7280", bg: "#f3f4f6", dot: "#9ca3af" },
 ];
 
 const ORD_OPTIONS = [
-  { value: "pending",    label: "Pending",    color: "text-gray-500",   bg: "bg-gray-100",   dot: "bg-gray-400" },
-  { value: "processing", label: "Processing", color: "text-blue-700",   bg: "bg-blue-50",    dot: "bg-blue-500" },
-  { value: "shipped",    label: "Shipped",    color: "text-violet-700", bg: "bg-violet-50",  dot: "bg-violet-500" },
-  { value: "delivered",  label: "Delivered",  color: "text-green-700",  bg: "bg-green-50",   dot: "bg-green-500" },
-  { value: "cancelled",  label: "Cancelled",  color: "text-red-500",    bg: "bg-red-50",     dot: "bg-red-400" },
+  { value: "pending", label: "Pending", color: "#6b7280", bg: "#f3f4f6", dot: "#9ca3af" },
+  { value: "processing", label: "Processing", color: "#1d4ed8", bg: "#eff6ff", dot: "#3b82f6" },
+  { value: "shipped", label: "Shipped", color: "#7c3aed", bg: "#f5f3ff", dot: "#8b5cf6" },
+  { value: "delivered", label: "Delivered", color: "#15803d", bg: "#f0fdf4", dot: "#22c55e" },
+  { value: "cancelled", label: "Cancelled", color: "#ef4444", bg: "#fef2f2", dot: "#f87171" },
 ];
 
 const pmtMap = Object.fromEntries(PMT_OPTIONS.map(o => [o.value, o]));
@@ -54,78 +58,24 @@ const ordMap = Object.fromEntries(ORD_OPTIONS.map(o => [o.value, o]));
 
 // ── Inline Status Badge ──────────────────────────────────────────────────
 // ── Inline Status Dropdown ──────────────────────────────────────────────────
-function StatusDropdown({
+// ── Static Status Badge ──────────────────────────────────────────────────
+function StatusBadge({
   value,
   options,
-  onSelect,
-  disabled,
 }: {
   value: string;
   options: typeof PMT_OPTIONS;
-  onSelect: (v: string) => void;
-  disabled: boolean;
 }) {
-  const [open, setOpen] = useState(false);
-  const [direction, setDirection] = useState<"down" | "up">("down");
-  const ref = useRef<HTMLDivElement>(null);
   const cfg = options.find(o => o.value === value) ?? options[0];
 
-  // Smart positioning
-  useEffect(() => {
-    if (open && ref.current) {
-      const rect = ref.current.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      setDirection(spaceBelow < 220 ? "up" : "down");
-    }
-  }, [open]);
-
-  // Close on outside click
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
   return (
-    <div ref={ref} className="relative inline-block">
-      <button
-        onClick={() => !disabled && setOpen(p => !p)}
-        disabled={disabled}
-        className={cn(
-          "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all",
-          cfg.bg, cfg.color,
-          disabled ? "opacity-60 cursor-not-allowed" : "hover:opacity-80 cursor-pointer"
-        )}
-      >
-        <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", cfg.dot)} />
-        {cfg.label}
-        <ChevronDown size={10} className={cn("transition-transform", open && "rotate-180")} />
-      </button>
-
-      {open && (
-        <div className={cn(
-          "absolute left-0 z-50 bg-white border border-gray-100 rounded-2xl shadow-xl overflow-hidden min-w-[140px]",
-          direction === "down" ? "top-full mt-1" : "bottom-full mb-1"
-        )}>
-          {options.map(opt => (
-            <button
-              key={opt.value}
-              onClick={() => { onSelect(opt.value); setOpen(false); }}
-              className={cn(
-                "w-full flex items-center gap-2.5 px-4 py-2.5 text-[11px] font-bold text-left transition-colors hover:bg-gray-50",
-                opt.value === value && "bg-gray-50 opacity-60 cursor-default pointer-events-none"
-              )}
-            >
-              <span className={cn("w-2 h-2 rounded-full shrink-0", opt.dot)} />
-              <span className={opt.color}>{opt.label}</span>
-              {opt.value === value && <CheckCircle2 size={10} className="ml-auto text-gray-400" />}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+    <span 
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold"
+      style={{ backgroundColor: cfg.bg, color: cfg.color }}
+    >
+      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: cfg.dot }} />
+      {cfg.label}
+    </span>
   );
 }
 
@@ -134,15 +84,18 @@ export default function AdminOrdersPage() {
   const settings = useSettings() as any;
   const currency = settings?.currencySymbol ?? "৳";
 
-  const [orders, setOrders]               = useState<Order[]>([]);
-  const [loading, setLoading]             = useState(true);
-  const [search, setSearch]               = useState("");
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   const [paymentFilter, setPaymentFilter] = useState("all");
-  const [updating, setUpdating]           = useState<string | null>(null); // orderId being updated
-  const [toast, setToast]                 = useState("");
+  const [updating, setUpdating] = useState<string | null>(null); // orderId being updated
+  const [toast, setToast] = useState("");
 
-  const [deleteModal, setDeleteModal]     = useState<{ isOpen: boolean; orderId: string }>({ isOpen: false, orderId: "" });
-  const [deleting, setDeleting]           = useState(false);
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; orderId: string }>({ isOpen: false, orderId: "" });
+  const [deleting, setDeleting] = useState(false);
+  const [showInvoice, setShowInvoice] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(""), 2500); };
 
@@ -150,11 +103,11 @@ export default function AdminOrdersPage() {
     const fetchOrders = () => {
       authenticatedFetch("/api/orders", { cache: "no-store" })
         .then(r => r.json())
-        .then((data: Order[]) => { 
+        .then((data: Order[]) => {
           if (Array.isArray(data)) {
-            setOrders(data); 
+            setOrders(data);
           }
-          setLoading(false); 
+          setLoading(false);
         })
         .catch(() => setLoading(false));
     };
@@ -215,18 +168,137 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const handleDownloadPDF = async (order: Order) => {
+    const invoiceElement = document.getElementById("invoice-capture");
+    if (!invoiceElement) {
+      showToast("Invoice element not found.");
+      return;
+    }
+
+    try {
+      setDownloadingPdf(true);
+      
+      const iframe = document.createElement("iframe");
+      iframe.style.position = "fixed";
+      iframe.style.width = "148mm";
+      iframe.style.height = "210mm";
+      iframe.style.left = "-9999px";
+      iframe.style.top = "-9999px";
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!doc) throw new Error("Could not create isolated print environment.");
+
+      doc.open();
+      doc.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8"/>
+            <title>Invoice</title>
+          </head>
+          <body style="margin:0; padding:0; background:#fff;">
+            ${invoiceElement.innerHTML}
+          </body>
+        </html>
+      `);
+      doc.close();
+
+      if (doc.fonts && doc.fonts.ready) {
+        await doc.fonts.ready;
+      }
+      await new Promise(r => setTimeout(r, 600));
+
+      // Target the strictly bounded wrapper to prevent grabbing extra iframe background
+      const targetEl = doc.querySelector(".inv-wrapper") as HTMLElement || doc.body;
+
+      const canvas = await html2canvas(targetEl, {
+        scale: 3, 
+        useCORS: true, 
+        logging: false,
+        backgroundColor: "#ffffff",
+      });
+
+      const dataUrl = canvas.toDataURL("image/png", 1.0);
+      const pdf = new jsPDF("p", "mm", "a5");
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(dataUrl, "PNG", 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+      pdf.save(`afra-invoice-${order.id.toUpperCase()}.pdf`);
+      showToast("Invoice downloaded successfully.");
+
+      document.body.removeChild(iframe);
+      
+    } catch (err: any) {
+      console.error("PDF generation failed:", err);
+      showToast("Download failed. Could not render PDF.");
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
+
+  const handlePrint = () => {
+    const invoiceElement = document.getElementById("invoice-capture");
+    if (!invoiceElement) return;
+
+    // Use an invisible iframe so the print dialog ONLY shows the invoice, not the admin UI
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "none";
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document || iframe.contentDocument;
+    if (!doc) return;
+
+    doc.open();
+    doc.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8"/>
+          <title>Invoice - ${selectedOrder?.id?.toUpperCase() || ''}</title>
+          <style>
+            @media print {
+              @page { size: A5 portrait; margin: 0; }
+              body { margin: 0.5cm; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            }
+          </style>
+        </head>
+        <body style="margin:0; background:#fff;">
+          ${invoiceElement.innerHTML}
+        </body>
+      </html>
+    `);
+    doc.close();
+
+    iframe.contentWindow?.focus();
+    
+    // Give fonts and images a moment to settle
+    setTimeout(() => {
+      iframe.contentWindow?.print();
+      // Cleanup after print dialog closes
+      setTimeout(() => document.body.removeChild(iframe), 1000);
+    }, 500);
+  };
+
+
+
 
 
   const filtered = orders.filter(o => {
-    const name    = o.shippingAddress?.fullName ?? o.customer?.name ?? o.userEmail ?? "";
-    const phone   = o.shippingAddress?.phone   ?? o.customer?.phone ?? "";
+    const name = o.shippingAddress?.fullName ?? o.customer?.name ?? o.userEmail ?? "";
+    const phone = o.shippingAddress?.phone ?? o.customer?.phone ?? "";
     const matchSearch =
       !search ||
       name.toLowerCase().includes(search.toLowerCase()) ||
       phone.includes(search) ||
       o.id.toLowerCase().includes(search.toLowerCase()) ||
       (o.userEmail ?? "").toLowerCase().includes(search.toLowerCase());
-    const payStatus    = o.paymentStatus ?? "pending";
+    const payStatus = o.paymentStatus ?? "pending";
     const matchPayment = paymentFilter === "all" || payStatus === paymentFilter;
     return matchSearch && matchPayment;
   });
@@ -279,11 +351,11 @@ export default function AdminOrdersPage() {
               <tr><td colSpan={7} className="px-6 py-16 text-center text-gray-400 text-sm italic">No orders found.</td></tr>
             ) : filtered.map((order, orderIdx) => {
               const payStatus = order.paymentStatus ?? "pending";
-              const ordStatus = order.orderStatus   ?? order.status?.toLowerCase() ?? "pending";
-              const total     = order.totalAmount   ?? order.total ?? 0;
+              const ordStatus = order.orderStatus ?? order.status?.toLowerCase() ?? "pending";
+              const total = order.totalAmount ?? order.total ?? 0;
               const pmtMethod = order.payment?.method ?? order.paymentDetails?.method ?? "—";
-              const custName  = order.shippingAddress?.fullName ?? order.customer?.name  ?? order.userEmail ?? "—";
-              const custPhone = order.shippingAddress?.phone   ?? order.customer?.phone ?? "—";
+              const custName = order.shippingAddress?.fullName ?? order.customer?.name ?? order.userEmail ?? "—";
+              const custPhone = order.shippingAddress?.phone ?? order.customer?.phone ?? "—";
               const isUpdating = updating === order.id;
               const isLast = orderIdx === filtered.length - 1;
 
@@ -314,37 +386,40 @@ export default function AdminOrdersPage() {
 
                   {/* ── Inline Payment Status ── */}
                   <td className="px-5 py-4">
-                    <StatusDropdown
+                    <StatusBadge
                       value={payStatus}
                       options={PMT_OPTIONS}
-                      onSelect={v => handlePaymentStatus(order.id, v)}
-                      disabled={isUpdating}
                     />
                   </td>
 
                   {/* ── Inline Order Status ── */}
                   <td className="px-5 py-4">
-                    <StatusDropdown
+                    <StatusBadge
                       value={ordStatus}
                       options={ORD_OPTIONS}
-                      onSelect={v => handleOrderStatus(order.id, v)}
-                      disabled={isUpdating}
                     />
                   </td>
 
                   <td className={cn("px-5 py-4 text-right", isLast && "rounded-br-[2rem]")}>
-                    <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all">
+                    <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => handleDelete(order.id)}
                         disabled={isUpdating}
-                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                        className="w-8 h-8 flex items-center justify-center text-red-500 bg-red-50 hover:bg-red-500 hover:text-white rounded-xl transition-all disabled:opacity-50 group/del"
                         title="Delete Order"
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={14} className="group-hover/del:scale-110 transition-transform" />
+                      </button>
+                      <button
+                        onClick={() => { setSelectedOrder(order); setShowInvoice(true); }}
+                        className="w-8 h-8 flex items-center justify-center text-teal-600 bg-teal-50 hover:bg-teal-600 hover:text-white rounded-xl transition-all group/inv"
+                        title="Quick Invoice"
+                      >
+                        <Banknote size={14} className="group-hover/inv:scale-110 transition-transform" />
                       </button>
                       <Link href={`/admin/orders/${order.id}`}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-black transition-colors">
-                        View <ChevronRight size={14} />
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-gray-900 text-gray-700 hover:text-white text-[11px] font-bold tracking-wide rounded-xl transition-all group/view">
+                        View <ChevronRight size={14} className="group-hover/view:translate-x-0.5 transition-transform" />
                       </Link>
                     </div>
                   </td>
@@ -365,11 +440,11 @@ export default function AdminOrdersPage() {
           </div>
         ) : filtered.map((order) => {
           const payStatus = order.paymentStatus ?? "pending";
-          const ordStatus = order.orderStatus   ?? order.status?.toLowerCase() ?? "pending";
-          const total     = order.totalAmount   ?? order.total ?? 0;
+          const ordStatus = order.orderStatus ?? order.status?.toLowerCase() ?? "pending";
+          const total = order.totalAmount ?? order.total ?? 0;
           const pmtMethod = order.payment?.method ?? order.paymentDetails?.method ?? "—";
-          const custName  = order.shippingAddress?.fullName ?? order.customer?.name  ?? order.userEmail ?? "—";
-          const custPhone = order.shippingAddress?.phone   ?? order.customer?.phone ?? "—";
+          const custName = order.shippingAddress?.fullName ?? order.customer?.name ?? order.userEmail ?? "—";
+          const custPhone = order.shippingAddress?.phone ?? order.customer?.phone ?? "—";
           const isUpdating = updating === order.id;
 
           return (
@@ -383,14 +458,14 @@ export default function AdminOrdersPage() {
                   </p>
                 </div>
                 <div className="text-right">
-                   <p className="font-black text-gray-900 text-base">{currency}{Number(total).toFixed(2)}</p>
-                   {pmtMethod === "Cash on Delivery" ? (
-                      <span className="inline-flex items-center gap-1 text-[9px] font-black text-green-700 bg-green-50 border border-green-100 rounded-full px-2 py-0.5 mt-0.5">
-                        <Banknote size={10} /> COD
-                      </span>
-                    ) : (
-                      <p className="text-[10px] text-gray-400">{pmtMethod}</p>
-                    )}
+                  <p className="font-black text-gray-900 text-base">{currency}{Number(total).toFixed(2)}</p>
+                  {pmtMethod === "Cash on Delivery" ? (
+                    <span className="inline-flex items-center gap-1 text-[9px] font-black text-green-700 bg-green-50 border border-green-100 rounded-full px-2 py-0.5 mt-0.5">
+                      <Banknote size={10} /> COD
+                    </span>
+                  ) : (
+                    <p className="text-[10px] text-gray-400">{pmtMethod}</p>
+                  )}
                 </div>
               </div>
 
@@ -401,7 +476,7 @@ export default function AdminOrdersPage() {
                   <p className="text-[10px] text-gray-400 truncate">{custPhone}</p>
                 </div>
                 <Link href={`/admin/orders/${order.id}`} className="shrink-0 w-8 h-8 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-gray-400">
-                   <ChevronRight size={16} />
+                  <ChevronRight size={16} />
                 </Link>
               </div>
 
@@ -409,20 +484,16 @@ export default function AdminOrdersPage() {
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <div className="space-y-1.5">
                   <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Payment</p>
-                  <StatusDropdown
+                  <StatusBadge
                     value={payStatus}
                     options={PMT_OPTIONS}
-                    onSelect={v => handlePaymentStatus(order.id, v)}
-                    disabled={isUpdating}
                   />
                 </div>
                 <div className="space-y-1.5 text-right">
                   <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mr-1">Delivery</p>
-                  <StatusDropdown
+                  <StatusBadge
                     value={ordStatus}
                     options={ORD_OPTIONS}
-                    onSelect={v => handleOrderStatus(order.id, v)}
-                    disabled={isUpdating}
                   />
                 </div>
               </div>
@@ -436,6 +507,13 @@ export default function AdminOrdersPage() {
                 >
                   <Trash2 size={12} /> Delete Order
                 </button>
+                <button
+                  onClick={() => { setSelectedOrder(order); setShowInvoice(true); }}
+                  className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-white px-4 py-2 rounded-xl transition-all shadow-lg active:scale-95"
+                  style={{ backgroundColor: '#14b8a6', boxShadow: '0 10px 15px -3px rgba(20, 184, 166, 0.1)' }}
+                >
+                  <Banknote size={12} /> Invoice
+                </button>
                 <Link href={`/admin/orders/${order.id}`} className="text-[10px] font-bold text-gray-900 bg-gray-100 px-4 py-1.5 rounded-xl">
                   Full Details
                 </Link>
@@ -444,6 +522,88 @@ export default function AdminOrdersPage() {
           );
         })}
       </div>
+
+      {/* ── Invoice Modal Preview ──────────────────── */}
+      <AnimatePresence>
+        {showInvoice && selectedOrder && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowInvoice(false)}
+              className="absolute inset-0 bg-black/60 shadow-2xl backdrop-blur-sm"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-4xl h-full bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center text-teal-600">
+                    <Banknote size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest">Invoice Preview</h3>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Order #{selectedOrder.id.toUpperCase()}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handlePrint}
+                    className="flex items-center gap-2 px-6 py-2 bg-gray-800 hover:bg-black text-white rounded-xl text-xs font-black transition-all shadow-lg shadow-gray-100"
+                  >
+                    <Printer size={14} />
+                    Print
+                  </button>
+                  <button
+                    onClick={() => handleDownloadPDF(selectedOrder)}
+                    disabled={downloadingPdf}
+                    className="flex items-center justify-center gap-2 px-6 py-2 text-white rounded-xl text-xs font-black transition-all shadow-lg min-w-[140px] disabled:opacity-50"
+                    style={{ backgroundColor: '#14b8a6', boxShadow: '0 10px 15px -3px rgba(20, 184, 166, 0.1)' }}
+                  >
+                    {downloadingPdf ? (
+                      <>
+                        <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Download size={14} />
+                        Download PDF
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setShowInvoice(false)}
+                    className="w-10 h-10 bg-gray-50 hover:bg-gray-100 text-gray-400 rounded-xl flex items-center justify-center transition-all"
+                  >
+                    <XCircle size={20} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Scrollable Invoice Area */}
+              <div className="flex-1 overflow-y-auto p-4 md:p-10 bg-gray-100/30">
+                <div id="invoice-capture" className="mx-auto w-fit">
+                  <OrderInvoice
+                    order={selectedOrder as any}
+                    currency={currency}
+                    storeName={settings?.storeName}
+                    storeAddress={settings?.contactAddress}
+                    storePhone={settings?.contactPhone}
+                    storeEmail={settings?.contactEmail}
+                    logoUrl={settings?.logoUrl}
+                    signatureUrl={settings?.signatureUrl}
+                  />
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal

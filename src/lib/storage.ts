@@ -111,6 +111,20 @@ export const storage = {
     return orders.find((o: any) => o.id === id) || null;
   },
 
+  async getOrderByConsignmentId(id: number | string) {
+    if (USE_FIREBASE) {
+      try {
+        const { getOrderByConsignmentId } = await getAdapter();
+        const order = await getOrderByConsignmentId(id);
+        if (order) return order;
+      } catch (err) {
+        console.warn("Firestore getOrderByConsignmentId failed.", err);
+      }
+    }
+    const orders = await readData(ordersFile, []);
+    return orders.find((o: any) => o.courierConsignmentId === Number(id) || o.courierConsignmentId === String(id)) || null;
+  },
+
   async createOrder(data: any) {
     if (USE_FIREBASE) {
       try {

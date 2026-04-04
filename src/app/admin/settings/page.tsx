@@ -22,6 +22,7 @@ interface Settings {
   contactPhone?: string;
   contactAddress?: string;
   businessHours?: string;
+  signatureUrl?: string;
 }
 
 const currencies = [
@@ -427,8 +428,10 @@ export default function AdminSettings() {
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"general" | "header" | "footer" | "social">("general");
   const [logoUrl, setLogoUrl] = useState("");
+  const [signatureUrl, setSignatureUrl] = useState("");
   const [currencySymbol, setCurrencySymbol] = useState("$");
   const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
+  const [pickingFor, setPickingFor] = useState<"logo" | "signature" | null>(null);
   const [isCropperOpen, setIsCropperOpen] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [isCropping, setIsCropping] = useState(false);
@@ -440,6 +443,7 @@ export default function AdminSettings() {
       .then((data) => {
         setSettings(data);
         setLogoUrl(data.logoUrl || "");
+        setSignatureUrl(data.signatureUrl || "");
         setCurrencySymbol(data.currencySymbol || "৳");
         setThemeId(data.themeId || "midnight");
         setNavLinks(data.navLinks || []);
@@ -474,6 +478,7 @@ export default function AdminSettings() {
         body: JSON.stringify({
           ...data,
           logoUrl,
+          signatureUrl,
           currencySymbol,
           themeId,
           navLinks,
@@ -641,12 +646,15 @@ export default function AdminSettings() {
                    </div>
                  </div>
 
-                 <div className="space-y-1.5 shrink-0">
-                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Store Logo (512x512)</label>
+                 {/* Right side: Image uploads */}
+                 <div className="space-y-6 shrink-0">
+                   <div className="space-y-1.5">
+                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Store Logo (512x512)</label>
+
                    <div className="relative group">
                      <button
                        type="button"
-                       onClick={() => setIsMediaPickerOpen(true)}
+                       onClick={() => { setPickingFor("logo"); setIsMediaPickerOpen(true); }}
                        className="relative w-40 h-40 rounded-2xl bg-gray-50 ring-1 ring-gray-100 overflow-hidden group hover:ring-2 hover:ring-black transition-all flex items-center justify-center p-0"
                        title="Click to choose logo from Media Library"
                      >
@@ -677,8 +685,51 @@ export default function AdminSettings() {
                        </button>
                      )}
                    </div>
+                   </div>
+
+                   {/* Signature Picker UI - Now Integrated with Media Library */}
+                    <div className="space-y-1.5 pt-4">
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Invoice Signature Image</label>
+                      <p className="text-[10px] text-gray-400 mb-2">Upload a transparent PNG signature.</p>
+                      <div className="relative group/sig">
+                        <button
+                          type="button"
+                          onClick={() => { setPickingFor("signature"); setIsMediaPickerOpen(true); }}
+                          className="relative w-40 h-20 rounded-2xl bg-gray-50 ring-1 ring-gray-100 overflow-hidden group hover:ring-2 hover:ring-black transition-all flex items-center justify-center p-0"
+                          title="Select signature from Media Library"
+                        >
+                          {signatureUrl
+                            ? <img src={signatureUrl} alt="Signature" className="w-full h-full object-contain p-2" />
+                            : <div className="flex flex-col items-center gap-1 text-gray-300">
+                                <ImageIcon size={20} />
+                                <span className="text-[9px] font-bold uppercase tracking-widest">Set Sign</span>
+                              </div>}
+                          <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl">
+                            <ImageIcon size={16} className="text-white" />
+                            <span className="text-[9px] font-bold text-white uppercase tracking-widest">Select New</span>
+                          </div>
+                        </button>
+
+                        {signatureUrl && (
+                          <button
+                            type="button"
+                            onClick={() => setSignatureUrl("")}
+                            className="absolute -top-2 -right-2 w-7 h-7 rounded-xl bg-white shadow-lg border border-gray-100 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all z-10"
+                            title="Remove Signature"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        type="hidden"
+                        name="signatureUrl"
+                        value={signatureUrl}
+                      />
+                    </div>
                  </div>
               </div>
+
 
               <div className="space-y-1.5 md:col-span-2">
                 <div className="flex items-center justify-between ml-1 mb-1.5">
@@ -943,9 +994,16 @@ export default function AdminSettings() {
       {/* Media Library Picker Modal */}
       <MediaPickerModal
         isOpen={isMediaPickerOpen}
-        onClose={() => setIsMediaPickerOpen(false)}
-        onSelect={(url) => setLogoUrl(url)}
-        currentUrl={logoUrl}
+        onClose={() => {
+          setIsMediaPickerOpen(false);
+          setPickingFor(null);
+        }}
+        onSelect={(url) => {
+          if (pickingFor === "logo") setLogoUrl(url);
+          else if (pickingFor === "signature") setSignatureUrl(url);
+          setPickingFor(null);
+        }}
+        currentUrl={pickingFor === "logo" ? logoUrl : signatureUrl}
       />
 
       {/* Image Cropper Modal */}

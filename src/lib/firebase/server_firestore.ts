@@ -94,6 +94,26 @@ export async function getOrdersByUser(userId: string) {
   return orders.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
+export async function getOrderByConsignmentId(consignmentId: number | string) {
+  const q = adminDb.collection("orders")
+    .where("courierConsignmentId", "==", Number(consignmentId));
+    
+  const snap = await q.get();
+  if (snap.empty) {
+    // Try string fallback just in case
+    const q2 = adminDb.collection("orders")
+      .where("courierConsignmentId", "==", String(consignmentId));
+    const snap2 = await q2.get();
+    if (snap2.empty) return null;
+    
+    const d = snap2.docs[0];
+    return { id: d.id, ...d.data() };
+  }
+
+  const d = snap.docs[0];
+  return { id: d.id, ...d.data() };
+}
+
 export async function getAllOrders() {
   const q = adminDb.collection("orders").orderBy("createdAt", "desc");
   const snap = await q.get();
@@ -383,3 +403,25 @@ export async function getUserProfileFromRTDB(uid: string) {
 
 
 
+
+// --- Fraud Checks Caching ---
+export async function getFraudCheckFromFirestore(phone: string) {
+  const docRef = adminDb.collection("fraud_checks").doc(phone);
+  const docSnap = await docRef.get();
+  if (docSnap.exists) {
+    const data = docSnap.data();
+    return {
+      ...data,
+      lastChecked: data?.lastChecked?.toDate() || new Date(0),
+    };
+  }
+  return null;
+}
+
+export async function saveFraudCheckInFirestore(phone: string, data: any) {
+  const docRef = adminDb.collection("fraud_checks").doc(phone);
+  await docRef.set({
+    ...data,
+    lastChecked: admin.firestore.FieldValue.serverTimestamp(),
+  });
+}

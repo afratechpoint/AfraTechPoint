@@ -1,4 +1,4 @@
-const CACHE_NAME = 'afra-admin-v2';
+const CACHE_NAME = 'afra-admin-v3';
 const ASSETS = [
   '/admin',
   '/api/manifest/admin'

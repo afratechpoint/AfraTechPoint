@@ -10,12 +10,20 @@ export async function syncUserToFirestore(uid: string, email: string, displayNam
     const userRef = adminDb.collection("users").doc(uid);
     const snap = await userRef.get();
     
+    const baseData = {
+      email,
+      lastLogin: FieldValue.serverTimestamp()
+    };
+
+    // Construct update data, only taking photo and name if they are defined
+    const updateData: any = { ...baseData };
+    if (displayName) updateData.displayName = displayName;
+    if (photoURL) updateData.photoURL = photoURL;
+
     if (!snap.exists) {
       await userRef.set({
+        ...updateData,
         uid,
-        email,
-        displayName: displayName || "",
-        photoURL: photoURL || "",
         role: "customer",
         createdAt: FieldValue.serverTimestamp()
       });
@@ -29,13 +37,27 @@ export async function syncUserToFirestore(uid: string, email: string, displayNam
         link: `/admin/customers`,
       }).catch(console.error);
 
-      // Dispatch Welcome Email asynchronously for newly created accounts
+      // Dispatch Welcome Email
       if (email) {
         dispatchWelcomeEmail(email, displayName || "Customer").catch(console.error);
       }
+    } else {
+      // Always update display name and photo from Google if available
+      await userRef.update(updateData);
     }
     
-    return { success: true };
+    // Fetch the final data to return to the client
+    const finalSnap = await userRef.get();
+    const finalData = finalSnap.data();
+
+    return { 
+      success: true, 
+      userData: {
+        displayName: finalData?.displayName || "",
+        photoURL: finalData?.photoURL || "",
+        role: finalData?.role || "customer"
+      }
+    };
   } catch (error: any) {
     console.error("Admin syncUserToFirestore error:", error);
     return { success: false, error: error.message };
