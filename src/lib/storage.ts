@@ -217,6 +217,11 @@ export const storage = {
     return products.filter((p: any) => !memoryCache.deletedProductIds.has(p.id));
   }),
 
+  async getProductById(id: string) {
+    const products = await this.getProducts();
+    return products.find((p: any) => p.id === id) || null;
+  },
+
   async createProduct(data: any) {
     memoryCache.products = undefined; // Invalidate
     if (USE_FIREBASE) {

@@ -7,24 +7,24 @@
 
 import type { Metadata } from "next";
 import ProductDetailClient from "./ProductDetailClient";
+import { storage } from "@/lib/storage";
 
 const SHOP_URL = process.env.NEXT_PUBLIC_SHOP_URL || "https://afratechpoint.shop";
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
   try {
-    const res = await fetch(`${SHOP_URL}/api/products/${params.id}`, {
-      next: { revalidate: 3600 }, // cache for 1 hour
-    });
-
-    if (!res.ok) throw new Error("Not found");
-
-    const product = await res.json();
+    const product = await storage.getProductById(id);
+    if (!product) throw new Error("Not found");
 
     const title = product.name || "Product";
+    const settings = await storage.getSettings();
+    const siteName = settings.storeName || "Afra Tech Point";
+
     const description =
       product.description?.substring(0, 160) ||
       `Buy ${product.name} at the best price.`;
@@ -32,19 +32,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       product.salePrice ?? product.regularPrice ?? product.price ?? 0;
     const currency = "BDT";
 
-    // Use the raw product image URL for OG — no ImageKit transforms
-    // so that Facebook's crawler (which can't handle some redirects) can access it
-    const imageUrl = product.image || `${SHOP_URL}/logo.png`;
+    // Use the raw product image URL for OG — ensuring it's absolute
+    let imageUrl = product.image;
+    if (imageUrl && !imageUrl.startsWith("http")) {
+       // Combine with shop URL if it's relative
+       imageUrl = `${SHOP_URL}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
+    }
+    if (!imageUrl) imageUrl = `${SHOP_URL}/logo.png`;
 
     return {
-      title: `${title} | Afra Tech Point`,
+      title: `${title} | ${siteName}`,
       description,
       openGraph: {
-        type: "website",
-        siteName: "Afra Tech Point",
+        type: "article",
+        siteName,
         title,
         description,
-        url: `${SHOP_URL}/shop/${params.id}`,
+        url: `${SHOP_URL}/shop/${id}`,
         images: [
           {
             url: imageUrl,
@@ -66,8 +70,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         "og:price:currency": currency,
       },
     };
-  } catch {
-    // Fallback metadata if product fetch fails
+  } catch (err) {
+    console.error("[generateMetadata] Error:", err);
+    // Fallback metadata if product lookup fails
     return {
       title: "Product | Afra Tech Point",
       description: "Shop electronics at Afra Tech Point.",
@@ -80,6 +85,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default function ProductDetailPage({ params }: Props) {
+export default async function ProductDetailPage({ params }: Props) {
   return <ProductDetailClient />;
 }
