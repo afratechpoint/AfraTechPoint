@@ -361,7 +361,7 @@ export async function getUserProfileFromFirestore(uid: string) {
 }
 
 export async function getCustomersCountInFirestore() {
-  const q = adminDb.collection("users");
+  const q = adminDb.collection("users").where("role", "==", "customer");
   const snap = await q.count().get();
   return snap.data().count;
 }

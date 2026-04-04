@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useSettings } from "@/components/SettingsProvider";
 import { authenticatedFetch } from "@/lib/api-helper";
+import { useAuth } from "@/contexts/AuthContext";
 
 import { subscribeToAllOrders, getProductsFromFirestore } from "@/lib/firebase/firestore";
 
@@ -14,24 +15,13 @@ export default function AdminDashboard() {
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const settings = useSettings();
 
+  const { user } = useAuth();
+
   useEffect(() => {
-    // 1. Initial product & customer fetch (static)
-    const loadStaticData = async () => {
-      try {
-        const [products, customerData] = await Promise.all([
-          getProductsFromFirestore(),
-          authenticatedFetch('/api/admin/customer-count').then(r => r.json()).catch(() => ({ count: 0 }))
-        ]);
-        setStats(prev => ({ 
-          ...prev, 
-          products: products.length, 
-          customers: customerData.count || 0 
-        }));
-      } catch (err) {
-        console.error("Dashboard Static Data Error:", err);
-      }
-    };
-    loadStaticData();
+    // 1. Initial product fetch (static)
+    getProductsFromFirestore()
+      .then((products) => setStats(prev => ({ ...prev, products: products.length })))
+      .catch(console.error);
 
     // 2. "Light-speed" real-time orders subscription
     const unsubscribe = subscribeToAllOrders((orders) => {
@@ -47,6 +37,18 @@ export default function AdminDashboard() {
 
     return () => unsubscribe();
   }, []);
+
+  // Fetch customer count strictly after user auth is ready
+  useEffect(() => {
+    if (!user) return;
+    authenticatedFetch('/api/admin/customer-count')
+      .then(r => r.json())
+      .then(data => setStats(prev => ({ ...prev, customers: data.count || 0 })))
+      .catch((err) => {
+         console.error("Customer Fetch Error:", err);
+         setStats(prev => ({ ...prev, customers: 0 }));
+      });
+  }, [user]);
 
   const metrics = [
     { label: "Total Products", value: stats.products, icon: Package, color: "bg-purple-500" },

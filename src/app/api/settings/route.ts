@@ -8,15 +8,15 @@ import { revalidatePath } from 'next/cache';
 const defaultSettings = {
   storeName: "Afra Tech Point",
   logoUrl: "/logo.png",
-  contactEmail: "info@afratechpoint.shop",
-  contactPhone: "+880 1XXXXXXXXX",
+  contactEmail: "afratechpoint@gmail.com",
+  contactPhone: "+880 1974-722102",
   contactAddress: "Dhaka, Bangladesh",
   shortDescription: "Your premium destination for the latest in cutting-edge electronics and smart home devices.",
   currencySymbol: "৳",
   themeId: "midnight",
-  announcementText: "Welcome to Afra Tech Point! Free shipping on orders over ৳5000! Shop now.",
+  announcementText: "Welcome to Afra Tech Point! Experience premium tech and exceptional service. Shop now.",
   announcementActive: false,
-  businessHours: "Mon - Fri: 9:00 AM - 6:00 PM",
+  businessHours: "Daily: 10:00 AM - 10:00 PM",
   navLinks: [
     { id: "1", label: "Home", href: "/" }
   ],

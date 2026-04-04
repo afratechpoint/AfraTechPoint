@@ -20,8 +20,8 @@ const inter = Inter({ subsets: ["latin"], display: "swap" });
 const defaultSettings = {
   storeName: "Afra Tech Point",
   logoUrl: "https://afratechpoint.shop/email-logo.png",
-  contactEmail: "info@afratechpoint.shop",
-  contactPhone: "+880 1XXXXXXXXX",
+  contactEmail: "afratechpoint@gmail.com",
+  contactPhone: "+880 1974-722102",
   contactAddress: "Dhaka, Bangladesh",
   shortDescription: "Your premium destination for the latest in cutting-edge electronics and smart home devices.",
   currencySymbol: "৳",
