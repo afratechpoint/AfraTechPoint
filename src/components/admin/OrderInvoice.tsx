@@ -64,6 +64,7 @@ const OrderInvoice: React.FC<OrderInvoiceProps> = ({
 
   return (
     <div id="invoice-container" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact', background: '#fff' }}>
+      {/* Inject custom invoice styles without triggering styled-jsx HMR bugs in Turbopack */}
       <style dangerouslySetInnerHTML={{__html: `
         @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
 
@@ -87,7 +88,6 @@ const OrderInvoice: React.FC<OrderInvoiceProps> = ({
 
         .bar{background:#111;height:12px;width:100%;flex-shrink:0;}
 
-        /* Top */
         .inv-top{
           padding:24px 32px 16px;
           display:flex;
@@ -121,7 +121,6 @@ const OrderInvoice: React.FC<OrderInvoiceProps> = ({
           margin-top:8px;
         }
 
-        /* Bill To */
         .billto{padding:4px 32px 20px;}
         .sec-title{
           font-weight:700;
@@ -131,7 +130,6 @@ const OrderInvoice: React.FC<OrderInvoiceProps> = ({
         }
         .billto-info{font-size:10px;line-height:1.7;}
 
-        /* Table */
         .tbl{padding:0 32px;}
         .tbl-head{
           background:#111;
@@ -168,7 +166,6 @@ const OrderInvoice: React.FC<OrderInvoiceProps> = ({
         }
         .item-name{font-size:9px;line-height:1.4;}
 
-        /* Totals */
         .totals{
           padding:12px 32px 8px;
           display:flex;
@@ -195,13 +192,11 @@ const OrderInvoice: React.FC<OrderInvoiceProps> = ({
           justify-content:space-between;
         }
 
-        /* Footer pushes to bottom automatically due to flex column */
         .inv-footer {
           margin-top: auto;
           width: 100%;
         }
 
-        /* Bottom */
         .inv-bottom{
           padding:16px 32px 8px;
           display:grid;

@@ -250,9 +250,9 @@ export default function AdminMediaPage() {
         </button>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6">
+      <div>
         {/* Gallery Grid */}
-        <div className="flex-1">
+        <div className="w-full">
           {isLoading ? (
             <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {Array.from({ length: 10 }).map((_, i) => (
@@ -325,93 +325,104 @@ export default function AdminMediaPage() {
             </motion.div>
           )}
         </div>
-
-        {/* Detail Panel */}
+        {/* Detail Modal (Compact Popup System) */}
         <AnimatePresence>
           {selected && (
-            <motion.div
-              initial={{ opacity: 0, x: 20, width: 0 }}
-              animate={{ opacity: 1, x: 0, width: 260 }}
-              exit={{ opacity: 0, x: 20, width: 0 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-              className="shrink-0 overflow-hidden w-full lg:w-auto"
-            >
-              <div className="w-full lg:w-[260px] bg-white rounded-[1.5rem] border border-gray-100 shadow-sm p-5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-black text-gray-900">File Details</p>
-                  <button onClick={() => setSelected(null)} className="text-gray-300 hover:text-black transition-colors">
-                    <X size={16} />
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setSelected(null)}
+                className="fixed inset-0 bg-black/50 backdrop-blur-[2px]"
+              />
+
+              {/* Modal Content */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                className="relative w-full max-w-[340px] bg-white rounded-[1.5rem] shadow-2xl overflow-hidden border border-gray-100 flex flex-col"
+                style={{ maxHeight: "480px" }}
+              >
+                {/* Header */}
+                <div className="px-5 pt-4 pb-2 flex items-center justify-between shrink-0">
+                  <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest">File Details</p>
+                  <button 
+                    onClick={() => setSelected(null)} 
+                    className="w-7 h-7 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-black transition-colors"
+                  >
+                    <X size={14} />
                   </button>
                 </div>
 
-                {/* Preview */}
-                <div className="aspect-square rounded-2xl overflow-hidden bg-gray-50 border border-gray-100">
-                  <img src={selected.url} alt={selected.name} className="w-full h-full object-contain p-2" />
+                {/* Preview - Very compact */}
+                <div className="mx-5 h-32 shrink-0 rounded-xl overflow-hidden bg-gray-50 border border-gray-50 flex items-center justify-center relative">
+                  <img src={selected.url} alt={selected.name} className="max-w-full max-h-full object-contain p-3" />
                 </div>
 
-                {/* Info */}
-                <div className="space-y-2 text-xs">
-                  <div className="space-y-0.5">
-                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Filename</p>
-                    <p className="font-bold text-gray-800 break-all">{selected.name}</p>
+                {/* Info Area */}
+                <div className="px-5 py-3 space-y-3 flex-1 overflow-visible">
+                  <div className="grid grid-cols-2 gap-3 text-[10px]">
+                    <div className="space-y-0.5">
+                      <p className="font-bold text-gray-300 uppercase tracking-tighter">Name</p>
+                      <p className="font-black text-gray-800 truncate" title={selected.name}>{selected.name}</p>
+                    </div>
+                    <div className="space-y-0.5 text-right">
+                      <p className="font-bold text-gray-300 uppercase tracking-tighter">Size</p>
+                      <p className="font-black text-gray-800">{formatBytes(selected.size)}</p>
+                    </div>
                   </div>
-                  <div className="space-y-0.5">
-                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">File Size</p>
-                    <p className="font-bold text-gray-800">{formatBytes(selected.size)}</p>
-                  </div>
-                  <div className="space-y-0.5">
-                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Uploaded</p>
-                    <p className="font-bold text-gray-800">{new Date(selected.uploadedAt).toLocaleString()}</p>
-                  </div>
-                </div>
 
-                {/* URL Copybox */}
-                <div className="space-y-1.5">
-                  <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">File URL</p>
-                  <div className="flex gap-2 items-center bg-gray-50 ring-1 ring-gray-100 rounded-xl px-3 py-2">
-                    <p className="text-[10px] font-mono text-gray-600 flex-1 truncate">{selected.url}</p>
-                    <button
-                      onClick={() => copyUrl(selected.url)}
-                      className="shrink-0 text-gray-400 hover:text-black transition-colors"
-                    >
-                      {copiedUrl === selected.url ? <Check size={13} className="text-green-600" /> : <Copy size={13} />}
-                    </button>
+                  <div className="space-y-1">
+                    <p className="text-[9px] font-bold text-gray-300 uppercase tracking-widest">Asset URL</p>
+                    <div className="flex gap-2 items-center bg-gray-50 ring-1 ring-inset ring-gray-100 rounded-lg pl-3 pr-1 py-1">
+                      <p className="text-[10px] font-mono text-gray-400 flex-1 truncate">{selected.url}</p>
+                      <button
+                        onClick={() => copyUrl(selected.url)}
+                        className="w-6 h-6 rounded-md bg-white shadow-sm border border-gray-100 flex items-center justify-center text-gray-400 hover:text-black transition-all"
+                      >
+                        {copiedUrl === selected.url ? <Check size={10} className="text-green-600" /> : <Copy size={10} />}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex flex-col gap-2 pt-2">
+                {/* Footer Actions - Always visible */}
+                <div className="px-5 pb-5 pt-1 space-y-2 shrink-0">
                   <div className="flex gap-2">
                     <button
                       onClick={() => copyUrl(selected.url)}
-                      className="flex-1 h-9 rounded-xl bg-black text-white text-[10px] font-black flex items-center justify-center gap-1.5 hover:scale-[1.02] transition-transform"
+                      className="flex-1 h-10 rounded-xl bg-black text-white text-[11px] font-black flex items-center justify-center gap-2 hover:bg-gray-900 active:scale-[0.98] transition-all"
                     >
-                      <Copy size={12} /> Copy URL
+                      <Copy size={14} /> Copy Link
                     </button>
                     <button
                       onClick={() => handleDelete(selected)}
                       disabled={deleting === selected.name}
-                      className="w-9 h-9 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-colors disabled:opacity-50 shrink-0"
+                      className="w-10 h-10 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all disabled:opacity-50"
+                      title="Delete File"
                     >
                       {deleting === selected.name
                         ? <PremiumSpinner size="sm" />
-                        : <Trash2 size={14} />}
+                        : <Trash2 size={16} />}
                     </button>
                   </div>
-
+                  
                   {selected.deleteUrl && (
                     <a
                       href={selected.deleteUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full h-8 rounded-xl border border-red-100 bg-red-50/30 text-red-400 text-[9px] font-bold flex items-center justify-center gap-1.5 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all uppercase tracking-tighter"
+                      className="block w-full text-center text-[9px] font-bold text-gray-400 hover:text-red-500 transition-colors uppercase tracking-widest py-1"
                     >
-                      <X size={10} /> Manual ImgBB Delete
+                      Remove from Source (ImgBB)
                     </a>
                   )}
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </div>
           )}
         </AnimatePresence>
       </div>

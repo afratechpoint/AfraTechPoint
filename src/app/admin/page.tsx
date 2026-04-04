@@ -7,36 +7,45 @@ import Link from "next/link";
 import { useSettings } from "@/components/SettingsProvider";
 import { authenticatedFetch } from "@/lib/api-helper";
 
+import { subscribeToAllOrders, getProductsFromFirestore } from "@/lib/firebase/firestore";
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ orders: 0, products: 0, customers: 0, completedOrders: 0, traffic: 0 });
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const settings = useSettings();
 
   useEffect(() => {
-    const loadStats = async () => {
+    // 1. Initial product & customer fetch (static)
+    const loadStaticData = async () => {
       try {
-        const [orders, products, customerData] = await Promise.all([
-          authenticatedFetch('/api/orders').then(r => r.json()),
-          authenticatedFetch('/api/products').then(r => r.json()),
+        const [products, customerData] = await Promise.all([
+          getProductsFromFirestore(),
           authenticatedFetch('/api/admin/customer-count').then(r => r.json()).catch(() => ({ count: 0 }))
         ]);
-
-        const completed = orders.filter((o: any) => o.status === "delivered" || o.orderStatus === "delivered").length;
-        
-        setStats({ 
-          orders: orders.length, 
-          products: products.length,
-          customers: customerData.count || 0,
-          completedOrders: completed,
-          traffic: 0
-        });
-        setRecentOrders(orders.slice(0, 5));
+        setStats(prev => ({ 
+          ...prev, 
+          products: products.length, 
+          customers: customerData.count || 0 
+        }));
       } catch (err) {
-        console.error("Dashboard Stats Error:", err);
+        console.error("Dashboard Static Data Error:", err);
       }
     };
-    
-    loadStats();
+    loadStaticData();
+
+    // 2. "Light-speed" real-time orders subscription
+    const unsubscribe = subscribeToAllOrders((orders) => {
+      const completed = orders.filter((o: any) => o.status?.toLowerCase() === "delivered" || o.orderStatus?.toLowerCase() === "delivered").length;
+      
+      setStats(prev => ({ 
+        ...prev,
+        orders: orders.length, 
+        completedOrders: completed,
+      }));
+      setRecentOrders(orders.slice(0, 5));
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const metrics = [

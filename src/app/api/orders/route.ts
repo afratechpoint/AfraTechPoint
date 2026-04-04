@@ -130,9 +130,12 @@ export async function POST(request: NextRequest) {
 
     const calculatedTotal = calculatedSubtotal + deliveryCharge;
 
+    const customerEmail = userToken?.email || body.userEmail || body.email || body.customer?.email;
+
     // storage.createOrder handles ID generation and persistence
     const newOrder = await storage.createOrder({
       userId: userId || "guest",
+      userEmail: customerEmail, // Save the customer's email
       items: validatedItems,
       shippingAddress,
       payment: payment || { method: "Cash on Delivery" },

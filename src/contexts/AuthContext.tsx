@@ -104,9 +104,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (name: string, email: string, password: string) => {
     const cred = await signUpWithEmail(name, email, password);
-    // Sync to Firestore via Server Action
+    // Sync to Firestore via Server Action (non-blocking)
     if (cred.user) {
-      await syncUserToFirestore(
+      syncUserToFirestore(
         cred.user.uid,
         cred.user.email || "",
         name,
@@ -117,9 +117,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const googleSignIn = async () => {
     const cred = await signInWithGoogle();
-    // Sync to Firestore via Server Action
+    // Sync to Firestore via Server Action (non-blocking)
     if (cred.user) {
-      await syncUserToFirestore(
+      syncUserToFirestore(
         cred.user.uid,
         cred.user.email || "",
         cred.user.displayName || "",

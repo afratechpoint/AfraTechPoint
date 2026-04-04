@@ -19,9 +19,11 @@ import OrderInvoice from "@/components/admin/OrderInvoice";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 
+import { subscribeToAllOrders } from "@/lib/firebase/firestore";
+
 interface Order {
   id: string;
-  createdAt: string;
+  createdAt: any; // Allow Date or string from Firestore
   total?: number;
   totalAmount?: number;
   paymentStatus?: string;
@@ -34,6 +36,7 @@ interface Order {
   customer?: { name?: string; phone?: string };
   items: { quantity?: number }[];
 }
+// ──────────────────────────────────────────────────────────────────────────────
 
 // ── Status config ──────────────────────────────────────────────────────────
 const PMT_OPTIONS = [
@@ -56,8 +59,6 @@ const ORD_OPTIONS = [
 const pmtMap = Object.fromEntries(PMT_OPTIONS.map(o => [o.value, o]));
 const ordMap = Object.fromEntries(ORD_OPTIONS.map(o => [o.value, o]));
 
-// ── Inline Status Badge ──────────────────────────────────────────────────
-// ── Inline Status Dropdown ──────────────────────────────────────────────────
 // ── Static Status Badge ──────────────────────────────────────────────────
 function StatusBadge({
   value,
@@ -100,21 +101,13 @@ export default function AdminOrdersPage() {
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(""), 2500); };
 
   useEffect(() => {
-    const fetchOrders = () => {
-      authenticatedFetch("/api/orders", { cache: "no-store" })
-        .then(r => r.json())
-        .then((data: Order[]) => {
-          if (Array.isArray(data)) {
-            setOrders(data);
-          }
-          setLoading(false);
-        })
-        .catch(() => setLoading(false));
-    };
+    // Light-speed real-time subscription
+    const unsubscribe = subscribeToAllOrders((data) => {
+      setOrders(data as any);
+      setLoading(false);
+    });
 
-    fetchOrders();
-    const interval = setInterval(fetchOrders, 3 * 60 * 1000); // 3 minutes — saves Firestore quota
-    return () => clearInterval(interval);
+    return () => unsubscribe();
   }, []);
 
   const patchOrder = useCallback(async (orderId: string, fields: Record<string, string>) => {
