@@ -13,9 +13,15 @@ const getApp = () => {
     return null;
   }
 
-  // Handle mangled newlines from various env sources (Vercel, Docker, etc.)
-  if (privateKey && privateKey.includes('\\n')) {
-    privateKey = privateKey.replace(/\\n/g, '\n');
+  // Handle mangled newlines and surrounding quotes from various env sources (Vercel, Docker, etc.)
+  if (privateKey) {
+    privateKey = privateKey.trim();
+    if ((privateKey.startsWith('"') && privateKey.endsWith('"')) || (privateKey.startsWith("'") && privateKey.endsWith("'"))) {
+      privateKey = privateKey.slice(1, -1);
+    }
+    if (privateKey.includes('\\n')) {
+      privateKey = privateKey.replace(/\\n/g, '\n');
+    }
   }
 
   // Ensure private key is wrapped if it came as a single string without headers

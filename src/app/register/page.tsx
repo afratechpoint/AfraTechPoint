@@ -1,12 +1,24 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, User, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { 
+  Mail, 
+  Lock, 
+  User, 
+  Eye, 
+  EyeOff, 
+  AlertCircle, 
+  ArrowLeft, 
+  ShieldCheck, 
+  RefreshCw, 
+  CheckCircle2, 
+  ArrowRight 
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { getFirebaseErrorMessage } from "@/lib/firebase/auth";
+import { signInWithToken, getFirebaseErrorMessage } from "@/lib/firebase/auth";
 import PremiumSpinner from "@/components/PremiumSpinner";
 
 const GoogleIcon = () => (
@@ -19,7 +31,7 @@ const GoogleIcon = () => (
 );
 
 export default function RegisterPage() {
-  const { user, loading, signUp, googleSignIn } = useAuth();
+  const { user, loading, googleSignIn } = useAuth();
   const router = useRouter();
 
   // Redirect if already logged in
@@ -29,6 +41,8 @@ export default function RegisterPage() {
     }
   }, [user, loading, router]);
 
+  // Form states
+  const [step, setStep]                       = useState<"form" | "otp">("form");
   const [firstName, setFirstName]             = useState("");
   const [lastName, setLastName]               = useState("");
   const [email, setEmail]                     = useState("");
@@ -38,31 +52,195 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading]             = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError]                     = useState("");
-  const [isVerificationSent, setIsVerificationSent] = useState(false);
+  const [successMsg, setSuccessMsg]           = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // OTP states
+  const [otp, setOtp]                         = useState<string[]>(["", "", "", "", "", ""]);
+  const [isResending, setIsResending]         = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(60);
+  const inputRefs                             = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Countdown timer effect
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (step === "otp" && resendCountdown > 0) {
+      timer = setInterval(() => {
+        setResendCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [step, resendCountdown]);
+
+  // Step 1: Send OTP to register
+  const handleInitiateRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (password !== confirmPassword) { setError("Passwords do not match."); return; }
-    if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
+    setSuccessMsg("");
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const displayName = `${firstName} ${lastName}`.trim();
-      await signUp(displayName, email, password);
-      
-      // 2. Call our branded verification API
-      await fetch("/api/auth/send-verification", {
+      const res = await fetch("/api/auth/otp/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, displayName }),
+        body: JSON.stringify({
+          email: email.trim(),
+          type: "register",
+          name: displayName,
+          password,
+        }),
       });
 
-      setIsVerificationSent(true);
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to send verification code. Please try again.");
+        return;
+      }
+
+      setStep("otp");
+      setResendCountdown(60);
+      setSuccessMsg(`A 6-digit verification code has been sent to ${email}.`);
+      setOtp(["", "", "", "", "", ""]);
+      setTimeout(() => inputRefs.current[0]?.focus(), 100);
     } catch (err: any) {
-      setError(getFirebaseErrorMessage(err.code));
+      setError("Network error. Please check your internet connection.");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Step 2: Verify OTP and create account
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const otpCode = otp.join("");
+    if (otpCode.length !== 6) {
+      setError("Please enter the complete 6-digit verification code.");
+      return;
+    }
+
+    setError("");
+    setSuccessMsg("");
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          otp: otpCode,
+          type: "register",
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Verification failed. Please try again.");
+        return;
+      }
+
+      // Automatically sign in with custom token
+      if (data.customToken) {
+        await signInWithToken(data.customToken);
+        router.push("/");
+      } else {
+        router.push("/login");
+      }
+    } catch (err: any) {
+      setError("Verification failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Resend OTP
+  const handleResendOtp = async () => {
+    if (resendCountdown > 0 || isResending) return;
+    setError("");
+    setSuccessMsg("");
+    setIsResending(true);
+
+    try {
+      const displayName = `${firstName} ${lastName}`.trim();
+      const res = await fetch("/api/auth/otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          type: "register",
+          name: displayName,
+          password,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to resend code.");
+        return;
+      }
+
+      setResendCountdown(60);
+      setSuccessMsg("A new verification code has been dispatched to your email.");
+    } catch (err: any) {
+      setError("Failed to resend verification code. Please try again.");
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  // Handle individual OTP digit changes
+  const handleOtpChange = (index: number, val: string) => {
+    const clean = val.replace(/\D/g, "");
+    if (clean.length > 1) {
+      // Pasting multiple digits
+      const digits = clean.slice(0, 6).split("");
+      const next = [...otp];
+      digits.forEach((d, i) => {
+        if (i < 6) next[i] = d;
+      });
+      setOtp(next);
+      const nextIndex = Math.min(digits.length, 5);
+      inputRefs.current[nextIndex]?.focus();
+      return;
+    }
+
+    const next = [...otp];
+    next[index] = clean;
+    setOtp(next);
+
+    if (clean && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const paste = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!paste) return;
+    const next = [...otp];
+    for (let i = 0; i < paste.length; i++) {
+      next[i] = paste[i];
+    }
+    setOtp(next);
+    const nextIndex = Math.min(paste.length, 5);
+    inputRefs.current[nextIndex]?.focus();
   };
 
   const handleGoogle = async () => {
@@ -82,8 +260,10 @@ export default function RegisterPage() {
     <div className="min-h-screen flex">
       {/* ── Left panel (decorative) ──────────────────────────────── */}
       <div className="hidden lg:flex lg:w-[42%] bg-black flex-col justify-between p-12 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.04]"
-          style={{ backgroundImage: "linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px)", backgroundSize: "48px 48px" }} />
+        <div 
+          className="absolute inset-0 opacity-[0.04]"
+          style={{ backgroundImage: "linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px)", backgroundSize: "48px 48px" }} 
+        />
         <div className="absolute top-1/3 left-1/3 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
 
         {/* Logo */}
@@ -101,14 +281,15 @@ export default function RegisterPage() {
               <span className="text-gray-400">Community.</span>
             </h2>
             <p className="text-gray-500 text-sm leading-relaxed max-w-xs">
-              Create your free account and get access to exclusive deals, order tracking, and personalized recommendations.
+              Create your verified account and get access to exclusive deals, order tracking, and instant support.
             </p>
           </div>
 
           <div className="space-y-3">
             {[
+              { title: "Secure OTP Verification", sub: "Protecting your email & data" },
               { title: "Fast Delivery", sub: "Dhaka & nationwide" },
-              { title: "100% Secure", sub: "SSL encrypted checkout" },
+              { title: "100% Genuine Products", sub: "Official brand warranty" },
               { title: "24/7 Support", sub: "Always here to help" },
             ].map(({ title, sub }) => (
               <div key={title} className="flex items-center gap-3">
@@ -120,17 +301,18 @@ export default function RegisterPage() {
               </div>
             ))}
           </div>
-
         </div>
 
         <p className="relative z-10 text-gray-600 text-xs">© 2026 Afra Tech Point. All rights reserved.</p>
       </div>
 
-      {/* ── Right panel (form) ────────────────────────────────────── */}
+      {/* ── Right panel (form / OTP) ────────────────────────────────────── */}
       <div className="flex-1 flex flex-col justify-center items-center p-6 md:p-12 bg-white overflow-y-auto">
         {/* Mobile logo */}
-        <div className="lg:hidden mb-12">
-          <Link href="/"><img src="/logo.png" alt="Afra Tech Point" className="h-16 w-auto object-contain" /></Link>
+        <div className="lg:hidden mb-10">
+          <Link href="/">
+            <img src="/logo.png" alt="Afra Tech Point" className="h-14 w-auto object-contain" />
+          </Link>
         </div>
 
         <motion.div
@@ -139,198 +321,289 @@ export default function RegisterPage() {
           transition={{ duration: 0.4 }}
           className="w-full max-w-md"
         >
-          {isVerificationSent ? (
+          {step === "otp" ? (
+            /* ══════════════════════════════════════════════════════════════ */
+            /* ── STEP 2: OTP VERIFICATION SCREEN ────────────────────────── */
+            /* ══════════════════════════════════════════════════════════════ */
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
             >
-              <div className="w-20 h-20 bg-black rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl shadow-gray-200">
-                <Mail className="w-10 h-10 text-white" />
-              </div>
-              <h1 className="text-3xl font-black text-gray-900 tracking-tight mb-4">Check your email</h1>
-              <p className="text-gray-500 mb-8 leading-relaxed font-medium">
-                We&apos;ve sent a branded verification link to <span className="text-black font-bold">{email}</span>. 
-                Please click the link in your inbox to activate your account.
-              </p>
-              <div className="space-y-4">
-                <button 
-                  onClick={() => router.push("/login")}
-                  className="w-full h-12 bg-black text-white rounded-xl font-bold hover:bg-gray-900 transition-all flex items-center justify-center gap-2"
-                >
-                  Go to Login
-                </button>
-                <p className="text-xs text-gray-400">
-                  Didn&apos;t receive it? Check your spam folder or contact support.
+              <button
+                type="button"
+                onClick={() => { setStep("form"); setError(""); setSuccessMsg(""); }}
+                className="inline-flex items-center gap-2 text-xs font-semibold text-gray-500 hover:text-black mb-6 transition-colors"
+              >
+                <ArrowLeft size={14} />
+                Back to registration details
+              </button>
+
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 bg-black text-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-gray-200">
+                  <ShieldCheck className="w-8 h-8 text-white" />
+                </div>
+                <h1 className="text-3xl font-black text-gray-900 tracking-tight mb-2">Verify Your Email</h1>
+                <p className="text-gray-500 text-sm leading-relaxed max-w-sm mx-auto">
+                  We&apos;ve sent a 6-digit verification code to <span className="font-bold text-gray-900">{email}</span>. 
+                  Please enter the code below to complete your registration.
                 </p>
               </div>
+
+              {/* Error / Success Notifications */}
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="flex items-center gap-2.5 p-3.5 mb-5 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm font-medium overflow-hidden"
+                  >
+                    <AlertCircle size={16} className="shrink-0" />
+                    <span>{error}</span>
+                  </motion.div>
+                )}
+                {successMsg && !error && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="flex items-center gap-2.5 p-3.5 mb-5 bg-green-50 border border-green-100 rounded-xl text-green-700 text-sm font-medium overflow-hidden"
+                  >
+                    <CheckCircle2 size={16} className="shrink-0" />
+                    <span>{successMsg}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* OTP Form */}
+              <form onSubmit={handleVerifyOtp} className="space-y-6">
+                <div className="flex justify-between gap-2.5" onPaste={handleOtpPaste}>
+                  {otp.map((digit, idx) => (
+                    <input
+                      key={idx}
+                      ref={(el) => { inputRefs.current[idx] = el; }}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleOtpChange(idx, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                      className="w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-bold font-mono rounded-xl bg-gray-50 border-2 border-gray-200 focus:border-black focus:bg-white focus:outline-none transition-all shadow-sm"
+                    />
+                  ))}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading || otp.join("").length !== 6}
+                  className="w-full h-12 bg-black text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-gray-900 active:scale-[0.98] transition-all disabled:opacity-50 shadow-md shadow-gray-200"
+                >
+                  {isLoading ? (
+                    <PremiumSpinner size="sm" light />
+                  ) : (
+                    <>
+                      <span>Verify & Create Account</span>
+                      <ArrowRight size={16} />
+                    </>
+                  )}
+                </button>
+
+                {/* Resend Action */}
+                <div className="text-center pt-2">
+                  {resendCountdown > 0 ? (
+                    <p className="text-xs text-gray-400 font-medium">
+                      Resend code in <span className="font-bold text-gray-700">{resendCountdown}s</span>
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleResendOtp}
+                      disabled={isResending}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-black hover:underline disabled:opacity-50"
+                    >
+                      <RefreshCw size={13} className={isResending ? "animate-spin" : ""} />
+                      {isResending ? "Sending..." : "Didn't receive the code? Resend"}
+                    </button>
+                  )}
+                </div>
+              </form>
             </motion.div>
           ) : (
+            /* ══════════════════════════════════════════════════════════════ */
+            /* ── STEP 1: INITIAL REGISTRATION FORM ──────────────────────── */
+            /* ══════════════════════════════════════════════════════════════ */
             <>
-          <div className="mb-7">
-            <h1 className="text-3xl font-black text-gray-900 tracking-tight mb-1">Create account</h1>
-            <p className="text-gray-400 text-sm">Join Afra Tech Point — it&apos;s free forever</p>
-          </div>
+              <div className="mb-7">
+                <h1 className="text-3xl font-black text-gray-900 tracking-tight mb-1">Create account</h1>
+                <p className="text-gray-400 text-sm">Join Afra Tech Point — verified with email OTP</p>
+              </div>
 
-          {/* Error */}
-          <AnimatePresence>
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="flex flex-col gap-2 p-3.5 mb-5 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm font-medium overflow-hidden"
-              >
-                <div className="flex items-center gap-2.5">
-                  <AlertCircle size={16} className="shrink-0" />
-                  <span>{error}</span>
-                </div>
-                {error.includes("Google") && (
-                  <Link
-                    href="/login"
-                    className="text-[11px] text-red-700 font-bold hover:underline mt-0.5 text-left pl-6.5"
+              {/* Error Display */}
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="flex flex-col gap-2 p-3.5 mb-5 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm font-medium overflow-hidden"
                   >
-                    Go to Login to reset password or use Google →
-                  </Link>
+                    <div className="flex items-center gap-2.5">
+                      <AlertCircle size={16} className="shrink-0" />
+                      <span>{error}</span>
+                    </div>
+                    {error.includes("already exists") && (
+                      <Link
+                        href="/login"
+                        className="text-[11px] text-red-700 font-bold hover:underline mt-0.5 text-left pl-6.5"
+                      >
+                        Go to Login instead →
+                      </Link>
+                    )}
+                  </motion.div>
                 )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </AnimatePresence>
 
-          {/* Google CTA */}
-          <button
-            onClick={handleGoogle}
-            disabled={isGoogleLoading}
-            className="w-full h-12 rounded-xl border border-gray-200 flex items-center justify-center gap-3 hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-semibold text-gray-700 disabled:opacity-60 mb-5"
-          >
-            {isGoogleLoading
-              ? <PremiumSpinner size="sm" />
-              : <GoogleIcon />
-            }
-            Continue with Google
-          </button>
+              {/* Google CTA */}
+              <button
+                onClick={handleGoogle}
+                disabled={isGoogleLoading}
+                className="w-full h-12 rounded-xl border border-gray-200 flex items-center justify-center gap-3 hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-semibold text-gray-700 disabled:opacity-60 mb-5"
+              >
+                {isGoogleLoading ? <PremiumSpinner size="sm" /> : <GoogleIcon />}
+                Continue with Google
+              </button>
 
-          {/* Divider */}
-          <div className="relative flex items-center gap-3 mb-5">
-            <div className="flex-1 h-px bg-gray-100" />
-            <span className="text-xs text-gray-400 font-medium shrink-0">or register with email</span>
-            <div className="flex-1 h-px bg-gray-100" />
-          </div>
+              {/* Divider */}
+              <div className="relative flex items-center gap-3 mb-5">
+                <div className="flex-1 h-px bg-gray-100" />
+                <span className="text-xs text-gray-400 font-medium shrink-0">or register with email</span>
+                <div className="flex-1 h-px bg-gray-100" />
+              </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Name row */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">First name</label>
-                <div className="relative">
-                  <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    required
-                    type="text"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    placeholder="John"
-                    className="w-full h-11 pl-10 pr-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-black focus:bg-white outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
-                  />
+              {/* Form */}
+              <form onSubmit={handleInitiateRegister} className="space-y-4">
+                {/* Name row */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">First name</label>
+                    <div className="relative">
+                      <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        required
+                        type="text"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        placeholder="John"
+                        className="w-full h-11 pl-10 pr-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-black focus:bg-white outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Last name</label>
+                    <input
+                      required
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Doe"
+                      className="w-full h-11 px-4 rounded-xl bg-gray-50 border border-gray-200 focus:border-black focus:bg-white outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
+                    />
+                  </div>
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Last name</label>
-                <input
-                  required
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Doe"
-                  className="w-full h-11 px-4 rounded-xl bg-gray-50 border border-gray-200 focus:border-black focus:bg-white outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
-                />
-              </div>
-            </div>
 
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email address</label>
-              <div className="relative">
-                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  required
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="w-full h-11 pl-10 pr-4 rounded-xl bg-gray-50 border border-gray-200 focus:border-black focus:bg-white outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
-                />
-              </div>
-            </div>
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email address</label>
+                  <div className="relative">
+                    <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      required
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      className="w-full h-11 pl-10 pr-4 rounded-xl bg-gray-50 border border-gray-200 focus:border-black focus:bg-white outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
+                    />
+                  </div>
+                </div>
 
-            {/* Password */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
-              <div className="relative">
-                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  required
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Min. 6 characters"
-                  className="w-full h-11 pl-10 pr-11 rounded-xl bg-gray-50 border border-gray-200 focus:border-black focus:bg-white outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
-                />
-                <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors">
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                {/* Password */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
+                  <div className="relative">
+                    <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      required
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Min. 6 characters"
+                      className="w-full h-11 pl-10 pr-11 rounded-xl bg-gray-50 border border-gray-200 focus:border-black focus:bg-white outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
+                    />
+                    <button 
+                      type="button" 
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors"
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Confirm password</label>
+                  <div className="relative">
+                    <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      required
+                      type={showPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter password"
+                      className="w-full h-11 pl-10 pr-4 rounded-xl bg-gray-50 border border-gray-200 focus:border-black focus:bg-white outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
+                    />
+                  </div>
+                </div>
+
+                {/* Terms note */}
+                <p className="text-xs text-gray-400 leading-relaxed">
+                  By creating an account you agree to our{" "}
+                  <Link href="/terms" className="text-gray-700 hover:text-black font-medium underline underline-offset-2">
+                    Terms of Service
+                  </Link>{" "}
+                  and <span className="text-gray-700 font-medium">Privacy Policy</span>.
+                </p>
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full h-11 bg-black text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-gray-900 active:scale-[0.98] transition-all disabled:opacity-60"
+                >
+                  {isLoading ? (
+                    <PremiumSpinner size="sm" light />
+                  ) : (
+                    <>
+                      <span>Continue & Send OTP</span>
+                      <ArrowRight size={16} />
+                    </>
+                  )}
                 </button>
-              </div>
-            </div>
+              </form>
 
-            {/* Confirm Password */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Confirm password</label>
-              <div className="relative">
-                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  required
-                  type={showPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Re-enter password"
-                  className="w-full h-11 pl-10 pr-4 rounded-xl bg-gray-50 border border-gray-200 focus:border-black focus:bg-white outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
-                />
-              </div>
-            </div>
-
-            {/* Terms note */}
-            <p className="text-xs text-gray-400 leading-relaxed">
-              By creating an account you agree to our{" "}
-              <Link href="/terms" className="text-gray-700 hover:text-black font-medium underline underline-offset-2">Terms of Service</Link>
-              {" "}and{" "}
-              <span className="text-gray-700 font-medium">Privacy Policy</span>.
-            </p>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full h-11 bg-black text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-gray-900 active:scale-[0.98] transition-all disabled:opacity-60"
-            >
-              {isLoading
-                ? <PremiumSpinner size="sm" light />
-                : "Create Account"
-              }
-            </button>
-          </form>
-
-            {/* Footer link */}
-            <p className="mt-6 text-center text-sm text-gray-500">
-              Already have an account?{" "}
-              <Link href="/login" className="text-black font-semibold hover:underline underline-offset-4">
-                Sign in
-              </Link>
-            </p>
-          </>
-        )}
-      </motion.div>
+              {/* Footer link */}
+              <p className="mt-6 text-center text-sm text-gray-500">
+                Already have an account?{" "}
+                <Link href="/login" className="text-black font-semibold hover:underline underline-offset-4">
+                  Sign in
+                </Link>
+              </p>
+            </>
+          )}
+        </motion.div>
       </div>
     </div>
   );

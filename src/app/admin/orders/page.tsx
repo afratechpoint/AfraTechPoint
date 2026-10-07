@@ -322,8 +322,9 @@ export default function AdminOrdersPage() {
 
       {/* Table */}
       {/* Desktop Table View */}
-      <div className="hidden md:block bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-visible">
-        <table className="w-full text-left">
+      <div className="hidden md:block bg-white rounded-2xl md:rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden w-full">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left min-w-[780px]">
           <thead>
             <tr className="bg-gray-50/50 border-b border-gray-100">
               {["Order", "Customer", "Date", "Total", "Payment Status", "Order Status", ""].map((h, i) => (
@@ -421,6 +422,7 @@ export default function AdminOrdersPage() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Mobile Card View */}

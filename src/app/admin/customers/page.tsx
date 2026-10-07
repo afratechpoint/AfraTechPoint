@@ -158,8 +158,8 @@ export default function CustomersPage() {
       <div className="space-y-4">
         {/* Desktop Table View */}
         <div className="hidden md:block bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-left border-collapse min-w-[640px]">
               <thead>
                 <tr className="bg-gray-50/50 border-b border-gray-100 text-xs font-bold text-gray-400 uppercase tracking-wider">
                   <th className="px-6 py-4">User</th>

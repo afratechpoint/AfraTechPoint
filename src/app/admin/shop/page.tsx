@@ -150,7 +150,7 @@ export default function AdminShopPage() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl w-full min-w-0 mx-auto space-y-6">
       
       {/* Sub-menu Tabs */}
       <div className="flex space-x-2 bg-gray-50/50 p-1.5 rounded-2xl border border-gray-100 overflow-x-auto">

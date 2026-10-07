@@ -37,6 +37,15 @@ export async function syncUserToFirestore(uid: string, email: string, displayNam
         link: `/admin/customers`,
       }).catch(console.error);
 
+      // Customer welcome in-app notification
+      createNotificationInFirestore({
+        type: "welcome",
+        title: "Welcome to Afra Tech Point!",
+        message: `Hello ${displayName || "there"}, welcome to Afra Tech Point! Explore our latest products and deals.`,
+        recipient: uid,
+        link: `/shop`,
+      }).catch(console.error);
+
       // Dispatch Welcome Email
       if (email) {
         dispatchWelcomeEmail(email, displayName || "Customer").catch(console.error);

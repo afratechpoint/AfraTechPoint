@@ -49,6 +49,24 @@ export async function createOrderInFirestore(orderData: any) {
       // Send push notification (non-blocking)
       sendPushToUser("admin", "New Order Placed", `Order #${docRef.id.slice(0, 8).toUpperCase()} received.`, `/admin/orders/${docRef.id}`).catch(console.error);
     }
+
+    // Customer order placed notification
+    if (orderData?.userId) {
+      const custNotifRef = adminDb.collection("notifications").doc(`cust_order_${docRef.id}`);
+      const existingCust = await custNotifRef.get();
+      if (!existingCust.exists) {
+        await custNotifRef.set({
+          type: "order_status_update",
+          title: "Order Placed Successfully",
+          message: `Your order #${docRef.id.slice(0, 8).toUpperCase()} for BDT ${orderData.totalAmount || orderData.total || "N/A"} has been placed.`,
+          recipient: orderData.userId,
+          link: `/account/orders/${docRef.id}`,
+          isRead: false,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        sendPushToUser(orderData.userId, "Order Placed", `Your order #${docRef.id.slice(0, 8).toUpperCase()} has been placed.`, `/account/orders/${docRef.id}`).catch(console.error);
+      }
+    }
   } catch (notifErr: any) {
     console.error("[Notification] Failed to create order notification:", notifErr.message);
   }
@@ -157,6 +175,25 @@ export async function updateOrderInFirestore(orderId: string, fields: any) {
       console.error("[Notification] Failed to create status notification:", notifErr.message);
     }
   }
+
+  // If payment status confirmed, notify customer
+  if (fields.paymentStatus === "confirmed" || fields.paymentStatus === "paid") {
+    try {
+      const snap = await docRef.get();
+      const order = snap.data();
+      if (order?.userId) {
+        await createNotificationInFirestore({
+          type: "payment_received",
+          title: "Payment Confirmed",
+          message: `Your payment for order #${orderId.slice(0, 8).toUpperCase()} has been confirmed.`,
+          recipient: order.userId,
+          link: `/account/orders/${orderId}`,
+        });
+      }
+    } catch (notifErr: any) {
+      console.error("[Notification] Failed to create payment notification:", notifErr.message);
+    }
+  }
 }
 
 export async function getPendingOrdersCount() {
@@ -238,27 +275,35 @@ export async function getNotifications(recipient: string = "admin", limit: numbe
       .limit(limit);
       
     const snap = await q.get();
-    return snap.docs.map((d: any) => ({
-      id: d.id,
-      ...d.data(),
-      createdAt: d.data().createdAt?.toDate() || new Date(),
-    }));
+    return snap.docs.map((d: any) => {
+      const data = d.data();
+      return {
+        id: d.id,
+        ...data,
+        createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : (data.createdAt ? new Date(data.createdAt).toISOString() : new Date().toISOString()),
+      };
+    });
   } catch (err: any) {
-    // If composite index not yet created, fall back to unordered query
-    console.warn("getNotifications: index may be missing, retrying without orderBy:", err.message);
-    const q = adminDb.collection("notifications").where("recipient", "==", recipient).limit(limit);
+    // If composite index not yet created, fetch documents and sort in-memory
+    console.warn("getNotifications: index may be missing, retrying with in-memory sort:", err.message);
+    const q = adminDb.collection("notifications").where("recipient", "==", recipient);
     const snap = await q.get();
-    return snap.docs.map((d: any) => ({
-      id: d.id,
-      ...d.data(),
-      createdAt: d.data().createdAt?.toDate() || new Date(),
-    }));
+    const list = snap.docs.map((d: any) => {
+      const data = d.data();
+      return {
+        id: d.id,
+        ...data,
+        createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : (data.createdAt ? new Date(data.createdAt).toISOString() : new Date().toISOString()),
+      };
+    });
+    list.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return list.slice(0, limit);
   }
 }
 
 export async function markNotificationAsRead(id: string) {
   const docRef = adminDb.collection("notifications").doc(id);
-  await docRef.update({ isRead: true });
+  await docRef.set({ isRead: true }, { merge: true });
 }
 
 export async function markAllNotificationsAsRead(recipient: string = "admin") {
@@ -267,9 +312,15 @@ export async function markAllNotificationsAsRead(recipient: string = "admin") {
     .where("isRead", "==", false);
     
   const snap = await q.get();
-  const batch = adminDb.batch();
-  snap.docs.forEach((d: any) => batch.update(d.ref, { isRead: true }));
-  await batch.commit();
+  if (snap.empty) return;
+
+  const docs = snap.docs;
+  for (let i = 0; i < docs.length; i += 400) {
+    const chunk = docs.slice(i, i + 400);
+    const batch = adminDb.batch();
+    chunk.forEach((d: any) => batch.update(d.ref, { isRead: true }));
+    await batch.commit();
+  }
 }
 
 export async function deleteNotification(id: string) {
@@ -279,9 +330,15 @@ export async function deleteNotification(id: string) {
 export async function clearAllNotifications(recipient: string = "admin") {
   const q = adminDb.collection("notifications").where("recipient", "==", recipient);
   const snap = await q.get();
-  const batch = adminDb.batch();
-  snap.docs.forEach((d: any) => batch.delete(d.ref));
-  await batch.commit();
+  if (snap.empty) return;
+
+  const docs = snap.docs;
+  for (let i = 0; i < docs.length; i += 400) {
+    const chunk = docs.slice(i, i + 400);
+    const batch = adminDb.batch();
+    chunk.forEach((d: any) => batch.delete(d.ref));
+    await batch.commit();
+  }
 }
 
 // --- Web Push Tokens ---

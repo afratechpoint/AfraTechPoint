@@ -182,9 +182,9 @@ export default async function RootLayout({
               </div>
             )}
             <ClientLayout>
-              <main id="main-content">
+              <div id="main-content" className="w-full">
                 {children}
-              </main>
+              </div>
             </ClientLayout>
           </SettingsProvider>
         </AuthProvider>

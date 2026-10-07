@@ -5,6 +5,7 @@
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signInWithCustomToken,
   signInWithPopup,
   GoogleAuthProvider,
   signOut,
@@ -25,6 +26,13 @@ export async function signInWithEmail(
   password: string
 ): Promise<UserCredential> {
   return signInWithEmailAndPassword(auth, email, password);
+}
+
+// ── Sign In with Custom Token (OTP verification) ─────────────────
+export async function signInWithToken(
+  token: string
+): Promise<UserCredential> {
+  return signInWithCustomToken(auth, token);
 }
 
 // ── Register ─────────────────────────────────────────────────────

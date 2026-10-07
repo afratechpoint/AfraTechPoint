@@ -21,12 +21,18 @@ export default function MobileNav() {
   const pathname  = usePathname();
   const { items } = useCart();
   const { user }  = useAuth();
-  const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const cartCount = mounted ? items.reduce((sum, item) => sum + item.quantity, 0) : 0;
 
   // Build items, updating the Account href based on auth state
   const resolvedItems = navItems.map(item =>
     item.label === "Account"
-      ? { ...item, href: user ? "/account" : "/login" }
+      ? { ...item, href: mounted && user ? "/account" : "/login" }
       : item
   );
 

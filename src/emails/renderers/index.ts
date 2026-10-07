@@ -6,6 +6,7 @@ import PaymentConfirmed from "../templates/PaymentConfirmed";
 import { ContactAutoReply, ContactAdminNotification } from "../templates/ContactTemplates";
 import PasswordResetEmail from "../templates/PasswordReset";
 import EmailVerificationEmail from "../templates/EmailVerification";
+import OtpEmail from "../templates/OtpEmail";
 
 export {
   WelcomeEmail,
@@ -17,4 +18,5 @@ export {
   ContactAdminNotification,
   PasswordResetEmail,
   EmailVerificationEmail,
+  OtpEmail,
 };

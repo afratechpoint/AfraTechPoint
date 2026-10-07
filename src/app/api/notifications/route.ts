@@ -1,4 +1,4 @@
-import { verifyAdmin } from "@/lib/auth-server";
+import { verifyAdmin, verifyUser } from "@/lib/auth-server";
 import { NextRequest, NextResponse } from "next/server";
 import { storage } from "@/lib/storage";
 
@@ -6,16 +6,29 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
-    const adminToken = await verifyAdmin(request);
-    if (!adminToken) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
     const { searchParams } = new URL(request.url);
     const recipient = searchParams.get("recipient") || "admin";
     const limit = parseInt(searchParams.get("limit") || "20");
 
+    if (recipient === "admin") {
+      const adminToken = await verifyAdmin(request);
+      if (!adminToken) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+    } else {
+      // Normal user notifications check
+      const userToken = await verifyUser(request);
+      const adminToken = !userToken ? await verifyAdmin(request) : null;
+      if (!userToken && !adminToken) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      if (userToken && userToken.uid !== recipient && !adminToken) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
+
     const notifications = await storage.getNotifications(recipient, limit);
-    return NextResponse.json({ notifications });
+    return NextResponse.json({ notifications: notifications || [] });
   } catch (error) {
     console.error("Failed to fetch notifications:", error);
     return NextResponse.json({ error: "Failed to fetch notifications" }, { status: 500 });
@@ -25,14 +38,24 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const adminToken = await verifyAdmin(request);
-    if (!adminToken) {
+    const userToken = !adminToken ? await verifyUser(request) : null;
+
+    if (!adminToken && !userToken) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
     const body = await request.json();
     const { id, all, recipient } = body;
 
     if (all) {
-      await storage.markAllNotificationsAsRead(recipient || "admin");
+      const targetRecipient = recipient || (adminToken ? "admin" : userToken?.uid);
+      if (targetRecipient === "admin" && !adminToken) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      if (!adminToken && userToken && targetRecipient !== userToken.uid) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      await storage.markAllNotificationsAsRead(targetRecipient);
     } else if (id) {
       await storage.markNotificationAsRead(id);
     } else {
@@ -45,18 +68,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Failed to update notification" }, { status: 500 });
   }
 }
+
 export async function DELETE(request: NextRequest) {
   try {
     const adminToken = await verifyAdmin(request);
-    if (!adminToken) {
+    const userToken = !adminToken ? await verifyUser(request) : null;
+
+    if (!adminToken && !userToken) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
     const clearAll = searchParams.get("all");
-    const recipient = searchParams.get("recipient") || "admin";
+    const recipient = searchParams.get("recipient") || (adminToken ? "admin" : userToken?.uid);
 
     if (clearAll === "true") {
+      if (recipient === "admin" && !adminToken) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      if (!adminToken && userToken && recipient !== userToken.uid) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
       await storage.clearAllNotifications(recipient);
     } else if (id) {
       await storage.deleteNotification(id);

@@ -7,7 +7,8 @@ import {
   User, Mail, ShieldCheck, ShieldAlert, LogOut,
   Package, ChevronRight, Pencil, Check, X,
   Phone, MapPin, Info, ShoppingBag, TrendingUp,
-  Calendar, Home, ArrowRight, Truck, CreditCard
+  Calendar, Home, ArrowRight, Truck, CreditCard,
+  Bell, CheckCheck, Trash2, ExternalLink, RefreshCw, Sparkles
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -19,7 +20,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/components/SettingsProvider";
 import PremiumLoader from "@/components/PremiumLoader";
 
-type Tab = "profile" | "orders";
+type Tab = "profile" | "orders" | "notifications";
+
+interface AccountNotification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  link?: string;
+  isRead: boolean;
+  createdAt: string;
+}
 
 interface OrderItem { name: string; quantity: number; price: number; image?: string; variantName?: string; }
 
@@ -75,6 +86,151 @@ function AccountContent() {
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+
+  // Customer Notifications State & Handlers
+  const [notifications, setNotifications] = useState<AccountNotification[]>([]);
+  const [notifsLoading, setNotifsLoading] = useState(false);
+  const [notifFilter, setNotifFilter] = useState<"all" | "unread">("all");
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [clearingAll, setClearingAll] = useState(false);
+  const [deletingNotifId, setDeletingNotifId] = useState<string | null>(null);
+
+  const fetchNotifications = async () => {
+    if (!user) return;
+    setNotifsLoading(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(`/api/notifications?recipient=${user.uid}&limit=50`, {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.notifications && Array.isArray(data.notifications)) {
+          setNotifications(data.notifications);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch customer notifications:", err);
+    } finally {
+      setNotifsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchNotifications();
+    }
+  }, [user, tab]);
+
+  const unreadNotifsCount = notifications.filter((n) => !n.isRead).length;
+
+  const markNotificationRead = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+    );
+    try {
+      const token = await user?.getIdToken();
+      await fetch("/api/notifications", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ id }),
+      });
+    } catch (err) {
+      console.error("Failed to mark notification read:", err);
+    }
+  };
+
+  const markAllNotificationsRead = async () => {
+    if (!user || unreadNotifsCount === 0) return;
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    toast.success("All notifications marked as read");
+    try {
+      const token = await user.getIdToken();
+      await fetch("/api/notifications", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ all: true, recipient: user.uid }),
+      });
+    } catch (err) {
+      console.error("Failed to mark all as read:", err);
+      fetchNotifications();
+    }
+  };
+
+  const deleteNotification = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setDeletingNotifId(id);
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    try {
+      const token = await user?.getIdToken();
+      await fetch(`/api/notifications?id=${id}&recipient=${user?.uid}`, {
+        method: "DELETE",
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      toast.success("Notification dismissed");
+    } catch (err) {
+      console.error("Failed to delete notification:", err);
+    } finally {
+      setDeletingNotifId(null);
+    }
+  };
+
+  const clearAllNotifications = async () => {
+    if (!user || notifications.length === 0) return;
+    setClearingAll(true);
+    setNotifications([]);
+    setShowClearConfirm(false);
+    toast.success("All notifications cleared");
+    try {
+      const token = await user.getIdToken();
+      await fetch(`/api/notifications?all=true&recipient=${user.uid}`, {
+        method: "DELETE",
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+    } catch (err) {
+      console.error("Failed to clear notifications:", err);
+      fetchNotifications();
+    } finally {
+      setClearingAll(false);
+    }
+  };
+
+  const handleNotificationCardClick = (n: AccountNotification) => {
+    if (!n.isRead) {
+      markNotificationRead(n.id);
+    }
+    if (n.link) {
+      router.push(n.link);
+    }
+  };
+
+  const formatNotifTime = (dateInput: string | Date) => {
+    try {
+      const d = typeof dateInput === "string" ? new Date(dateInput).getTime() : dateInput.getTime();
+      if (isNaN(d)) return "";
+      const diff = Math.floor((Date.now() - d) / 1000);
+      if (diff < 30) return "Just now";
+      if (diff < 60) return `${diff}s ago`;
+      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+      if (diff < 86400 * 2) return "Yesterday";
+      return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    } catch {
+      return "";
+    }
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -332,7 +488,7 @@ function AccountContent() {
                     <ShieldAlert size={11} /> Email not verified
                   </div>
                 )}
-                <div className="w-full mt-4 pt-4 border-t border-gray-50 flex items-center gap-2 text-[10px] text-gray-400 justify-center">
+                <div className="w-full mt-4 pt-4 border-t border-gray-50 flex items-center gap-2 text-[10px] text-gray-400 justify-center" suppressHydrationWarning>
                   <Calendar size={10} /> Member since {joined}
                 </div>
               </div>
@@ -340,14 +496,18 @@ function AccountContent() {
               {/* Navigation */}
               <nav className="bg-white rounded-[2rem] border border-gray-100 overflow-hidden shadow-sm">
                 {([
-                  { id: "profile", label: "My Profile",    icon: User,    desc: "Personal info & settings" },
-                  { id: "orders",  label: "Order History",  icon: Package, desc: "Track your purchases" },
-                ] as { id: Tab; label: string; icon: any; desc: string }[]).map(({ id, label, icon: Icon, desc }) => (
+                  { id: "profile", label: "My Profile", icon: User, desc: "Personal info & settings" },
+                  { id: "orders", label: "Order History", icon: Package, desc: "Track your purchases" },
+                  { id: "notifications", label: "Notifications", icon: Bell, desc: "Alerts & order updates", count: unreadNotifsCount },
+                ] as { id: Tab; label: string; icon: any; desc: string; count?: number }[]).map(({ id, label, icon: Icon, desc, count }) => (
                   <button
                     key={id}
-                    onClick={() => setTab(id)}
+                    onClick={() => {
+                      setTab(id);
+                      router.push(`/account?tab=${id}`, { scroll: false });
+                    }}
                     className={`w-full flex items-center justify-between px-5 py-4 text-left border-b border-gray-50 last:border-0 transition-all ${
-                      tab === id ? "bg-gray-50 text-black" : "text-gray-500 hover:bg-gray-50/50 hover:text-black"
+                      tab === id ? "bg-gray-50 text-black font-black" : "text-gray-500 hover:bg-gray-50/50 hover:text-black"
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -355,7 +515,14 @@ function AccountContent() {
                         <Icon size={15} />
                       </div>
                       <div className="text-left">
-                        <p className="text-sm font-bold">{label}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-bold">{label}</p>
+                          {count && count > 0 ? (
+                            <span className="px-1.5 py-0.5 text-[9px] font-black rounded-full bg-red-500 text-white">
+                              {count > 9 ? "9+" : count}
+                            </span>
+                          ) : null}
+                        </div>
                         <p className="text-[9px] text-gray-400 font-medium">{desc}</p>
                       </div>
                     </div>
@@ -672,6 +839,268 @@ function AccountContent() {
                           })}
                         </div>
                       )}
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* ── Notifications Tab ── */}
+                {tab === "notifications" && (
+                  <motion.div
+                    key="notifications"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="space-y-5"
+                  >
+                    <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6 md:p-8">
+                      {/* Header */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-gray-100">
+                        <div>
+                          <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
+                            <Bell size={20} className="text-gray-900" /> Notifications
+                          </h3>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {unreadNotifsCount > 0
+                              ? `${unreadNotifsCount} unread alert${unreadNotifsCount !== 1 ? "s" : ""}`
+                              : "All caught up!"}
+                            {notifications.length > 0 && ` · ${notifications.length} total`}
+                          </p>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <button
+                            onClick={fetchNotifications}
+                            disabled={notifsLoading}
+                            className="p-2.5 rounded-xl border border-gray-200 bg-white text-gray-600 hover:text-black hover:border-black active:scale-95 transition-all disabled:opacity-40"
+                            title="Refresh notifications"
+                          >
+                            <RefreshCw size={14} className={notifsLoading ? "animate-spin" : ""} />
+                          </button>
+
+                          {unreadNotifsCount > 0 && (
+                            <button
+                              onClick={markAllNotificationsRead}
+                              className="flex items-center gap-1.5 text-xs font-bold bg-black text-white px-4 py-2.5 rounded-xl hover:bg-gray-800 active:scale-95 transition-all shadow-sm"
+                            >
+                              <CheckCheck size={14} /> Mark all read
+                            </button>
+                          )}
+
+                          {notifications.length > 0 && (
+                            <button
+                              onClick={() => setShowClearConfirm(true)}
+                              className="flex items-center gap-1.5 text-xs font-bold bg-red-50 text-red-500 border border-red-100 px-4 py-2.5 rounded-xl hover:bg-red-100 active:scale-95 transition-all"
+                            >
+                              <Trash2 size={13} /> Clear all
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Filter Tabs */}
+                      <div className="flex gap-2 pt-5 pb-2">
+                        {(["all", "unread"] as const).map((f) => (
+                          <button
+                            key={f}
+                            onClick={() => setNotifFilter(f)}
+                            className={`px-4 py-1.5 rounded-full text-xs font-bold capitalize transition-all ${
+                              notifFilter === f
+                                ? "bg-black text-white"
+                                : "bg-gray-50 border border-gray-200 text-gray-500 hover:text-black hover:border-black"
+                            }`}
+                          >
+                            {f} {f === "unread" && unreadNotifsCount > 0 && `(${unreadNotifsCount})`}
+                            {f === "all" && notifications.length > 0 && `(${notifications.length})`}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Clear All Modal Confirmation */}
+                      <AnimatePresence>
+                        {showClearConfirm && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150] flex items-center justify-center p-4"
+                            onClick={() => setShowClearConfirm(false)}
+                          >
+                            <motion.div
+                              initial={{ scale: 0.95, y: 10 }}
+                              animate={{ scale: 1, y: 0 }}
+                              exit={{ scale: 0.95, y: 10 }}
+                              onClick={(e) => e.stopPropagation()}
+                              className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl text-center"
+                            >
+                              <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                <Trash2 size={24} className="text-red-500" />
+                              </div>
+                              <h4 className="text-lg font-black text-gray-900 mb-1">Clear all alerts?</h4>
+                              <p className="text-xs text-gray-400 mb-6 leading-relaxed">
+                                This will permanently delete all {notifications.length} notifications from your account.
+                              </p>
+                              <div className="flex gap-3">
+                                <button
+                                  onClick={() => setShowClearConfirm(false)}
+                                  className="flex-1 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-gray-600 hover:bg-gray-50 transition-all"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={clearAllNotifications}
+                                  disabled={clearingAll}
+                                  className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-xs font-bold hover:bg-red-600 transition-all disabled:opacity-40"
+                                >
+                                  {clearingAll ? "Clearing..." : "Yes, clear all"}
+                                </button>
+                              </div>
+                            </motion.div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {/* Notifications List */}
+                      <div className="mt-4">
+                        {notifsLoading && notifications.length === 0 ? (
+                          <div className="py-20 flex items-center justify-center">
+                            <div className="w-7 h-7 border-4 border-gray-100 border-t-black rounded-full animate-spin" />
+                          </div>
+                        ) : (
+                          (() => {
+                            const filteredNotifs =
+                              notifFilter === "unread"
+                                ? notifications.filter((n) => !n.isRead)
+                                : notifications;
+
+                            if (filteredNotifs.length === 0) {
+                              return (
+                                <div className="py-16 text-center flex flex-col items-center">
+                                  <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mb-3">
+                                    <Bell size={24} className="text-gray-300" />
+                                  </div>
+                                  <p className="text-sm font-bold text-gray-800">
+                                    {notifFilter === "unread" ? "No unread alerts" : "No notifications yet"}
+                                  </p>
+                                  <p className="text-xs text-gray-400 mt-1 max-w-xs leading-relaxed">
+                                    {notifFilter === "unread"
+                                      ? "You've read all your notifications."
+                                      : "We'll notify you whenever your order status changes or exciting deals arrive!"}
+                                  </p>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <div className="space-y-3">
+                                {filteredNotifs.map((n) => {
+                                  const getNotifIcon = (type: string) => {
+                                    switch (type) {
+                                      case "order_status_update":
+                                        return (
+                                          <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                                            <Package size={18} />
+                                          </div>
+                                        );
+                                      case "payment_received":
+                                        return (
+                                          <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                            <ShoppingBag size={18} />
+                                          </div>
+                                        );
+                                      case "welcome":
+                                        return (
+                                          <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                                            <Sparkles size={18} />
+                                          </div>
+                                        );
+                                      default:
+                                        return (
+                                          <div className="w-10 h-10 rounded-2xl bg-gray-100 text-gray-600 flex items-center justify-center shrink-0">
+                                            <Info size={18} />
+                                          </div>
+                                        );
+                                    }
+                                  };
+
+                                  return (
+                                    <div
+                                      key={n.id}
+                                      onClick={() => handleNotificationCardClick(n)}
+                                      className={`p-4 md:p-5 rounded-2xl border transition-all cursor-pointer group flex items-start gap-4 ${
+                                        !n.isRead
+                                          ? "bg-blue-50/40 border-blue-100 hover:border-blue-200"
+                                          : "bg-gray-50/50 border-gray-100 hover:bg-white hover:border-gray-200 hover:shadow-sm"
+                                      }`}
+                                    >
+                                      {/* Icon */}
+                                      {getNotifIcon(n.type)}
+
+                                      {/* Content */}
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-start justify-between gap-2">
+                                          <p className={`text-sm text-gray-900 ${!n.isRead ? "font-black" : "font-bold"}`}>
+                                            {n.title}
+                                            {!n.isRead && (
+                                              <span className="ml-2 inline-block w-2 h-2 bg-blue-500 rounded-full align-middle" />
+                                            )}
+                                          </p>
+                                          <span className="text-[10px] text-gray-400 font-medium shrink-0">
+                                            {formatNotifTime(n.createdAt)}
+                                          </span>
+                                        </div>
+                                        <p className="text-xs text-gray-600 mt-1 leading-relaxed">
+                                          {n.message}
+                                        </p>
+
+                                        {/* Actions */}
+                                        <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-100/60">
+                                          {n.link ? (
+                                            <Link
+                                              href={n.link}
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (!n.isRead) markNotificationRead(n.id);
+                                              }}
+                                              className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 transition-colors"
+                                            >
+                                              <ExternalLink size={12} /> View details
+                                            </Link>
+                                          ) : <span />}
+
+                                          <div className="flex items-center gap-1.5">
+                                            {!n.isRead && (
+                                              <button
+                                                onClick={(e) => markNotificationRead(n.id, e)}
+                                                title="Mark read"
+                                                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors"
+                                              >
+                                                <Check size={11} /> Mark read
+                                              </button>
+                                            )}
+                                            <button
+                                              onClick={(e) => deleteNotification(n.id, e)}
+                                              disabled={deletingNotifId === n.id}
+                                              title="Delete notification"
+                                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                            >
+                                              {deletingNotifId === n.id ? (
+                                                <div className="w-3.5 h-3.5 border-2 border-red-300 border-t-red-500 rounded-full animate-spin" />
+                                              ) : (
+                                                <Trash2 size={13} />
+                                              )}
+                                            </button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })()
+                        )}
+                      </div>
                     </div>
                   </motion.div>
                 )}

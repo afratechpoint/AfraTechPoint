@@ -22,6 +22,8 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+build_log.txt
+*.log
 
 # local env files
 .env

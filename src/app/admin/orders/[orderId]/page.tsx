@@ -269,7 +269,7 @@ export default function AdminOrderDetailPage() {
   const ordInfo   = ORD_STATUS[ordStatus] ?? ORD_STATUS.pending;
 
   return (
-    <div className="max-w-4xl space-y-6 pb-10">
+    <div className="max-w-4xl w-full min-w-0 space-y-6 pb-10">
 
       {/* ── Top bar ─────────────────────────────────── */}
       <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">

@@ -29,6 +29,11 @@ export default function Navbar({
   const settings  = useSettings();
   const { user, loading, isAdmin, logout, displayName, photoURL } = useAuth();
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const navLinks  = settings.navLinks || [];
 
@@ -83,7 +88,7 @@ export default function Navbar({
               className="p-2.5 rounded-2xl bg-gray-50 text-gray-900 border border-gray-100 shadow-sm relative active:scale-95 transition-all"
             >
               <ShoppingBag size={18} strokeWidth={2.5} aria-hidden="true" />
-              {items.length > 0 && (
+              {mounted && items.length > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-black text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white">
                   {items.length}
                 </span>
@@ -182,7 +187,7 @@ export default function Navbar({
               className="p-2.5 rounded-full bg-white shadow-sm border border-gray-100 hover:bg-gray-50 transition-all relative group block"
             >
               <ShoppingBag size={20} className="text-gray-700 group-hover:text-black" aria-hidden="true" />
-              {cartCount > 0 && (
+              {mounted && cartCount > 0 && (
                 <span
                   style={{ backgroundColor: "var(--primary)", color: "var(--primary-text)" }}
                   className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center rounded-full border-2 border-white text-[10px] font-bold"

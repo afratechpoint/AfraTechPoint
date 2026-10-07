@@ -52,11 +52,11 @@ export default function AdminProductsPage() {
   }, [query, products]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full min-w-0">
       {/* ── Toolbar ── */}
-      <div className="flex justify-between items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 w-full">
         {/* Search */}
-        <div className="relative w-72">
+        <div className="relative w-full sm:w-72">
           <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
             <Search size={16} />
           </div>
@@ -68,25 +68,27 @@ export default function AdminProductsPage() {
           />
         </div>
 
-        {/* Stats pill */}
-        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest hidden md:block">
-          {filtered.length} of {products.length} products
-        </span>
+        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+          {/* Stats pill */}
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+            {filtered.length} of {products.length} products
+          </span>
 
-        {/* Add product CTA */}
-        <Link
-          href="/admin/products/new"
-          className="bg-black text-white px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all"
-        >
-          <Plus size={18} />
-          Add Product
-        </Link>
+          {/* Add product CTA */}
+          <Link
+            href="/admin/products/new"
+            className="bg-black text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all shrink-0 shadow-sm"
+          >
+            <Plus size={18} />
+            <span>Add Product</span>
+          </Link>
+        </div>
       </div>
 
       {/* ── Table ── */}
       {isLoading ? (
-        // Skeleton loader — matches table layout
-        <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+        // Skeleton loader
+        <div className="bg-white rounded-2xl md:rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
           <div className="p-6 space-y-4">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="flex items-center gap-4 animate-pulse">
